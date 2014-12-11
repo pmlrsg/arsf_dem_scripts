@@ -666,7 +666,8 @@ def subset_to_bb(in_dem_mosaic, out_demfile, bounding_box,
                      out_projection=dem_common.WGS84_PROJ4_STRING,
                      out_res=None):
    """
-   Subset a raster to a bounding box using gdalwarp.
+   Subset a raster to a bounding box using gdalwarp, if reprojection is also required or gdal_translate
+   if bounding_box and input DEM have the same projection.
 
    Takes and exports raster in any projection, can supply WKT file or Proj4 string using
    'in_projection' and 'out_projection'.
@@ -689,7 +690,20 @@ def subset_to_bb(in_dem_mosaic, out_demfile, bounding_box,
    if len(bounding_box) != 4:
       raise Exception('Expected four values for bounding box')
 
-   call_gdalwarp(in_dem_mosaic, out_demfile, 
+   # If input and output projections are the same then calling gdalwarp will regrid
+   # to align with bounding box. Can use gdaltranslate with 'projwin' instead.
+   if in_projection == out_projection:
+      gdal_translate_cmd = ['gdal_translate', '-projwin',str(bounding_box[2]),
+                                              str(bounding_box[1]),
+                                              str(bounding_box[3]),
+                                              str(bounding_box[0])]
+      gdal_translate_cmd.extend(['-of',dem_common.GDAL_OUTFILE_FORMAT])
+      gdal_translate_cmd.extend(['-ot',dem_common.GDAL_OUTFILE_DATATYPE])
+      gdal_translate_cmd.extend(['-co',dem_common.GDAL_CREATION_OPTIONS])
+      gdal_translate_cmd.extend([in_dem_mosaic, out_demfile])
+      common_functions.CallSubprocessOn(gdal_translate_cmd)
+   else:
+      call_gdalwarp(in_dem_mosaic, out_demfile, 
                      s_srs=in_projection,
                      t_srs=out_projection,
                      of=dem_common.GDAL_OUTFILE_FORMAT, 
@@ -886,37 +900,37 @@ def call_gdalwarp(in_file, out_file, s_srs=None, t_srs=dem_common.WGS84_PROJ4_ST
    gdalwarp_cmd = ['gdalwarp']
 
    if overwrite:
-      gdalwarp_cmd = gdalwarp_cmd + ['-overwrite']
+      gdalwarp_cmd.extend(['-overwrite'])
 
    # Add output extent if provided
    if out_extent is not None:
       if len(out_extent) != 4:
          raise Exception('Expected four values for extent')
-      gdalwarp_cmd = gdalwarp_cmd + ['-te',str(out_extent[2]),
-                                           str(out_extent[0]),
-                                           str(out_extent[3]),
-                                           str(out_extent[1])]
+      gdalwarp_cmd.extend(['-te',str(out_extent[2]),
+                                 str(out_extent[0]),
+                                 str(out_extent[3]),
+                                 str(out_extent[1])])
 
    if target_res is not None:
       if len(target_res) != 2:
          raise Exception('Expected two values for target resolution')
-      gdalwarp_cmd = gdalwarp_cmd + ['-tr',str(target_res[0]),
-                                           str(target_res[1])]
+      gdalwarp_cmd.extend(['-tr',str(target_res[0]),
+                                           str(target_res[1])])
 
    if s_srs is not None:
-      gdalwarp_cmd = gdalwarp_cmd + ['-s_srs','"{}"'.format(s_srs)]
+      gdalwarp_cmd.extend(['-s_srs','"{}"'.format(s_srs)])
 
    if srcnodata is not None:
-      gdalwarp_cmd = gdalwarp_cmd + ['-srcnodata',str(srcnodata)]
+      gdalwarp_cmd.extend(['-srcnodata',str(srcnodata)])
 
    if dstnodata is not None:
-      gdalwarp_cmd = gdalwarp_cmd + ['-dstnodata',str(dstnodata)]
+      gdalwarp_cmd.extend(['-dstnodata',str(dstnodata)])
 
-   gdalwarp_cmd = gdalwarp_cmd + ['-t_srs','"{}"'.format(t_srs)]
-   gdalwarp_cmd = gdalwarp_cmd + ['-of',of,'-ot',ot,
-                        '-co',co]
-   gdalwarp_cmd = gdalwarp_cmd + ['-r',r]
-   gdalwarp_cmd = gdalwarp_cmd + [in_file, out_file]
+   gdalwarp_cmd.extend(['-t_srs','"{}"'.format(t_srs)])
+   gdalwarp_cmd.extend(['-of',of,'-ot',ot,
+                        '-co',co])
+   gdalwarp_cmd.extend(['-r',r])
+   gdalwarp_cmd.extend([in_file, out_file])
 
    cmd_str = ""
 
