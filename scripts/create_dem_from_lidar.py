@@ -250,7 +250,7 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
 
       # If a single file is provided for the screenshot and patching with a DEM 
       # want screenshot of patched DEM not lidar.
-      if not os.path.isdir(args.screenshot) and patch_with_dem:
+      if (args.screenshot is not None and not os.path.isdir(args.screenshot)) and patch_with_dem:
          lidar_screenshots = None
       else:
          lidar_screenshots = args.screenshot
