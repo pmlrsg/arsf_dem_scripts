@@ -21,6 +21,7 @@ system level.
 """
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os, sys
+import glob
 import math
 try:
    import ConfigParser
@@ -53,39 +54,61 @@ def get_config_int_fallback(config, section, option, fallback=None):
    except:
       return fallback
 
-# Define functions to check environmental variables (to overwrite ARSF defaults).
-def get_grass_python_lib_path():
-   """Get path for GRASS python library.
-      Checks for environmental variable 'GRASS_PYTHON_LIB_PATH'
-      if not found uses /usr/lib64/grass/etc/python/
-   """
-   FEDORA_GRASS_PYTHON_LIB_PATH="/usr/lib64/grass/etc/python/"
-   GRASS_PYTHON_LIB_PATH = ""
-   try:
-      GRASS_PYTHON_LIB_PATH = os.environ['GRASS_PYTHON_LIB_PATH']
-   except KeyError:
-      GRASS_PYTHON_LIB_PATH = FEDORA_GRASS_PYTHON_LIB_PATH
-   except Exception as err:
-      print(err, file=sys.stderr)
-      GRASS_LIB_PATH = FEDORA_GRASS_PYTHON_LIB_PATH
-   return GRASS_PYTHON_LIB_PATH
 
-# Define functions to check environmental variables (to overwrite ARSF defaults).
+# Functions to try and get paths for files
 def get_grass_lib_path():
-   """Get path for GRASS python library.
-      Checks for environmental variable 'GRASS_LIB_PATH'
-      if not found uses /usr/lib64/grass/
    """
-   FEDORA_GRASS_LIB_PATH="/usr/lib64/grass/"
-   GRASS_LIB_PATH = ""
-   try:
-      GRASS_LIB_PATH = os.environ['GRASS_LIB_PATH']
-   except KeyError:
-      GRASS_LIB_PATH = FEDORA_GRASS_LIB_PATH
-   except Exception as err:
-      print(err, file=sys.stderr)
-      GRASS_LIB_PATH = FEDORA_GRASS_LIB_PATH
-   return GRASS_LIB_PATH
+   Try to get GRASS path by trying common locations for Linux, OS X and 
+   Windows.
+
+   For Windows assumes installed through OSGeo4W
+
+   Exits if path does not exist
+   """
+   LINUX64_GRASS_LIB_PATH = '/usr/lib64/grass'
+   LINUX32_GRASS_LIB_PATH = '/usr/lib/grass'
+   OSX_GRASS_LIB_PATH = '/Aplications/GRASS/'
+   WIN_GRASS_LIB_PATH = 'C:/OSGeo4W/apps/grass/grass'
+
+   if sys.platform.find('win') > -1:
+      # As under Windows OSGeo4W stores with version name, run Glob to try
+      # and find path from root
+      grass_version_path = glob.glob(WIN_GRASS_LIB_PATH + '*')
+      if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
+         return grass_version_path[-1]
+      else:
+         print('Could not find GRASS library. Set in Config file using "GRASS_LIB_PATH"',file=sys.stderr)
+         sys.exit(1)
+   elif sys.platform.find('osx') > -1:
+      if os.path.isdir(OSX_GRASS_LIB_PATH):
+         return OSX_GRASS_LIB_PATH
+      else:
+         print('Could not find GRASS library. Set in Config file using "GRASS_LIB_PATH"',file=sys.stderr)
+         sys.exit(1)
+   # If its not Windows or OS X, assume Linux or something UNIX-like
+   else:
+      if os.path.isdir(LINUX64_GRASS_LIB_PATH):
+         return LINUX64_GRASS_LIB_PATH
+      elif os.path.isdir(LINUX32_GRASS_LIB_PATH):
+         return LINUX32_GRASS_LIB_PATH
+      else:
+         print('Could not find GRASS library. Set in Config file using "GRASS_LIB_PATH"',file=sys.stderr)
+         sys.exit(1)
+
+def get_grass_python_lib_path(GRASS_LIB_PATH=get_grass_lib_path()):
+   """
+   Try to find GRASS Python library path. 
+   If GRASS_LIB_PATH is passed in will use this, otherwise will try default
+   locations.
+   """
+   GRASS_PYTHON_LIB_PATH = os.path.join(GRASS_LIB_PATH,'etc','python')
+   
+   if os.path.isdir(GRASS_PYTHON_LIB_PATH):
+      return GRASS_PYTHON_LIB_PATH
+   else:
+      print('Could not find GRASS Python library. Was not where expected relative to "GRASS_LIB_PATH".',file=sys.stderr)
+      print('You need to define in config file using "GRASS_PYTHON_LIB_PATH".',file=sys.stderr)
+      sys.exit(1)
 
 def get_temp_path():
    """Function to get temp path by trying
@@ -94,6 +117,7 @@ def get_temp_path():
    Defaults to /tmp/
    """
    TEMP_PATH = None
+
    temp_env_vars = ['TMPDIR','TEMP']
 
    for temp_var in temp_env_vars:
@@ -107,6 +131,27 @@ def get_temp_path():
       TEMP_PATH = '/tmp'
 
    return TEMP_PATH
+
+def get_lastools_path():
+   """
+   Function to get path to LAStools
+
+   Under Linux / OS X assumes they are added to $PATH so 
+   don't need to pass in full path and returns empty string.
+
+   Under Windows assume LAStools has been installed to 
+   'C:\LAStools'
+   """
+
+   if sys.platform.find('win') > -1:
+      win_lastools_path = os.path.join('C:\LAStools','bin')
+      if os.path.isdir(win_lastools_path):
+         return win_lastools_path
+      else:
+         print('Could not find LAStools bin directory.\nChecked {}\n'.format(win_lastools_path),file=sys.stderr)
+         print('If you want to use LAS format files you need to define the path in the config file using "LASTOOLS_FREE_BIN_PATH" and "LASTOOLS_NONFREE_BIN_PATH"',file=sys.stderr)
+   else:
+      return ''
 
 # Read in config parser file
 config_current_dir = os.path.join(os.path.abspath('.'),'arsf_dem.cfg')
@@ -137,11 +182,15 @@ if not read_config:
 #: Temporary path
 TEMP_PATH = get_config_fallback(config,'system','TEMP_PATH',fallback=get_temp_path())
 
-#: Path for GRASS Python library
-GRASS_PYTHON_LIB_PATH = get_config_fallback(config,'grass','GRASS_PYTHON_LIB_PATH',
-                           fallback=get_grass_python_lib_path())
 #: Path for GRASS Library
 GRASS_LIB_PATH = get_config_fallback(config,'grass','GRASS_LIB_PATH',fallback=get_grass_lib_path())
+
+#: Path for GRASS Python library
+GRASS_PYTHON_LIB_PATH = get_config_fallback(config,'grass','GRASS_PYTHON_LIB_PATH',
+                           fallback=get_grass_python_lib_path(GRASS_LIB_PATH))
+
+# Set environmental variable for GRASS lib
+os.environ['GISBASE'] = GRASS_LIB_PATH
 
 #: Path for GRASS database template
 GRASS_DATABASE_TEMPLATE = get_config_fallback(config,'grass','GRASS_DATABASE_TEMPLATE',
@@ -247,10 +296,15 @@ EGM96_UKBNG_SEP_FILE_UKBNG_IS_ASCII = False
 
 #: Location of OSTN02 transform file
 OSTN02_NTV2_BIN_FILE = get_config_fallback(config,'projection','OSTN02_NTV2_BIN_FILE',
-                  fallback='/users/rsg/arsf/dems/ostn02/OSTN02_NTv2.gsb')
+                  fallback=None)
 
-#: Default Proj4 string for UKBNG
-OSTN02_PROJ4_STRING = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy +units=m +no_defs +nadgrids={}'.format(OSTN02_NTV2_BIN_FILE)
+#: Default Proj4 string for UKBNG 
+if OSTN02_NTV2_BIN_FILE is not None:
+   OSTN02_PROJ4_STRING = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy +units=m +no_defs +nadgrids={}'.format(OSTN02_NTV2_BIN_FILE)
+else:
+   print('WARNING: OSTN02_NTV2_BIN_FILE was not set, any transforms to/from UKBNG will be inaccurate!')
+   OSTN02_PROJ4_STRING = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy +units=m +no_defs'
+
 #: Default Proj4 string for WGS84LL
 WGS84_PROJ4_STRING = '+proj=longlat +datum=WGS84 +no_defs'
 
@@ -281,6 +335,6 @@ SPD_DEFAULT_INTERPOLATION = get_config_fallback(config,'spdlib','SPD_DEFAULT_INT
                      fallback='NATURAL_NEIGHBOR')
 
 #: Path to open source LAStools binaries
-LASTOOLS_FREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_FREE_BIN_PATH',fallback='')
+LASTOOLS_FREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_FREE_BIN_PATH',fallback=get_lastools_path())
 #: Path to commercial LAStools binaries
-LASTOOLS_PAID_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_PAID_BIN_PATH',fallback='')
+LASTOOLS_NONFREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_NONFREE_BIN_PATH',fallback=get_lastools_path())

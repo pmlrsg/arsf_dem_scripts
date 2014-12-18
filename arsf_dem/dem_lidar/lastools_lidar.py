@@ -34,7 +34,7 @@ def checkPaidLAStools():
    """Check if paid LAStools are installed."""
    
    try:
-      common_functions.CallSubprocessOn([os.path.join(dem_common.LASTOOLS_PAID_BIN_PATH,'las2dem.exe'),'-h'],
+      common_functions.CallSubprocessOn([os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe'),'-h'],
                         redirect=True, quiet=True)
       return True
    except OSError:
@@ -94,7 +94,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
 
    """
    if not checkFreeLAStools():
-      raise Exception('Could not find LAStools')
+      raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
 
    las2txt_cmd = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH,'las2txt'),
                   '-parse',
@@ -157,9 +157,9 @@ def classify_ground_las(in_las,out_las):
  
     """
    if not checkPaidLAStools():
-      raise Exception('Could not find LAStools')
+      raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
 
-   lasground_cmd = [os.path.join(dem_common.LASTOOLS_PAID_BIN_PATH,'lasground.exe'),
+   lasground_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'lasground.exe'),
                   '-i',in_las,
                   '-o',out_las]
    
@@ -187,9 +187,9 @@ def las_to_dsm(in_las, out_dsm):
    """
 
    if not checkPaidLAStools():
-      raise Exception('Could not find LAStools')
+      raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
 
-   las2dem_cmd = [os.path.join(dem_common.LASTOOLS_PAID_BIN_PATH,'las2dem.exe'),
+   las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe'),
                   '-i',in_las,
                   '-o',out_dsm]
    
@@ -217,14 +217,14 @@ def las_to_dtm(in_las, out_dtm, keep_las=False):
    """
 
    if not checkPaidLAStools():
-      raise Exception('Could not find LAStools')
+      raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
 
    lasfile_grd_tmp = tempfile.mkstemp(suffix='.LAS', dir=dem_common.TEMP_PATH)[1]
    
    print('Classifying ground returns')
    classify_ground_las(in_las, lasfile_grd_tmp)
 
-   las2dem_cmd = [os.path.join(dem_common.LASTOOLS_PAID_BIN_PATH,'las2dem.exe'),
+   las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe'),
                   '-keep_class', '2',
                   '-i',lasfile_grd_tmp,
                   '-o',out_dtm]

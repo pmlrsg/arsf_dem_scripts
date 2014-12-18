@@ -52,7 +52,6 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
    if command is None:
       raise TypeError("Command to be run must be specified")
 
-
    if isinstance(command,str):
       command_to_run=command.split(' ')
    elif isinstance(command,list):
@@ -66,13 +65,15 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
    redirecttext=[]
    try:
       process=subprocess.Popen(command_to_run,stderr=subprocess.PIPE,stdout=subprocess.PIPE)
-      while process.poll() is None:
-         if redirect==False and not quiet:
-            lines, _, _ =select.select([process.stdout,process.stderr],[],[],0.1)
-            if lines:#if there is data read a line of it
-               someline=lines[0].readline()
-               if someline:
-                  print(someline.rstrip())
+      # If on Windows don't try to run this, as it doesn't work
+      if sys.platform.find('win') < 0:
+         while process.poll() is None:
+            if redirect==False and not quiet:
+               lines, _, _ =select.select([process.stdout,process.stderr],[],[],0.1)
+               if lines:#if there is data read a line of it
+                  someline=lines[0].readline()
+                  if someline:
+                     print(someline.rstrip())
                   
       #Get anything left over in buffer
       stdout,stderr=process.communicate()

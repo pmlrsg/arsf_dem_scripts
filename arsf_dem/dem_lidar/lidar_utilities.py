@@ -318,3 +318,47 @@ def get_lidar_buffered_bb(in_bounding_box, bb_buffer=dem_common.DEFAULT_LIDAR_DE
 
    return out_bounding_box
 
+def las_to_dsm(in_las,out_raster, 
+               resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
+               method='GRASS'):
+   """
+   Helper function to generate a Digital Surface Model (DSM) from a LAS file.
+
+   Utility function to call las_to_dsm from grass_lidar, lastools_lidar or
+   spdlib_lidar
+      
+   Arguments:
+   
+   * in_las - Input LAS file.
+   * out_raster - Output raster (set to None to leave in GRASS database).
+   * bin_size - Resolution to use for output raster.
+   * out_raster_format - GDAL format name for output raster (e.g., ENVI)
+   * out_raster_type - GDAL datatype for output raster (e.g., Float32)
+
+   Returns:
+   
+   None
+
+   Example::
+
+      from arsf_dem import dem_lidar
+      dem_lidar.las_to_dsm('in_las_file.las','out_dsm.dem')
+
+
+   """
+
+   # Get output type from extension (if not specified)
+   out_raster_format = dem_utilities.get_gdal_type_from_path(out_raster)
+
+   if method.upper() == 'GRASS':
+      grass_lidar.las_to_dsm(in_las, out_raster,
+                              bin_size=resolution,
+                              out_raster_format=out_raster_format)
+   elif method.upper() == 'SPDLIB':
+      spdlib_lidar.las_to_dsm(in_las, out_raster,
+                              bin_size=resolution,
+                              out_raster_format=out_raster_format)
+   elif method.upper() == 'LASTOOLS':
+      lastools_lidar.las_to_dsm(in_las, out_raster)
+   else:
+      raise Exception('Invalid method "{}", expected GRASS, SPDLIB or LASTOOLS'.format(method))

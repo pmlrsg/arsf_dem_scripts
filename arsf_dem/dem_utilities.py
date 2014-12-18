@@ -459,7 +459,7 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
    # When subsetting perform horizontal reprojection
    # If output projection is not WGS84LL need to reproject bounding box
    if out_projection is not None and out_projection != 'WGS84LL':
-      temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)[1]
+      tm_fh, temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)
       temp_mosaic_dem_header = os.path.splitext(temp_mosaic_dem)[0] + '.hdr'
 
       bounding_box_reproj = reproject_bounding_box(bounding_box, 
@@ -492,6 +492,7 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
                                         out_projection=out_projection,
                                         out_res=out_res)
 
+         os.close(tm_fh)
          if os.path.isfile(temp_mosaic_dem):
             os.remove(temp_mosaic_dem)
          if os.path.isfile(temp_mosaic_dem_header):
@@ -746,7 +747,7 @@ def reproject_bng_to_wgs84(in_file, out_file, vertical_reproject=False):
             raise Exception('Could not find UKBNG seperation file in speficied location:'
                            ' "{}"'.format(dem_common.UKBNG_SEP_FILE_WGS84))
 
-      temp_reproject_dem = tempfile.mkstemp(prefix='reproject_dem',suffix='.dem', dir=dem_common.TEMP_PATH)[1]
+      tr_fh, temp_reproject_dem = tempfile.mkstemp(prefix='reproject_dem',suffix='.dem', dir=dem_common.TEMP_PATH)
       temp_reproject_dem_header = os.path.splitext(temp_reproject_dem)[0] + '.hdr'
       temp_file_list = [temp_reproject_dem, temp_reproject_dem_header]
 
@@ -769,6 +770,7 @@ def reproject_bng_to_wgs84(in_file, out_file, vertical_reproject=False):
                os.remove(temp_file) 
          return None
 
+      os.close(tr_fh)
       for temp_file in temp_file_list:
          if os.path.isfile(temp_file):
             os.remove(temp_file) 

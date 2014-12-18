@@ -4,12 +4,11 @@ Setup script for arsf_dem
 """
 
 import glob, os
-from numpy.distutils.core import setup
+from distutils.core import setup
 
 scripts_list = ['scripts/create_apl_dem.py',
                 'scripts/create_dem_from_lidar.py',
                 'scripts/demcompare.py']
-
 setup(
   name='arsf_dem',
   version = '0.1',

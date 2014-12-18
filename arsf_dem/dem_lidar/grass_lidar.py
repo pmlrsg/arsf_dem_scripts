@@ -114,7 +114,7 @@ def ascii_to_raster(in_ascii,out_raster=None,
 
    # Create copy of ASCII file, if needed
    if (drop_class is not None) or (keep_class is not None) or first_only or last_only:
-      in_ascii_drop = tempfile.mkstemp(suffix='.txt', prefix='lidar_',dir=dem_common.TEMP_PATH)[1]
+      tmp_ascii_fh, in_ascii_drop = tempfile.mkstemp(suffix='.txt', prefix='lidar_',dir=dem_common.TEMP_PATH)
       grass_library.removeASCIIClass(in_ascii, in_ascii_drop,drop_class=drop_class, first_only=first_only, last_only=last_only)
    else:
       in_ascii_drop = in_ascii
@@ -173,6 +173,7 @@ def ascii_to_raster(in_ascii,out_raster=None,
       dem_utilities.remove_gdal_aux_file(out_raster)
 
    if (drop_class is not None) or (keep_class is not None) or first_only or last_only:
+      os.close(tmp_ascii_fh)
       os.remove(in_ascii_drop)
 
    # Remove GRASS database if requested.
@@ -235,7 +236,7 @@ def las_to_raster(in_las,out_raster=None,
 
    """
 
-   ascii_file_tmp = tempfile.mkstemp(suffix='.txt', prefix='lidar_',dir=dem_common.TEMP_PATH)[1]
+   tmp_ascii_fh, ascii_file_tmp = tempfile.mkstemp(suffix='.txt', prefix='lidar_',dir=dem_common.TEMP_PATH)
    
    if out_raster is not None:
       out_raster_name = os.path.basename(out_raster).replace("-","_")
@@ -269,10 +270,12 @@ def las_to_raster(in_las,out_raster=None,
                                        projection=projection,
                                        bin_size=bin_size)
    except Exception as err:
+      os.close(tmp_ascii_fh)
       os.remove(ascii_file_tmp)
       raise
 
    # Remove ASCII file created
+   os.close(tmp_ascii_fh)
    os.remove(ascii_file_tmp)
 
    return out_raster_name, grassdb_path

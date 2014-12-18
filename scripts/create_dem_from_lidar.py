@@ -158,6 +158,7 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
 
       # Set up list to hold temp files
       temp_file_list = []
+      temp_file_handler_list = []
 
       # Input projection for lidar files
       in_lidar_projection = args.in_projection.upper()
@@ -237,12 +238,13 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
             subset_to_navigation = False
 
       # Create temp file for DEM (if required)
-      temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)[1]
+      tmd_fh, temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)
       temp_mosaic_dem_header = os.path.splitext(temp_mosaic_dem)[0] + '.hdr'
-      temp_lidar_dem = tempfile.mkstemp(prefix='lidar_dem_mosaic',suffix='.dem', dir=dem_common.TEMP_PATH)[1]
+      tld_fh, temp_lidar_dem = tempfile.mkstemp(prefix='lidar_dem_mosaic',suffix='.dem', dir=dem_common.TEMP_PATH)
       temp_lidar_dem_header = os.path.splitext(temp_lidar_dem)[0] + '.hdr'
 
       temp_file_list.extend([temp_mosaic_dem, temp_mosaic_dem_header, temp_lidar_dem, temp_lidar_dem_header])
+      temp_file_handler_list.extend([tmd_fh, tld_fh])
 
       lidar_dem_mosaic = args.outdem
       lidar_dem_mosaic_header = os.path.splitext(lidar_dem_mosaic)[0] + '.hdr'
@@ -349,12 +351,16 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
             pass
 
       # Remove temp files created
+      for temp_handler in temp_file_handler_list:
+         os.close(temp_handler)
       for temp_file in temp_file_list:
          if os.path.isfile(temp_file):
             os.remove(temp_file)
 
    except KeyboardInterrupt:
       # Remove temp files created
+      for temp_handler in temp_file_handler_list:
+         os.close(temp_handler)
       for temp_file in temp_file_list:
          if os.path.isfile(temp_file):
             os.remove(temp_file)
@@ -362,6 +368,9 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
 
    except Exception as err:
       # Remove temp files created
+      raise
+      for temp_handler in temp_file_handler_list:
+         os.close(temp_handler)
       for temp_file in temp_file_list:
          if os.path.isfile(temp_file):
             os.remove(temp_file)
