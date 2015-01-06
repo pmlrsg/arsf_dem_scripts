@@ -8,7 +8,7 @@ from distutils.core import setup
 
 # For windows also copy batch files, incase .py files
 # aren't associated with Python.
-if sys.platform == 'win32'):
+if sys.platform == 'win32':
    scripts_list = ['scripts\\create_apl_dem.py',
                    'scripts\\create_apl_dem.bat',
                    'scripts\\create_dem_from_lidar.py',
