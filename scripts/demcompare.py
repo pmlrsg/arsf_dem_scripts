@@ -167,7 +167,7 @@ def main(commandline):
                lidar_proj_info = dem_common.DEFAULT_LIDAR_PROJECTION_GRASS
             else:
                try: 
-                  lidar_proj_info = dem_library.get_project_proj(commandline.lidar.replace("ascii", "las1.0"))
+                  lidar_proj_info = dem_library.get_project_proj(las_lidar_path)
                except:
                   common_functions.ERROR("There was a problem finding the lidar projection automatically. specify this using -l (UTM##N|S or UKBNG)")
                   exit(1)
