@@ -8,6 +8,16 @@ Welcome to ARSF DEM's documentation!
 
 A library and set of utility scripts for working with Digital Elevation Models.
 
+Tutorials
+---------
+.. toctree::
+      :maxdepth: 2
+
+      installation
+      tutorial_lidar
+
+
+
 Scripts
 -------
 

@@ -3,12 +3,20 @@
 Setup script for arsf_dem
 """
 
-import glob, os
+import glob, os, sys
 from distutils.core import setup
 
-scripts_list = ['scripts/create_apl_dem.py',
-                'scripts/create_dem_from_lidar.py',
-                'scripts/demcompare.py']
+# For windows also copy batch files, incase .py files
+# aren't associated with Python.
+if sys.platform == 'win32'):
+   scripts_list = ['scripts\\create_apl_dem.py',
+                   'scripts\\create_apl_dem.bat',
+                   'scripts\\create_dem_from_lidar.py',
+                   'scripts\\create_dem_from_lidar.bat']
+else:
+   scripts_list = ['scripts/create_apl_dem.py',
+                   'scripts/create_dem_from_lidar.py',
+                   'scripts/demcompare.py']
 setup(
   name='arsf_dem',
   version = '0.1',

@@ -20,7 +20,7 @@ import subprocess
 def WARNING(strOutput):
    """Function that emphasises text in the terminal"""
    #Black background + bold white text
-   if sys.platform.find('win') < 0:
+   if sys.platform == 'win32' < 0:
       print('\033[40;37;1m'+strOutput+'\033[0m')
    # If on windows don't bother trying to change colours, it won't work
    else:
@@ -35,7 +35,7 @@ def ERROR(strOutput,tostdouttoo=False):
    except:
       callerid=""
 
-   if sys.platform.find('win') < 0:
+   if sys.platform == 'win32':
       print('\033[41;33;1m'+"Error in "+callerid+": "+str(strOutput)+'\033[0m', file=sys.stderr)
       if tostdouttoo:
          print('\033[41;33;1m'+"Error in "+callerid+": "+str(strOutput)+'\033[0m', file=sys.stdout)
@@ -66,7 +66,7 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
    try:
       process=subprocess.Popen(command_to_run,stderr=subprocess.PIPE,stdout=subprocess.PIPE)
       # If on Windows don't try to run this, as it doesn't work
-      if sys.platform.find('win') < 0:
+      if sys.platform == 'win32':
          while process.poll() is None:
             if redirect==False and not quiet:
                lines, _, _ =select.select([process.stdout,process.stderr],[],[],0.1)

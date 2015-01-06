@@ -16,6 +16,7 @@ Note, some functions require a valid LAStools license.
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os, sys
 import tempfile
+import glob
 # Import common files
 from .. import dem_common
 from .. import common_functions
@@ -51,7 +52,7 @@ def check_flag(in_flag):
    else:
       return '-' + in_flag
 
-def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,flags=None):
+def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,flags=None,print_only=False):
    """
    Convert LAS files to ASCII using las2txt
    tool.
@@ -79,14 +80,16 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
 
    Can use flags to only keep first (-first_only) or last returns (-last_only)
             
-            
+   If a list 
+
    Arguments:
 
-   * in_las - Input LAS file
-   * out_ascii - Output ASCII file
+   * in_las - Input LAS file / directory containing LAS files
+   * out_ascii - Output ASCII file / directory containing LAS files
    * drop_class - Integer or list of integer class codes to drop
    * keep_class - Integer or list of integer class codes to keep
    * flags - List of additional flags for las2txt
+   * print_only - Don't run commands, only print
 
    Returns:
    
@@ -131,10 +134,43 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
       elif isinstance(flags,str):
          las2txt_cmd = las2txt_cmd + [check_flag(flags)]
 
-   las2txt_cmd = las2txt_cmd + ['-i',in_las,
+   if os.path.isdir(in_las):
+      # If a directoy is passed in
+      # Look for LAS or LAZ files 
+      in_las_list = glob.glob(
+                           os.path.join(in_las,'*LAS'))
+      in_las_list = glob.glob(
+                           os.path.join(in_las,'*LAZ'))
+      in_las_list.extend(glob.glob(
+                           os.path.join(in_las,'*las')))
+      in_las_list.extend(glob.glob(
+                           os.path.join(in_las,'*laz')))
+      if len(in_las_list) == 0:
+         raise Exception('Could not find any LAS files in directory:\n {}'.format(in_las))
+
+      # Check a directory has been provided for output
+      if not os.path.isdir(out_ascii):
+         raise Exception('Must provide path to existing directory if an input directory is provided')
+
+      for in_las_file in in_las_list:
+         out_ascii_base = os.path.splitext(os.path.basename(in_las_file))[0]
+         out_ascii_file = os.path.join(out_ascii, out_ascii_base + '.txt')
+         las2txt_cmd = las2txt_cmd + ['-i',in_las_file,
+                                '-o',out_ascii_file]
+   
+         if print_only:
+            print(" ", " ".join(las2txt_cmd))
+         else:
+            common_functions.CallSubprocessOn(las2txt_cmd)
+
+   else:
+      las2txt_cmd = las2txt_cmd + ['-i',in_las,
                                 '-o',out_ascii]
    
-   common_functions.CallSubprocessOn(las2txt_cmd)
+      if print_only:
+         print(" ", " ".join(las2txt_cmd))
+      else:
+         common_functions.CallSubprocessOn(las2txt_cmd)
 
 def classify_ground_las(in_las,out_las):
    """

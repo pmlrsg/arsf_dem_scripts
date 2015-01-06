@@ -88,29 +88,16 @@ def create_apl_dem_from_mosaic(outdem,
       * remove_grassdb - Remove GRASS database after processing is complete
         
       """
-
-      # If no DEM output is required (left in GRASS database) make temp file
-      temp_dem = False
-      temp_file_list = []
-      if outdem is None:
-         temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)[1]
-         temp_mosaic_dem_header = os.path.splitext(temp_mosaic_dem)[0] + '.hdr' 
-         temp_file_list.extend([temp_mosaic_dem,temp_mosaic_dem_header])
-         temp_dem = True
-         outdem = temp_mosaic_dem
-
-      in_dem_mosaic = None
-
       # ASTER DEM
-      if dem_source.upper() == 'ASTER':
+      if (dem_source is not None) and (dem_source.upper() == 'ASTER'):
          in_dem_mosaic = dem_common.ASTER_MOSAIC_FILE
          in_dem_projection = dem_common.WGS84_PROJ4_STRING
          separation_file = dem_common.WWGSG_FILE
          ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
          out_res = dem_common.ASTER_RES_DEGREES
-      
+
       # NEXTMap DEM
-      elif dem_source.upper() == 'NEXTMAP':
+      elif (dem_source is not None) and (dem_source.upper() == 'NEXTMAP'):
          in_dem_mosaic = dem_common.NEXTMAP_MOSAIC_FILE
          in_dem_projection = dem_common.OSTN02_PROJ4_STRING
          separation_file = dem_common.UKBNG_SEP_FILE_WGS84
@@ -121,7 +108,7 @@ def create_apl_dem_from_mosaic(outdem,
             sys.exit(1) 
 
       # SRTM DEM
-      elif dem_source.upper() == 'SRTM':
+      elif (dem_source is not None) and (dem_source.upper() == 'SRTM'):
          in_dem_mosaic = dem_common.SRTM_MOSAIC_FILE
          in_dem_projection = dem_common.WGS84_PROJ4_STRING
          separation_file = dem_common.WWGSG_FILE
@@ -139,9 +126,21 @@ def create_apl_dem_from_mosaic(outdem,
          else:
             ascii_separation_file = True
          out_res = None
+         if dem_source is None:
+            dem_source = 'DEM'
 
       else:
          raise Exception('DEM Source not recognised and no custom DEM supplied.')
+      
+      # If a name for the output DEM is not provided try to figure out standard name
+      if outdem is None:
+         if not HAVE_DEM_LIBRARY:
+            raise Exception('A name for the output DEM was not supplied and' +
+                        ' the dem_library could not be imported to determine the standard' +
+                        ' ARSF DEM name and path from the project.\nPlease supply a name for the DEM')
+         else:
+            outdem = dem_library.getAplDemName(project, dem_source)
+            print('Saving DEM to: {}'.format(outdem))
 
       if bil_navigation is not None:
          common_functions.PrintTermWidth('Using post processed navigation data from {}'.format(bil_navigation))
@@ -172,12 +171,6 @@ def create_apl_dem_from_mosaic(outdem,
                               grassdb_path=grassdb_path,
                               fill_nulls=fill_nulls)
          
-      if temp_dem:
-         # Remove temp files created
-         for temp_file in temp_file_list:
-            if os.path.isfile(temp_file):
-               os.remove(temp_file)
-
       return out_demfile, grassdb_path
 
 

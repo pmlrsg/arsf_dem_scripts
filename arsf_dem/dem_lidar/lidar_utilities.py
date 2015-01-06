@@ -5,6 +5,7 @@ General utilities for working with LiDAR data to perform common tasks.
 
 Available functions:
 
+* create_patched_lidar_mosaic - Create mosaic from lidar data and patch with another DEM.
 * create_lidar_mosaic - Create mosaic from lidar data.
 * get_lidar_buffered_bb - buffer bounding box by 'DEFAULT_LIDAR_DEM_BUFFER' or user specified buffer.
 
@@ -17,6 +18,7 @@ import tempfile
 
 from .. import dem_common
 from .. import dem_utilities
+from .. import dem_nav_utilities
 from .. import common_functions
 
 from . import grass_lidar
@@ -32,6 +34,264 @@ except ImportError as err:
    print("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
    print(err, file=sys.stderr)
    sys.exit(1)
+
+def create_patched_lidar_mosaic(in_lidar,
+                     outdem,
+                     in_lidar_projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
+                     resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
+                     lidar_format='LAS',
+                     out_projection=None,
+                     screenshot=None,
+                     shaded_relief_screenshots=False,
+                     dem_source=None,
+                     dem_mosaic=None,
+                     project='.',
+                     nav=None,
+                     lidar_bounds=True):
+
+   """
+   Create patched DSM of lidar files and optionally an additional DEM to fill
+   in gaps.
+
+   Used by the command line script 'create_dem_from_lidar.py'
+
+   Arguments:
+
+   * in_lidar - list or directory of lidar files.
+   * outdem - output DEM.
+   * in_lidar_projection - projection of input lidar files.
+   * resolution - resolution to use when creating rasters from lidar files.
+   * lidar_format - format of lidar data (LAS / ASCII).
+   * out_projection - output projection of DEM.
+   * screenshot - directory / file for screenshots.
+   * shaded_relief_screenshots - create shaded relief (hillshade) screenshots.
+   * dem_source - source of DEM to patch with lidar (ASTER / NEXTMAP).
+   * dem_mosaic - dem mosaic to patch with lidar (if not using standard mosaics).
+   * project - project directory, used to calculated DEM bounds for APL.
+   * nav - path to navigation data file.
+   * lidar_bounds - create patched DEM using lidar bounds plus buffer (for when hyperspectral navigation data is not available.
+
+   """
+
+   # Set up list to hold temp files
+   temp_file_list = []
+   temp_file_handler_list = []
+
+   try:
+      # If a string is passed in convert to a list
+      if isinstance(in_lidar, str):
+         in_lidar = [in_lidar]
+
+      # Input projection for lidar files
+      in_lidar_projection = in_lidar_projection.upper()
+      
+      # Set output projection - if not provided assume
+      # the same as input.
+      if out_projection is None:
+         out_patched_projection = in_lidar_projection
+      else:
+         out_patched_projection = out_projection
+
+      # If lidar is in UKBNG and output is not UKBNG need to apply vertical datum
+      # offset.
+      # If not UKBNG (likely UTM) assume no vertical shift is required
+      if in_lidar_projection == 'UKBNG' and out_patched_projection != 'UKBNG':
+         lidar_separation_file = dem_common.UKBNG_SEP_FILE_UKBNG
+         lidar_separation_file_is_ascii = dem_common.UKBNG_SEP_FILE_UKBNG_IS_ASCII
+      else:
+         lidar_separation_file = None
+         lidar_separation_file_is_ascii = False
+
+      # Check if we want to patch with a DEM (default is not)
+      patch_with_dem = False
+   
+      # ASTER DEM
+      if (dem_source is not None) and (dem_source.upper() == 'ASTER'):
+         in_dem_mosaic = dem_common.ASTER_MOSAIC_FILE
+         in_dem_mosaic_projection = 'WGS84LL'
+         # If relative to UKBNG is required apply seperate
+         # shift file equal to (EGM96 to WGS-84) - (UKBNG to WGS-84)
+         if out_patched_projection == 'UKBNG':
+            separation_file = dem_common.EGM96_UKBNG_SEP_FILE_WGS84
+            ascii_separation_file = dem_common.EGM96_UKBNG_SEP_FILE_WGS84_IS_ASCII
+         # Else shift to WGS-84 vertical datum
+         else:
+            separation_file = dem_common.WWGSG_FILE
+            ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
+         out_res = dem_common.ASTER_RES_DEGREES
+         patch_with_dem = True
+      
+      # NEXTMap DEM
+      elif (dem_source is not None) and (dem_source.upper() == 'NEXTMAP'):
+         in_dem_mosaic = dem_common.NEXTMAP_MOSAIC_FILE
+         in_dem_mosaic_projection = 'UKBNG'
+         # If output projection if UKBNG no vertical shift is required
+         if out_patched_projection == 'UKBNG':
+            separation_file = None
+            ascii_separation_file = False
+         # Else shift to WGS-84 vertical datum
+         else:
+            separation_file = dem_common.UKBNG_SEP_FILE_UKBNG
+            ascii_separation_file = dem_common.UKBNG_SEP_FILE_UKBNG_IS_ASCII
+         out_res = dem_common.NEXTMAP_RES_DEGREES
+         patch_with_dem=True
+      
+      # Custom DEM
+      elif demmosaic is not None:
+         in_dem_mosaic = demmosaic
+         in_dem_mosaic_projection = 'WGS84LL'
+         separation_file = None
+         ascii_separation_file = False
+         out_res = None
+         patch_with_dem = True
+
+      # Check if patched DEM should be subset to navigation or based on the DEM mosaic
+      subset_to_navigation = False
+      if patch_with_dem:
+         if (project != ".") or (nav is not None) or not lidar_bounds:
+            # If any of these options are set probably want to subset to hyperspectral
+            subset_to_navigation = True
+         else:
+            subset_to_navigation = False
+
+      # Create temp file for DEM (if required)
+      tmd_fh, temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)
+      temp_mosaic_dem_header = os.path.splitext(temp_mosaic_dem)[0] + '.hdr'
+      tld_fh, temp_lidar_dem = tempfile.mkstemp(prefix='lidar_dem_mosaic',suffix='.dem', dir=dem_common.TEMP_PATH)
+      temp_lidar_dem_header = os.path.splitext(temp_lidar_dem)[0] + '.hdr'
+
+      temp_file_list.extend([temp_mosaic_dem, temp_mosaic_dem_header, temp_lidar_dem, temp_lidar_dem_header])
+      temp_file_handler_list.extend([tmd_fh, tld_fh])
+
+      lidar_dem_mosaic = outdem
+      lidar_dem_mosaic_header = os.path.splitext(lidar_dem_mosaic)[0] + '.hdr'
+      outdem_header = os.path.splitext(outdem)[0] + '.hdr'
+
+      # If a single file is provided for the screenshot and patching with a DEM 
+      # want screenshot of patched DEM not lidar.
+      if (screenshot is not None and not os.path.isdir(screenshot)) and patch_with_dem:
+         lidar_screenshots = None
+      else:
+         lidar_screenshots = screenshot
+   
+      # Create DSM from individual lidar lines and patch together
+      create_lidar_mosaic(in_lidar,lidar_dem_mosaic,
+                     out_screenshot=lidar_screenshots,
+                     shaded_relief_screenshots=shaded_relief_screenshots,
+                     in_projection=in_lidar_projection,
+                     resolution=resolution,
+                     nodata=dem_common.NODATA_VALUE,
+                     lidar_format=lidar_format,
+                     raster_type='DSM',
+                     fill_nulls=False)
+      
+      # Check if input projection is equal to output projection
+      if in_lidar_projection != out_patched_projection:
+         dem_utilities.call_gdalwarp(lidar_dem_mosaic, temp_lidar_dem,
+                s_srs=grass_library.grass_projection_to_proj4(in_lidar_projection),
+                t_srs=grass_library.grass_projection_to_proj4(out_patched_projection))
+
+         # Check if a vertical datum shift is required.
+         # At the moment only consider UKBNG to WGS84LL
+         if in_lidar_projection == 'UKBNG' and out_patched_projection == 'WGS84LL':
+            print('Applying vertical offset to LiDAR mosaic')
+            dem_utilities.offset_null_fill_dem(temp_lidar_dem, temp_lidar_dem, 
+                                                    import_to_grass=True,
+                                                    separation_file=dem_common.UKBNG_SEP_FILE_WGS84,
+                                                    ascii_separation_file=dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII,
+                                                    fill_nulls=False,
+                                                    nodata=dem_common.NODATA_VALUE,
+                                                    remove_grassdb=False)
+         lidar_dem_mosaic = temp_lidar_dem
+
+      if patch_with_dem:
+         print('')
+         common_functions.PrintTermWidth('Patching with {}'.format(in_dem_mosaic), padding_char='*')
+         print('')
+         if subset_to_navigation:
+            try:
+               dem_nav_utilities.subset_dem_to_nav(in_dem_mosaic, 
+                                 nav, project,
+                                 out_demfile=temp_mosaic_dem,
+                                 separation_file=separation_file,
+                                 ascii_separation_file=ascii_separation_file,
+                                 in_dem_projection=grass_library.grass_projection_to_proj4(in_dem_mosaic_projection),
+                                 out_projection=grass_library.grass_projection_to_proj4(out_patched_projection),
+                                 nodata=dem_common.NODATA_VALUE,
+                                 out_res=None,
+                                 remove_grassdb=True, 
+                                 fill_nulls=True)        
+            except Exception as err:
+               common_functions.ERROR('Could not subset DEM to navigation data.\n{}.'.format(err))
+               print('If the DEM is not required for use in APL, try using the "--lidar_bounds" flag')
+               raise
+         else:
+            print('Getting bounding box from LiDAR mosaic')
+            # Get bounding box from output lidar mosaic
+            lidar_bb = dem_utilities.get_gdal_dataset_bb(lidar_dem_mosaic, output_ll=True)
+            buffered_lidar_bb = get_lidar_buffered_bb(lidar_bb)
+
+            dem_utilities.subset_dem_to_bounding_box(in_dem_mosaic, 
+                                 out_demfile=temp_mosaic_dem, 
+                                 bounding_box=buffered_lidar_bb,
+                                 separation_file=separation_file,
+                                 ascii_separation_file=ascii_separation_file,
+                                 in_dem_projection=grass_library.grass_projection_to_proj4(in_dem_mosaic_projection),
+                                 out_projection=grass_library.grass_projection_to_proj4(out_patched_projection),
+                                 nodata=dem_common.NODATA_VALUE,
+                                 out_res=None,
+                                 remove_grassdb=True, 
+                                 fill_nulls=True) 
+
+         dem_utilities.patch_files([lidar_dem_mosaic, temp_mosaic_dem], 
+                     out_file=outdem,
+                     import_to_grass=True,
+                     nodata=dem_common.NODATA_VALUE,
+                     projection=out_patched_projection,
+                     grassdb_path=None,
+                     remove_grassdb=True) 
+
+      # Check if file was reprojected but not patched (if so need to move from temp file)
+      elif in_lidar_projection != out_patched_projection:
+         shutil.move(lidar_dem_mosaic,outdem)
+         shutil.move(lidar_dem_mosaic_header,outdem_header)
+
+      # Try to export screenshot if path or file is provided.
+      # Only needed if patching with DEM, else will have been done earlier.
+      if patch_with_dem:
+         try:
+            if (screenshot is not None) and not os.path.isdir(screenshot):
+               dem_utilities.export_screenshot(outdem, screenshot,shaded_relief=shaded_relief_screenshots)
+            elif os.path.isdir(screenshot):
+               mosaic_screenshot = dem_utilities.get_screenshot_path(outdem, screenshot)
+               dem_utilities.export_screenshot(outdem, mosaic_screenshot, shaded_relief=shaded_relief_screenshots)
+         except TypeError:
+            pass
+
+      # Remove temp files created
+      for temp_handler in temp_file_handler_list:
+         os.close(temp_handler)
+      for temp_file in temp_file_list:
+         if os.path.isfile(temp_file):
+            os.remove(temp_file)
+
+   except KeyboardInterrupt:
+      # Remove temp files created
+      for temp_handler in temp_file_handler_list:
+         os.close(temp_handler)
+      for temp_file in temp_file_list:
+         if os.path.isfile(temp_file):
+            os.remove(temp_file)
+      raise
+
+   except Exception as err:
+      # Remove temp files created
+      for temp_handler in temp_file_handler_list:
+         os.close(temp_handler)
+      for temp_file in temp_file_list:
+         if os.path.isfile(temp_file):
+            os.remove(temp_file)
+      raise
 
 def create_lidar_mosaic(in_lidar_files, out_mosaic, 
                      out_screenshot=None,
@@ -71,7 +331,7 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
       * DTM (Digital Terrain Model) - Uses last returns, each pixel represents the ground. In reality this isn't a true DTM as it will depend on where the last return was from.
       * DEM (Digital Elevation Model) - Uses all returns.
       * UNFILTEREDDEM - Uses all returns, keeps points classified as noise.
-      * Intensity - Intensity image.
+      * INTENSITY - Intensity image.
 
    * fill_nulls - Null fill values
    * remove_grassdb - Remove GRASS database after processing is complete
@@ -145,7 +405,8 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
             lidar_format = 'ASCII'
    else:
       in_lidar_files_list = in_lidar_files
-      if os.path.splitext(in_lidar_files_list[0])[-1].lower() != '.las':
+      if os.path.splitext(in_lidar_files_list[0])[-1].lower() != '.las' \
+        and os.path.splitext(in_lidar_files_list[0])[-1].lower() != '.laz':
          lidar_format = 'ASCII' 
 
    if len(in_lidar_files_list) == 0:
@@ -240,10 +501,10 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                                      projection=in_projection,
                                      grassdb_path=grassdb_path,
                                      remove_grassdb=False)
+      print('Tiles patched OK')
    else:
       patched_name = raster_names[0] 
 
-   print('Tiles patched OK')
    # Fill null values
    if fill_nulls:
       patched_name, grassdb_path = dem_utilities.offset_null_fill_dem(patched_name, out_mosaic, 
@@ -318,47 +579,4 @@ def get_lidar_buffered_bb(in_bounding_box, bb_buffer=dem_common.DEFAULT_LIDAR_DE
 
    return out_bounding_box
 
-def las_to_dsm(in_las,out_raster, 
-               resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
-               method='GRASS'):
-   """
-   Helper function to generate a Digital Surface Model (DSM) from a LAS file.
 
-   Utility function to call las_to_dsm from grass_lidar, lastools_lidar or
-   spdlib_lidar
-      
-   Arguments:
-   
-   * in_las - Input LAS file.
-   * out_raster - Output raster (set to None to leave in GRASS database).
-   * bin_size - Resolution to use for output raster.
-   * out_raster_format - GDAL format name for output raster (e.g., ENVI)
-   * out_raster_type - GDAL datatype for output raster (e.g., Float32)
-
-   Returns:
-   
-   None
-
-   Example::
-
-      from arsf_dem import dem_lidar
-      dem_lidar.las_to_dsm('in_las_file.las','out_dsm.dem')
-
-
-   """
-
-   # Get output type from extension (if not specified)
-   out_raster_format = dem_utilities.get_gdal_type_from_path(out_raster)
-
-   if method.upper() == 'GRASS':
-      grass_lidar.las_to_dsm(in_las, out_raster,
-                              bin_size=resolution,
-                              out_raster_format=out_raster_format)
-   elif method.upper() == 'SPDLIB':
-      spdlib_lidar.las_to_dsm(in_las, out_raster,
-                              bin_size=resolution,
-                              out_raster_format=out_raster_format)
-   elif method.upper() == 'LASTOOLS':
-      lastools_lidar.las_to_dsm(in_las, out_raster)
-   else:
-      raise Exception('Invalid method "{}", expected GRASS, SPDLIB or LASTOOLS'.format(method))

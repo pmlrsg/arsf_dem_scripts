@@ -930,7 +930,7 @@ def call_gdalwarp(in_file, out_file, s_srs=None, t_srs=dem_common.WGS84_PROJ4_ST
 
    gdalwarp_cmd.extend(['-t_srs','"{}"'.format(t_srs)])
    gdalwarp_cmd.extend(['-of',of,'-ot',ot,
-                        '-co',co])
+                        '-co','"{}"'.format(co)])
    gdalwarp_cmd.extend(['-r',r])
    gdalwarp_cmd.extend([in_file, out_file])
 

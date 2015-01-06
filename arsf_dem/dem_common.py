@@ -23,6 +23,7 @@ from __future__ import print_function # Import print function (so we can use Pyt
 import os, sys
 import glob
 import math
+import tempfile
 try:
    import ConfigParser
 except ImportError:
@@ -67,40 +68,44 @@ def get_grass_lib_path():
    """
    LINUX64_GRASS_LIB_PATH = '/usr/lib64/grass'
    LINUX32_GRASS_LIB_PATH = '/usr/lib/grass'
-   OSX_GRASS_LIB_PATH = '/Aplications/GRASS/'
+   OSX_GRASS_LIB_PATH = '/Applications/GRASS-*.app/Contents/MacOS/'
    WIN_GRASS_LIB_PATH = 'C:/OSGeo4W/apps/grass/grass'
 
-   if sys.platform.find('win') > -1:
+   if sys.platform == 'darwin':
+      grass_version_path = glob.glob(OSX_GRASS_LIB_PATH)
+      if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
+         return grass_version_path[-1]
+      else:
+         print('Could not find GRASS library. Tried default location of {}.Set in Config file using "GRASS_LIB_PATH"'.format(OSX_GRASS_LIB_PATH),file=sys.stderr)
+         sys.exit(1)
+   elif sys.platform == 'win32':
       # As under Windows OSGeo4W stores with version name, run Glob to try
       # and find path from root
       grass_version_path = glob.glob(WIN_GRASS_LIB_PATH + '*')
       if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
          return grass_version_path[-1]
       else:
-         print('Could not find GRASS library. Set in Config file using "GRASS_LIB_PATH"',file=sys.stderr)
+         print('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(WIN_GRASS_LIB_PATH),file=sys.stderr)
          sys.exit(1)
-   elif sys.platform.find('osx') > -1:
-      if os.path.isdir(OSX_GRASS_LIB_PATH):
-         return OSX_GRASS_LIB_PATH
-      else:
-         print('Could not find GRASS library. Set in Config file using "GRASS_LIB_PATH"',file=sys.stderr)
-         sys.exit(1)
-   # If its not Windows or OS X, assume Linux or something UNIX-like
+    # If its not Windows or OS X, assume Linux or something UNIX-like
    else:
       if os.path.isdir(LINUX64_GRASS_LIB_PATH):
          return LINUX64_GRASS_LIB_PATH
       elif os.path.isdir(LINUX32_GRASS_LIB_PATH):
          return LINUX32_GRASS_LIB_PATH
       else:
-         print('Could not find GRASS library. Set in Config file using "GRASS_LIB_PATH"',file=sys.stderr)
+         print('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(LINUX64_GRASS_LIB_PATH),file=sys.stderr)
          sys.exit(1)
 
-def get_grass_python_lib_path(GRASS_LIB_PATH=get_grass_lib_path()):
+def get_grass_python_lib_path(GRASS_LIB_PATH=None):
    """
    Try to find GRASS Python library path. 
    If GRASS_LIB_PATH is passed in will use this, otherwise will try default
    locations.
    """
+   if GRASS_LIB_PATH is None:
+      GRASS_LIB_PATH = get_grass_lib_path()
+
    GRASS_PYTHON_LIB_PATH = os.path.join(GRASS_LIB_PATH,'etc','python')
    
    if os.path.isdir(GRASS_PYTHON_LIB_PATH):
@@ -127,8 +132,10 @@ def get_temp_path():
       except KeyError:
          pass
 
-   if TEMP_PATH is None:
+   if TEMP_PATH is None and sys.platform.find('win') != 0:
       TEMP_PATH = '/tmp'
+   else:
+      TEMP_PATH = tempfile.gettempdir() 
 
    return TEMP_PATH
 
@@ -143,7 +150,7 @@ def get_lastools_path():
    'C:\LAStools'
    """
 
-   if sys.platform.find('win') > -1:
+   if sys.platform == 'win32':
       win_lastools_path = os.path.join('C:\LAStools','bin')
       if os.path.isdir(win_lastools_path):
          return win_lastools_path
@@ -183,11 +190,17 @@ if not read_config:
 TEMP_PATH = get_config_fallback(config,'system','TEMP_PATH',fallback=get_temp_path())
 
 #: Path for GRASS Library
-GRASS_LIB_PATH = get_config_fallback(config,'grass','GRASS_LIB_PATH',fallback=get_grass_lib_path())
+GRASS_LIB_PATH = get_config_fallback(config,'grass','GRASS_LIB_PATH',fallback=None)
+
+if GRASS_LIB_PATH is None:
+   GRASS_LIB_PATH = get_grass_lib_path()
 
 #: Path for GRASS Python library
 GRASS_PYTHON_LIB_PATH = get_config_fallback(config,'grass','GRASS_PYTHON_LIB_PATH',
-                           fallback=get_grass_python_lib_path(GRASS_LIB_PATH))
+                           fallback=None)
+
+if GRASS_PYTHON_LIB_PATH is None:
+   GRASS_PYTHON_LIB_PATH = get_grass_python_lib_path(GRASS_LIB_PATH=GRASS_LIB_PATH)
 
 # Set environmental variable for GRASS lib
 os.environ['GISBASE'] = GRASS_LIB_PATH
