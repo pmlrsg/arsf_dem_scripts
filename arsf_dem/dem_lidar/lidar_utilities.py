@@ -135,6 +135,22 @@ def create_patched_lidar_mosaic(in_lidar,
             ascii_separation_file = dem_common.UKBNG_SEP_FILE_UKBNG_IS_ASCII
          out_res = dem_common.NEXTMAP_RES_DEGREES
          patch_with_dem=True
+
+      # SRTM DEM
+      elif (dem_source is not None) and (dem_source.upper() == 'SRTM'):
+         in_dem_mosaic = dem_common.SRTM_MOSAIC_FILE
+         in_dem_projection = dem_common.WGS84_PROJ4_STRING
+         # If relative to UKBNG is required apply seperate
+         # shift file equal to (EGM96 to WGS-84) - (UKBNG to WGS-84)
+         if out_patched_projection == 'UKBNG':
+            separation_file = dem_common.EGM96_UKBNG_SEP_FILE_WGS84
+            ascii_separation_file = dem_common.EGM96_UKBNG_SEP_FILE_WGS84_IS_ASCII
+         # Else shift to WGS-84 vertical datum
+         else:
+            separation_file = dem_common.WWGSG_FILE
+            ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
+         out_res = dem_common.SRTM_RES_DEGREES
+         patch_with_dem = True
       
       # Custom DEM
       elif demmosaic is not None:
@@ -210,9 +226,8 @@ def create_patched_lidar_mosaic(in_lidar,
          print('')
          if subset_to_navigation:
             try:
-               dem_nav_utilities.subset_dem_to_nav(in_dem_mosaic, 
+               dem_nav_utilities.subset_dem_to_nav(in_dem_mosaic, temp_mosaic_dem,
                                  nav, project,
-                                 out_demfile=temp_mosaic_dem,
                                  separation_file=separation_file,
                                  ascii_separation_file=ascii_separation_file,
                                  in_dem_projection=grass_library.grass_projection_to_proj4(in_dem_mosaic_projection),
@@ -223,7 +238,7 @@ def create_patched_lidar_mosaic(in_lidar,
                                  fill_nulls=True)        
             except Exception as err:
                common_functions.ERROR('Could not subset DEM to navigation data.\n{}.'.format(err))
-               print('If the DEM is not required for use in APL, try using the "--lidar_bounds" flag')
+               print('If the DEM is not required for use in APL, try setting the "lidar_bounds" flag')
                raise
          else:
             print('Getting bounding box from LiDAR mosaic')
@@ -232,7 +247,7 @@ def create_patched_lidar_mosaic(in_lidar,
             buffered_lidar_bb = get_lidar_buffered_bb(lidar_bb)
 
             dem_utilities.subset_dem_to_bounding_box(in_dem_mosaic, 
-                                 out_demfile=temp_mosaic_dem, 
+                                 temp_mosaic_dem, 
                                  bounding_box=buffered_lidar_bb,
                                  separation_file=separation_file,
                                  ascii_separation_file=ascii_separation_file,

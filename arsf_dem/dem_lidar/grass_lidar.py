@@ -255,6 +255,7 @@ def las_to_raster(in_las,out_raster=None,
    
    # Convert LAS to ASCII
    print('Converting LAS file to ASCII')
+
    lastools_lidar.convert_las_to_ascii(in_las,ascii_file_tmp,
                                        drop_class=drop_class,
                                        keep_class=keep_class,

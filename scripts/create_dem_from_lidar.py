@@ -135,6 +135,11 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
                           help='Patch with Nextmap data ({})'.format(dem_common.NEXTMAP_MOSAIC_FILE),
                           default=False,
                           required=False)
+      parser.add_argument('--srtm',
+                          action='store_true',
+                          help='Use SRTM data ({})'.format(dem_common.SRTM_MOSAIC_FILE),
+                          default=False,
+                          required=False)
       parser.add_argument('--hyperspectral_bounds',
                           action='store_true',
                           help='''If patching with another DEM, get extent from hyperspectral navigation data,
@@ -163,6 +168,9 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
       # ASTER DEM
       if args.aster:
          dem_source = 'ASTER'
+      # SRTM DEM
+      elif args.srtm:
+         dem_source = 'SRTM'
       # NEXTMap DEM
       elif args.nextmap:
          dem_source = 'NEXTMAP'

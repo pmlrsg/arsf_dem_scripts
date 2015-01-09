@@ -257,7 +257,7 @@ ASTER_MOSAIC_FILE = get_config_fallback(config,'dems','ASTER_MOSAIC_FILE',
 #: Resolution of ASTER DEM (in degrees)
 ASTER_RES_DEGREES = (0.000277777777778,-0.000277777777778)
 #: Resolution of ASTER DEM (in metres)
-ASTER_RES_METRES = (15,-15)
+ASTER_RES_METRES = (30,-30)
 
 #: Default location of NextMap DEM mosaic 
 NEXTMAP_MOSAIC_FILE = get_config_fallback(config,'dems','NEXTMAP_MOSAIC_FILE',
@@ -275,7 +275,6 @@ SRTM_RES_DEGREES = (0.000833333333333,-0.000833333333333)
 #: Resolution of SRTM DEM (in metres)
 SRTM_RES_METRES = (90,-90)
 
-                     
 # Set locations of separation files
 #: Default location of vertical separation file between Newlyn and WGS-84 datum (WGS84LL projection)
 UKBNG_SEP_FILE_WGS84  = get_config_fallback(config,'separationfiles','UKBNG_SEP_FILE_WGS84',
