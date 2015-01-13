@@ -269,7 +269,7 @@ def readLidar(lasfolder,location=None,patch=True,datacolumn=dem_common.LIDAR_ASC
 
 
 #Note this is just a wrapper that converts the las to ascii and calls readAsciiLidar
-def readLasLidar(lasfolder,location=None,patch=True,datacolumn=dem_common.LIDAR_ASCII_ORDER['z'],resolution=2):
+def readLasLidar(lasfolder,location=None,patch=True,datacolumn=dem_common.LIDAR_ASCII_ORDER['z'],resolution=dem_common.DEFAULT_LIDAR_RES_METRES):
    """Function readLasLidar
 
       Wrapper to convert LAS files into ASCII LiDAR files and then call readAsciiLidar
@@ -284,25 +284,9 @@ def readLasLidar(lasfolder,location=None,patch=True,datacolumn=dem_common.LIDAR_
    """
    #Create a tmp folder for storing the ascii files
    tempdir=tempfile.mkdtemp()
-   #Convert the LAS files into ASCII files
-   print("Attempting to convert LAS files to ASCII.")
-   if type(lasfolder) is list:
-      #Assume a list of filenames
-      for item in lasfolder:
-         command=['las2txt.sh',item,tempdir]
-         common_functions.CallSubprocessOn(command)
-   elif os.path.isdir(lasfolder):
-      #A directory
-      command=['las2txt.sh',lasfolder,tempdir]
-      common_functions.CallSubprocessOn(command)
-   elif os.path.isfile(lasfolder):
-      #A file
-      command=['las2txt.sh',lasfolder,tempdir]
-      common_functions.CallSubprocessOn(command)
-   else:
-      #What is it?
-      common_functions.ERROR("Expected a list of files, a single file or a directory name. I got %s"%lasfolder)
-      return None
+
+   from .dem_lidar import lastools_lidar
+   lastools_lidar.convert_las_to_ascii(lasfolder, tempdir)
 
    #Call readAsciiLidar on the files
    return readAsciiLidar(tempdir,location=location,patch=patch,datacolumn=datacolumn,resolution=resolution)

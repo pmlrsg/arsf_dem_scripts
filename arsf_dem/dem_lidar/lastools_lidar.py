@@ -134,7 +134,19 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
       elif isinstance(flags,str):
          las2txt_cmd_base = las2txt_cmd_base + [check_flag(flags)]
 
-   if os.path.isdir(in_las):
+   if isinstance(in_las,list):
+      # If a list is passed in, run for each file
+      for in_las_file in in_las:
+         out_ascii_base = os.path.splitext(os.path.basename(in_las_file))[0]
+         out_ascii_file = os.path.join(out_ascii, out_ascii_base + '.txt')
+         las2txt_cmd = las2txt_cmd_base + ['-i',in_las_file,
+                                '-o',out_ascii_file]
+         if print_only:
+            print(" ", " ".join(las2txt_cmd))
+         else:
+            common_functions.CallSubprocessOn(las2txt_cmd)
+
+   elif os.path.isdir(in_las):
       # If a directoy is passed in
       # Look for LAS or LAZ files 
       in_las_list = glob.glob(
