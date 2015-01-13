@@ -41,6 +41,8 @@ import numpy
 # Import common files
 from . import dem_common
 from . import common_functions
+from . import grass_library
+
 # Import GRASS
 sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
 try:
@@ -50,11 +52,6 @@ except ImportError as err:
    print("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
    print(err, file=sys.stderr)
    sys.exit(1)
-# Import PML Utilities
-try:
-   import grass_library
-except ImportError:
-   from . import grass_library
 
 # Try to import GDAL
 HAVE_GDAL=True

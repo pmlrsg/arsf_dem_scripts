@@ -32,12 +32,7 @@ import numpy
 from . import dem_common
 from . import dem_utilities
 from . import common_functions
-
-# Import PML Utilities
-try:
-   import grass_library
-except ImportError as err:
-   from . import grass_library
+from . import grass_library
 
 # Check DEM library is available
 # this is only used on ARSF systems

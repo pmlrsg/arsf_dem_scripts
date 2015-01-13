@@ -20,12 +20,7 @@ import tempfile
 import csv
 # Import common files
 from .. import dem_common
-
-# Import PML Utilities
-try:
-   import common_functions
-except ImportError:
-   from .. import common_functions
+from .. import common_functions
 
 def get_ascii_bounds(in_ascii):
    """

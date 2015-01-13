@@ -607,7 +607,7 @@ def setLocation(projection):
       grass.run_command('g.gisenv', 
                   set="LOCATION_NAME=%s" % (location))
    return location
-#end functio
+#end function
 
 def newLocation(projection):
    """
