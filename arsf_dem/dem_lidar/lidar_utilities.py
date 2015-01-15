@@ -224,6 +224,7 @@ def create_patched_lidar_mosaic(in_lidar,
          print('')
          common_functions.PrintTermWidth('Patching with {}'.format(in_dem_mosaic), padding_char='*')
          print('')
+         subset_to_nav_failed = False
          if subset_to_navigation:
             try:
                dem_nav_utilities.subset_dem_to_nav(in_dem_mosaic, temp_mosaic_dem,
@@ -238,9 +239,10 @@ def create_patched_lidar_mosaic(in_lidar,
                                  fill_nulls=True)        
             except Exception as err:
                common_functions.ERROR('Could not subset DEM to navigation data.\n{}.'.format(err))
-               print('If the DEM is not required for use in APL, try setting the "lidar_bounds" flag')
-               raise
-         else:
+               common_functions.WARNING('Will try to subset using lidar bounds, coverage of DEM might not be sufficient for hyperspectral processing')
+               subset_to_nav_failed = True
+
+         if not subset_to_navigation or (subset_to_navigation and subset_to_nav_failed):
             print('Getting bounding box from LiDAR mosaic')
             # Get bounding box from output lidar mosaic
             lidar_bb = dem_utilities.get_gdal_dataset_bb(lidar_dem_mosaic, output_ll=True)
