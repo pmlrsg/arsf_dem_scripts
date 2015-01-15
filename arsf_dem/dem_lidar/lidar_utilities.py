@@ -139,7 +139,7 @@ def create_patched_lidar_mosaic(in_lidar,
       # SRTM DEM
       elif (dem_source is not None) and (dem_source.upper() == 'SRTM'):
          in_dem_mosaic = dem_common.SRTM_MOSAIC_FILE
-         in_dem_projection = dem_common.WGS84_PROJ4_STRING
+         in_dem_mosaic_projection = 'WGS84LL'
          # If relative to UKBNG is required apply seperate
          # shift file equal to (EGM96 to WGS-84) - (UKBNG to WGS-84)
          if out_patched_projection == 'UKBNG':

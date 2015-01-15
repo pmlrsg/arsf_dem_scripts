@@ -269,11 +269,11 @@ NEXTMAP_RES_METRES = (5,-5)
 
 #: Default location of SRTM Mosaic
 SRTM_MOSAIC_FILE = get_config_fallback(config,'dems','SRTM_MOSAIC_FILE',
-            fallback='/users/rsg/arsf/scratch_space/SRTM/srtm_global_mosaic_90m.tif')
+            fallback='/users/rsg/arsf/SRTM/global/srtm_global_mosaic_90m.tif')
 #: Resolution of SRTM DEM (in degrees)
-SRTM_RES_DEGREES = (0.000833333333333,-0.000833333333333)
+SRTM_RES_DEGREES = (0.000277777777778,-0.000277777777778)
 #: Resolution of SRTM DEM (in metres)
-SRTM_RES_METRES = (90,-90)
+SRTM_RES_METRES = (30,-30)
 
 # Set locations of separation files
 #: Default location of vertical separation file between Newlyn and WGS-84 datum (WGS84LL projection)
