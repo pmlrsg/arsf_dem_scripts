@@ -253,7 +253,7 @@ DEFAULT_APL_DEM_BUFFER = {'N' : 0.05,
 
 #: Default location of ASTER DEM mosaic
 ASTER_MOSAIC_FILE = get_config_fallback(config,'dems','ASTER_MOSAIC_FILE',
-            fallback='/users/rsg/arsf/aster/aster_15m_dem_mosaic.vrt')
+            fallback='/users/rsg/arsf/aster/aster_v2_dem_mosaic.vrt')
 #: Resolution of ASTER DEM (in degrees)
 ASTER_RES_DEGREES = (0.000277777777778,-0.000277777777778)
 #: Resolution of ASTER DEM (in metres)
