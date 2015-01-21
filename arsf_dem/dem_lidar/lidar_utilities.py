@@ -153,8 +153,8 @@ def create_patched_lidar_mosaic(in_lidar,
          patch_with_dem = True
       
       # Custom DEM
-      elif demmosaic is not None:
-         in_dem_mosaic = demmosaic
+      elif dem_mosaic is not None:
+         in_dem_mosaic = dem_mosaic
          in_dem_mosaic_projection = 'WGS84LL'
          separation_file = None
          ascii_separation_file = False
