@@ -168,6 +168,7 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
       dem_nav_utilities.create_apl_dem_from_mosaic(args.outdem,
                      dem_source=dem_source,
                      dem_mosaic=args.demmosaic,
+                     separation_file=args.separation_file,
                      project=args.project,
                      nav=args.nav,
                      bil_navigation=args.bil_navigation,

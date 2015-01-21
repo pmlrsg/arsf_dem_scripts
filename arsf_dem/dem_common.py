@@ -24,9 +24,9 @@ import os, sys
 import glob
 import math
 import tempfile
-try:
+if sys.version_info[0] < 3:
    import ConfigParser
-except ImportError:
+else:
    import configparser as ConfigParser
 
 def get_config_fallback(config, section, option, fallback=None):
@@ -151,7 +151,7 @@ def get_lastools_path():
    """
 
    if sys.platform == 'win32':
-      win_lastools_path = os.path.join('C:\LAStools','bin')
+      win_lastools_path = os.path.join('C:/LAStools','bin')
       if os.path.isdir(win_lastools_path):
          return win_lastools_path
       else:

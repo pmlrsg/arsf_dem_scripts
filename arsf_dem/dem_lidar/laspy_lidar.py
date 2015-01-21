@@ -17,7 +17,6 @@ Available Function:
 """
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
-from .. import dem_common
 
 #: laspy library is available
 HAVE_LASPY = True
@@ -105,9 +104,9 @@ def get_las_bounds(in_las, from_header=True):
       min_z = None
       max_z = None
       
-      for in_las_file in in_las_list:
+      for in_las_file in in_las:
          try:
-            las_bounds = laspy_lidar.get_las_bounds_single(in_las_file,
+            las_bounds = get_las_bounds_single(in_las_file,
                                     from_header=from_header)
          
             if min_x is None:

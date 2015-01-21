@@ -50,7 +50,7 @@ Available functions:
 ###################################Imports######################################
 ################################################################################
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
-import os, sys, argparse, re
+import os, sys, re
 # Import from arsf_dem
 from . import common_functions
 from . import dem_common
@@ -63,6 +63,11 @@ try:
 except ImportError as err:
    HAVE_DEM_LIBRARY = False
 
+try:
+   import hdr_files
+except Exception as err:
+   pass
+
 #gives us access to grass and its pythony bits
 sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
 try:
@@ -73,12 +78,10 @@ except ImportError as err:
    print("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
    print(err, file=sys.stderr)
    sys.exit(1)
-import subprocess
 import shutil
 import time
 import numpy
 import tempfile
-import glob
 # Try to import GDAL
 HAVE_GDAL=True
 try:
@@ -170,21 +173,21 @@ def createTiffDem(tilelist, outname, spheroidfile):
    print("Creating patched version of tiles")
    if len(tilelist) != 1:
       for tile in tilelist:
-            tilename=os.path.basename(tile)
-            print(tilename)
-            #import the tile
-            try:
-               grass.run_command("r.in.gdal", 
+         tilename=os.path.basename(tile)
+         print(tilename)
+         #import the tile
+         try:
+            grass.run_command("r.in.gdal", 
                                  input=tile, 
                                  output=tilename, 
                                  overwrite=True, 
                                  flags='e',
                                  quiet=False)
                
-            except:
-               common_functions.WARNING("This tile %s was not imported, might not exist?" % tile)
-               continue
-            tiles.append(tilename)
+         except:
+            common_functions.WARNING("This tile %s was not imported, might not exist?" % tile)
+            continue
+         tiles.append(tilename)
       #if tiles is empty no tiles were imported :(
       if tiles == 0:
          raise Exception
@@ -619,11 +622,11 @@ def newLocation(projection):
       proj4_str = projection
    except Exception:
       grass_loc = projection
-      proj_4 = grass_projection_to_proj4(grass_loc)
+      proj_4_str = grass_projection_to_proj4(grass_loc)
 
    grass.run_command('g.proj', 
                         flags='c', 
-                        proj4=proj_4, 
+                        proj4=proj_4_str, 
                         location=grass_loc)
    return grass_loc
 #end function
@@ -1052,8 +1055,10 @@ def importGdal(inputname,outputname=None,band=None,flags='ok',setnull=True,null=
    if band==None:
       grass.run_command('r.in.gdal',flags=flags,input=inputname,output=outputname)
    else:
-      try: int(band)
-      except: raise Exception("Band must be integer value in importGdal function") 
+      try: 
+         int(band)
+      except: 
+         raise Exception("Band must be integer value in importGdal function") 
       grass.run_command('r.in.gdal',flags=flags,input=inputname,output=outputname,band=band)
 
    if setnull:

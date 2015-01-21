@@ -22,18 +22,7 @@ from .. import dem_nav_utilities
 from .. import common_functions
 
 from . import grass_lidar
-from . import lastools_lidar
-from . import spdlib_lidar
-from . import laspy_lidar
 from .. import grass_library
-
-try:
-   import grass.script as grass
-   import grass.script.setup as gsetup
-except ImportError as err:
-   print("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
-   print(err, file=sys.stderr)
-   sys.exit(1)
 
 def create_patched_lidar_mosaic(in_lidar,
                      outdem,
@@ -133,7 +122,6 @@ def create_patched_lidar_mosaic(in_lidar,
          else:
             separation_file = dem_common.UKBNG_SEP_FILE_UKBNG
             ascii_separation_file = dem_common.UKBNG_SEP_FILE_UKBNG_IS_ASCII
-         out_res = dem_common.NEXTMAP_RES_DEGREES
          patch_with_dem=True
 
       # SRTM DEM
@@ -149,16 +137,14 @@ def create_patched_lidar_mosaic(in_lidar,
          else:
             separation_file = dem_common.WWGSG_FILE
             ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
-         out_res = dem_common.SRTM_RES_DEGREES
          patch_with_dem = True
       
       # Custom DEM
-      elif demmosaic is not None:
-         in_dem_mosaic = demmosaic
+      elif dem_mosaic is not None:
+         in_dem_mosaic = dem_mosaic
          in_dem_mosaic_projection = 'WGS84LL'
          separation_file = None
          ascii_separation_file = False
-         out_res = None
          patch_with_dem = True
 
       # Check if patched DEM should be subset to navigation or based on the DEM mosaic

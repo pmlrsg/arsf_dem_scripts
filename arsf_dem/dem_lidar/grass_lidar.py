@@ -21,7 +21,6 @@ Available Functions:
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os, sys
-import subprocess
 import shutil
 import tempfile
 # Import common files
@@ -37,7 +36,6 @@ from .. import common_functions
 sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
 try:
    import grass.script as grass
-   import grass.script.setup as gsetup
 except ImportError as err:
    print("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
    print(err, file=sys.stderr)
@@ -269,7 +267,10 @@ def las_to_raster(in_las,out_raster=None,
                                        xyz_bounds=xyz_bounds,
                                        val_field=val_field,
                                        projection=projection,
-                                       bin_size=bin_size)
+                                       bin_size=bin_size,
+                                       out_raster_format=out_raster_format,
+                                       out_raster_type=out_raster_type)
+
    except Exception as err:
       os.close(tmp_ascii_fh)
       os.remove(ascii_file_tmp)
