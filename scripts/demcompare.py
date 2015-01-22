@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 """
-A script to test hyperspectral and LiDAR dems provided in deliveries. It reads in the delivery DEM and the sol file, uses demgen.py to work 
+A script to test hyperspectral and LiDAR dems provided in deliveries. It reads in the delivery DEM and the sol file, uses demgen.py to work
 out which tiffs are needed (or accepts a folder full of tiffs if needs be, or reads a dem instead). Then passes the files to grass to patch
 tiles together and add spheroid data and finally performs the comparison of the two DEMs.
 The total calculation is as follows:
@@ -29,27 +29,24 @@ Updated 10/12/2014 by Dan Clewley (dac) to utilise new arsf_dem library.
 """
 # IMPORTS
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
-import os, sys, argparse 
-import glob
+import os, sys, argparse
 import shutil
-import subprocess
 
 # Import ARSF DEM
 try:
-   from arsf_dem import common_functions 
+   from arsf_dem import common_functions
    from arsf_dem import grass_library
    from arsf_dem import dem_nav_utilities
    from arsf_dem import dem_lidar
    from arsf_dem import dem_common
 except ImportError as err:
-   print("Could not import arsf_dem library.\n{}".format(err),file=sys.stderr) 
+   print("Could not import arsf_dem library.\n{}".format(err),file=sys.stderr)
    sys.exit(1)
 
 # Import GRASS
 sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
 try:
    import grass.script as grass
-   import grass.script.setup as gsetup
 except ImportError as err:
    print("Could not import grass library from {}".format(dem_common.GRASS_PYTHON_LIB_PATH), file=sys.stderr)
    print(err, file=sys.stderr)
@@ -93,20 +90,17 @@ def report(dem_dict):
             if it is one solid colour then sample it to check what that colour represents and \
             hope it is 0"
       common_functions.WARNING(warning)
-   
+
 def main(commandline):
    unmaskeduniv=None
 
    #initialise grass and prepares it to take the commands, sets grassrc to our requirements
    tempfolder = grass_library.grassDBsetup()
-   tmp_rast=[]
-   tiles=[]
-   input_dem_location = commandline.dem
    #The base location is kept as WGS84LL if reading aster data, otherwise will be updated to relevant dem type.
    base_location = "WGS84LL"
-   
+
    grass_library.setGrassQuiet(commandline.v)
-   
+
    if commandline.output is not None and os.path.isfile(commandline.output):
       common_functions.ERROR("The output dem you are trying to create (%s) already exists!" % (commandline.output))
       exit(1)
@@ -114,7 +108,7 @@ def main(commandline):
    # Create DEM from another dataset
    if commandline.comparison_dem is None:
       try:
-         # Subset source DEM to navigation data and apply offset so heights are relative 
+         # Subset source DEM to navigation data and apply offset so heights are relative
          # to WGS84 datum. The seperation file to be used will be determined based on
          # the DEM source
          common_functions.PrintTermWidth("Creating comparison DEM from %s data"%(COMPARISON_DEM_SOURCE),padding_char='*')
@@ -142,7 +136,7 @@ def main(commandline):
    except ValueError as v:
       common_functions.ERROR(v)
       exit(1)
-   
+
    # If lidar directory is supplied, assume a lidar comparison
    # lidar files will be read in rasterised, patched together and
    # used to create a mask
@@ -158,15 +152,15 @@ def main(commandline):
          if commandline.las:
             las_lidar_path = commandline.lidar
          else:
-            las_lidar_path = commandline.lidar.replace("ascii", "las1.0") 
+            las_lidar_path = commandline.lidar.replace("ascii", "las1.0")
             if not os.path.isdir(las_lidar_path):
-               las_lidar_path = commandline.lidar.replace("ascii", "las1.2") 
+               las_lidar_path = commandline.lidar.replace("ascii", "las1.2")
             if not os.path.isdir(las_lidar_path):
                common_functions.WARNING("Could not find LAS files based on the ASCII path given")
                common_functions.WARNING("Assuming lidar files use default projection of %s"%(dem_common.DEFAULT_LIDAR_PROJECTION_GRASS))
                lidar_proj_info = dem_common.DEFAULT_LIDAR_PROJECTION_GRASS
             else:
-               try: 
+               try:
                   lidar_proj_info = dem_library.get_project_proj(las_lidar_path)
                except:
                   common_functions.ERROR("There was a problem finding the lidar projection automatically. specify this using -l (UTM##N|S or UKBNG)")
@@ -192,8 +186,8 @@ def main(commandline):
          lidar_format = 'LAS'
       else:
          lidar_format = 'ASCII'
-         
-      las_patched, grassdb_path = dem_lidar.lidar_utilities.create_lidar_mosaic(commandline.lidar, out_mosaic=None, 
+
+      las_patched, grassdb_path = dem_lidar.lidar_utilities.create_lidar_mosaic(commandline.lidar, out_mosaic=None,
                      out_screenshot=None,
                      in_projection=commandline.lidar_projection,
                      resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
@@ -208,31 +202,31 @@ def main(commandline):
 
       if base_location != las_loc:
          grass_library.reproject(las_patched, las_loc, "PERMANENT", las_patched)
-      
+
       ###############
       #Masking
       ###############
-      
-      #need to convert the mask file to rounded int values, because grass doesn't like floats for masks. 
+
+      #need to convert the mask file to rounded int values, because grass doesn't like floats for masks.
       #If grass gets updated this can be removed.
-      grass.mapcalc("las_mask=int(round(%s))"%las_patched, 
+      grass.mapcalc("las_mask=int(round(%s))"%las_patched,
                      overwrite = True)
-      
+
       if input_location != base_location:
          grass.run_command('g.gisenv', set="LOCATION_NAME=%s" % (base_location))
          grass_library.reproject(input_dem, input_location, "PERMANENT", input_dem)
-      
+
       grass_library.createComparisonDem(base_dem, input_dem, "comparison_unmasked")
-         
-      
+
+
       #take statistics before the mask is applied, for completeness.
       unmaskeduniv = grass_library.univariates("comparison_unmasked")
-      
+
       #mask cats '1 thru 6000' avoids 0 asking the entire map, includes the likely heighest points.
-      grass.run_command('r.mask', 
+      grass.run_command('r.mask',
                         input='las_mask',
                         maskcats='1 thru 6000')
-      
+
       #create a comparison of the lidar and input
       grass_library.createComparisonDem(base_dem, las_patched, "lidar_comparison")
       lidaruniv = grass_library.univariates("lidar_comparison")
@@ -244,14 +238,14 @@ def main(commandline):
          grass.run_command('g.gisenv', set="LOCATION_NAME=%s" % (base_location))
          grass_library.reproject(input_dem, input_location, "PERMANENT", input_dem)
          unmaskeduniv = None
-   
+
    if commandline.comparison_dem is None:
       common_functions.PrintTermWidth("Comparing supplied DEM (%s) with one created from %s"%(commandline.dem, COMPARISON_DEM_SOURCE))
    else:
       common_functions.PrintTermWidth("Comparing '%s' with '%s'"%(commandline.dem, commandline.comparison_dem))
 
    grass_library.createComparisonDem(base_dem, input_dem, "comparison")
-   
+
    astersum = grass.read_command("r.sum",
                                  rast=base_dem).replace("SUM = ", "")
    inputsum = grass.read_command("r.sum",
@@ -261,19 +255,19 @@ def main(commandline):
    #set the region to comparison (just in case, otherwise we might get values we don't care about.)
    grass.run_command('g.region',
                      rast="comparison")
-   
+
    #For the output of the created DEM, probably not worth making this into a def of its own right.
    if commandline.output is not None:
-      grass.run_command('r.out.gdal', 
-                        input="comparison", 
-                        output=commandline.output, 
-                        format='ENVI', 
-                        type='Float64', 
+      grass.run_command('r.out.gdal',
+                        input="comparison",
+                        output=commandline.output,
+                        format='ENVI',
+                        type='Float64',
                         flags='c')
-   
+
    statistics = grass_library.univariates("comparison")
    #mode, modevalue = modalavg("comparison")
-   
+
    if commandline.csv:
       try:
          output = [input_dem,
@@ -314,7 +308,7 @@ def main(commandline):
             statistics['cells'],
             statistics['null_cells'],
             tempfolder]
-      
+
       if commandline.lidar is not None:
          try:
             output.extend([lidaruniv['min'],
@@ -327,7 +321,7 @@ def main(commandline):
                lidaruniv['max'],
                lidaruniv['sum'],
                lidaruniv['mean']])
-         
+
       if commandline.script:
          return output
       else:
@@ -353,17 +347,17 @@ def main(commandline):
          print("\n\nUnmasked statistics:")
          report(unmaskeduniv)
       common_functions.PrintTermWidth('',padding_char='*')
-   
+
    if commandline.histogram is not None:
       if os.path.exists(commandline.histogram):
          common_functions.WARNING("The file specified with --histogram already exists, adding _1 to the given name")
          grass_library.histogram("comparison_unmasked", commandline.histogram.replace(".","_1."))
       else:
          grass_library.histogram("comparison_unmasked", commandline.histogram)
-   
+
    grass.run_command('r.mask',
                      flags = 'r')
-   
+
    if commandline.png is not None:
       print("Recoloring for clarity, this might take a while")
       grass.run_command('r.colors',
@@ -381,7 +375,7 @@ def main(commandline):
    if not commandline.keepgrassdb:
       shutil.rmtree(tempfolder)
 #end function
-   
+
 if __name__ == "__main__":
    description_str = '''A script to compare DEMs
 
@@ -398,24 +392,24 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
    try:
       parser = argparse.ArgumentParser(description=description_str,formatter_class=argparse.RawDescriptionHelpFormatter)
       parser.add_argument('-d','--dem',
-                          metavar ='DEM to be tested',help ='The DEM file that will be tested.', 
+                          metavar ='DEM to be tested',help ='The DEM file that will be tested.',
                           required = True)
-      parser.add_argument('-p','--project', 
+      parser.add_argument('-p','--project',
                           metavar ='Main project directory',
                           help ='Main project directory, assumed as . if not given',
                           default='.')
       parser.add_argument('-n', '--nav',metavar ='Nav file',
                           help ='.sol file used to produce the original DEM, a different sol file may give a different result.',
                           default=None)
-      parser.add_argument('-c','--comparison_dem', 
+      parser.add_argument('-c','--comparison_dem',
                           metavar ='Comparison DEM',
                           help ='Compare to a prepared DEM rather than creating a new DEM from %s data. Make sure you input these the right way around.'%COMPARISON_DEM_SOURCE,
                           default=None)
-      parser.add_argument('-l','--lidar_projection', 
+      parser.add_argument('-l','--lidar_projection',
                           metavar ='Lidar projection',
                           help ='UTM zone or UKBNG, must either be formatted UTM##N|S or as UKBNG.',
                           default=None)
-      parser.add_argument('-v', 
+      parser.add_argument('-v',
                           metavar ='Verbosity',
                           help ='0 - 3, 0 being only errors/staging, 3 maximum detail. Default is 0.',
                           default=0)
@@ -434,19 +428,19 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
                           action='store_true',
                           help='Input LiDAR data are in ASCII format (default=True)',
                           default=True,
-                          required=False) 
-      parser.add_argument('--csv', 
-                          action='store_true', 
+                          required=False)
+      parser.add_argument('--csv',
+                          action='store_true',
                           help ='Output as csv format for batch processing.',
                           default=False)
-      parser.add_argument('--script', 
-                          action='store_true', 
+      parser.add_argument('--script',
+                          action='store_true',
                           help ='Use with csv to indicate return rather than print',
                           default=False)
-      parser.add_argument('--histogram', 
+      parser.add_argument('--histogram',
                           help ='Create a histogram and output it as a png at specified location. Include file extension.',
                           default=None)
-      parser.add_argument('--png', 
+      parser.add_argument('--png',
                           help ='Create a PNG of the difference dem at the specified location. Include file extension.',
                           default=None)
       parser.add_argument('--keepgrassdb',

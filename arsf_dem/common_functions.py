@@ -25,7 +25,7 @@ def WARNING(strOutput):
    # If on windows don't bother trying to change colours, it won't work
    else:
       print(strOutput)
-      
+
 def ERROR(strOutput,tostdouttoo=False):
    """Function that emphasises text in the sys.stderr stream"""
 
@@ -74,7 +74,7 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
                   someline=lines[0].readline()
                   if someline:
                      print(someline.rstrip())
-                  
+
       #Get anything left over in buffer
       stdout,stderr=process.communicate()
       if redirect==True:
@@ -86,9 +86,9 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
 
       #still output error if quiet but not if redirecting
       #elif stderr and redirect==False: ERROR(stderr)
-      elif stderr and redirect==False: 
+      elif stderr and redirect==False:
          raise StandardError(stderr)
-      
+
    except StandardError as e:
       raise
 
@@ -97,12 +97,34 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
    else:
       return True
 
+def FileListInDirectory(path):
+   """Function to return a list of files in the given directory"""
+   if not os.path.exists(path):
+      ERROR("Directory does not exist: %s"%path)
+      return False
+
+   try:
+      listing=os.listdir(path)
+   except Exception,e:
+      ERROR("Error getting file listing of directory: %s\n%s"%(path,str(e)))
+      return []
+
+   files=[]
+   for item in listing:
+      fullitem=os.path.join(path,item)
+      if os.path.isdir(fullitem):
+         pass
+      elif os.path.isfile(fullitem):
+         files.append(item)
+   return files
+
+
 def PrintTermWidth(text, padding_char=' '):
    """
-   Prints a string padding with a character so the string is in the centre of the 
+   Prints a string padding with a character so the string is in the centre of the
    terminal.
 
-   Function modified from one in https://bitbucket.org/chchrsc/envmaster by 
+   Function modified from one in https://bitbucket.org/chchrsc/envmaster by
    Sam Gillingham and make available under GPLv2 License
 
    """
@@ -121,7 +143,7 @@ def PrintTermWidth(text, padding_char=' '):
       if text != '':
          paddedtext = ' {} '.format(text)
       # If an empty string is passed in don't want to print a message
-      # just a line of 'padding_chars', in this case don't want a 
+      # just a line of 'padding_chars', in this case don't want a
       # space (as this will look silly).
       else:
          paddedtext = text
@@ -134,6 +156,5 @@ def PrintTermWidth(text, padding_char=' '):
    # Default is to place a single character each side with spaces.
    except Exception:
       paddedtext = ' {0} {1} {0} '.format(padding_char,text)
-   
-   print(paddedtext)
 
+   print(paddedtext)

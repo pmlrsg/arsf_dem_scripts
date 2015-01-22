@@ -12,15 +12,13 @@ License restrictions: Depends on GRASS library, subject to GNU GPL
 """
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
-import os, sys
-import glob
+import sys
 import argparse
-import tempfile
-import shutil
 # Import DEM library
 try:
    from arsf_dem import dem_common
    from arsf_dem import dem_lidar
+   from arsf_dem import common_functions
 except ImportError as err:
    print("Could not import ARSF DEM library.", file=sys.stderr)
    print(err, file=sys.stderr)

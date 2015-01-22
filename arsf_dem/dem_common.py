@@ -4,7 +4,7 @@
 #
 # Author: Dan Clewley (dac@pml.ac.uk)
 # Created on: 05 November 2014
-# Licensing: 
+# Licensing:
 
 """
 A set of common variables (default parameters, paths etc.,) for the arsf_dem module.
@@ -15,14 +15,13 @@ Reads parameter from a config file checks:
 2. Home folder for .arsf_dem or .arsf_dem.cfg
 3. Library path for arsf_dem.cfg
 
-These files can be changed as required to override default settings at the project, user or 
+These files can be changed as required to override default settings at the project, user or
 system level.
 
 """
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os, sys
 import glob
-import math
 import tempfile
 if sys.version_info[0] < 3:
    import ConfigParser
@@ -59,7 +58,7 @@ def get_config_int_fallback(config, section, option, fallback=None):
 # Functions to try and get paths for files
 def get_grass_lib_path():
    """
-   Try to get GRASS path by trying common locations for Linux, OS X and 
+   Try to get GRASS path by trying common locations for Linux, OS X and
    Windows.
 
    For Windows assumes installed through OSGeo4W
@@ -99,7 +98,7 @@ def get_grass_lib_path():
 
 def get_grass_python_lib_path(GRASS_LIB_PATH=None):
    """
-   Try to find GRASS Python library path. 
+   Try to find GRASS Python library path.
    If GRASS_LIB_PATH is passed in will use this, otherwise will try default
    locations.
    """
@@ -107,7 +106,7 @@ def get_grass_python_lib_path(GRASS_LIB_PATH=None):
       GRASS_LIB_PATH = get_grass_lib_path()
 
    GRASS_PYTHON_LIB_PATH = os.path.join(GRASS_LIB_PATH,'etc','python')
-   
+
    if os.path.isdir(GRASS_PYTHON_LIB_PATH):
       return GRASS_PYTHON_LIB_PATH
    else:
@@ -135,7 +134,7 @@ def get_temp_path():
    if TEMP_PATH is None and sys.platform.find('win') != 0:
       TEMP_PATH = '/tmp'
    else:
-      TEMP_PATH = tempfile.gettempdir() 
+      TEMP_PATH = tempfile.gettempdir()
 
    return TEMP_PATH
 
@@ -143,10 +142,10 @@ def get_lastools_path():
    """
    Function to get path to LAStools
 
-   Under Linux / OS X assumes they are added to $PATH so 
+   Under Linux / OS X assumes they are added to $PATH so
    don't need to pass in full path and returns empty string.
 
-   Under Windows assume LAStools has been installed to 
+   Under Windows assume LAStools has been installed to
    'C:\LAStools'
    """
 
@@ -172,7 +171,7 @@ config_file_locations = [config_current_dir, config_home_dir, config_home_dir_ex
 config = ConfigParser.ConfigParser()
 read_config = False
 
-# Itterate through config file locations until one is found 
+# Itterate through config file locations until one is found
 # which can be read.
 for config_file in config_file_locations:
    if os.path.isfile(config_file):
@@ -234,7 +233,7 @@ DEFAULT_LIDAR_DEM_BUFFER = {'N' : 2000,
                             'S' : 2000,
                             'W' : 2000}
 
-#: Order of columns in ASCII format lidar data 
+#: Order of columns in ASCII format lidar data
 LIDAR_ASCII_ORDER = {'time':1,
                      'x':2,'y':3,'z':4,
                      'intensity':5,
@@ -259,7 +258,7 @@ ASTER_RES_DEGREES = (0.000277777777778,-0.000277777777778)
 #: Resolution of ASTER DEM (in metres)
 ASTER_RES_METRES = (30,-30)
 
-#: Default location of NextMap DEM mosaic 
+#: Default location of NextMap DEM mosaic
 NEXTMAP_MOSAIC_FILE = get_config_fallback(config,'dems','NEXTMAP_MOSAIC_FILE',
             fallback='/users/rsg/arsf/nextmap/neodc/nextmap_dsm_mosaic_bng.vrt')
 #: Resolution of NextMap DEM (in degrees)
@@ -281,7 +280,7 @@ UKBNG_SEP_FILE_WGS84  = get_config_fallback(config,'separationfiles','UKBNG_SEP_
                   fallback='/users/rsg/arsf/dems/aster/separation_files/uk_separation_file_WGS84LL.dem')
 #: If UKBNG_SEP_FILE_WGS84 is ASCII format
 UKBNG_SEP_FILE_WGS84_IS_ASCII = False
-                     
+
 #: Default location of vertical separation file between Newlyn and WGS-84 datum (UKBNG projection)
 UKBNG_SEP_FILE_UKBNG = get_config_fallback(config,'separationfiles','UKBNG_SEP_FILE_UKBNG',
                   fallback='/users/rsg/arsf/dems/aster/separation_files/uk_separation_file_UKBNG.dem')
@@ -294,13 +293,13 @@ WWGSG_FILE = get_config_fallback(config,'separationfiles','WWGSG_FILE',
 #: If WWGSG_FILE is ASCII
 WWGSG_FILE_IS_ASCII = True
 
-#: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection). 
+#: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection).
 EGM96_UKBNG_SEP_FILE_WGS84 = get_config_fallback(config,'separationfiles','EGM96_UKBNG_SEP_FILE_WGS84',
                   fallback='/users/rsg/arsf/dems/aster/separation_files/ww15mgh_minus_uk_separation_file_WGS84LL.dem')
 #: If EMG96_UKBNG_SEP_FILE_UKBNG is ASCII format
 EGM96_UKBNG_SEP_FILE_WGS84_IS_ASCII = False
 
-#: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection). 
+#: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection).
 EGM96_UKBNG_SEP_FILE_UKBNG = get_config_fallback(config,'separationfiles','EGM96_UKBNG_SEP_FILE_UKBNG',
                   fallback='/users/rsg/arsf/dems/aster/separation_files/ww15mgh_minus_uk_separation_file_UKBNG.dem')
 #: If EMG96_UKBNG_SEP_FILE_UKBNG is ASCII format
@@ -310,7 +309,7 @@ EGM96_UKBNG_SEP_FILE_UKBNG_IS_ASCII = False
 OSTN02_NTV2_BIN_FILE = get_config_fallback(config,'projection','OSTN02_NTV2_BIN_FILE',
                   fallback=None)
 
-#: Default Proj4 string for UKBNG 
+#: Default Proj4 string for UKBNG
 if OSTN02_NTV2_BIN_FILE is not None:
    OSTN02_PROJ4_STRING = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy +units=m +no_defs +nadgrids={}'.format(OSTN02_NTV2_BIN_FILE)
 else:

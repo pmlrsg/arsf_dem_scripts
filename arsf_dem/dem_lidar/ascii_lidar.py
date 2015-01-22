@@ -48,7 +48,7 @@ def get_ascii_bounds(in_ascii):
    max_y = -100000000
    min_z = 9999999
    max_z = 0
-  
+
    in_ascii_handler = open(in_ascii, 'rU')
    in_ascii_csv = csv.reader(in_ascii_handler, delimiter=' ')
 
@@ -57,26 +57,25 @@ def get_ascii_bounds(in_ascii):
       line_x = float(line[dem_common.LIDAR_ASCII_ORDER['x']-1])
       line_y = float(line[dem_common.LIDAR_ASCII_ORDER['y']-1])
       line_z = float(line[dem_common.LIDAR_ASCII_ORDER['z']-1])
-   
+
       if line_x < min_x:
          min_x = line_x
       elif line_x > max_x:
          max_x = line_x
-         
+
       if line_y < min_y:
          min_y = line_y
       elif line_y > max_y:
          max_y = line_y
-         
+
       if line_z < min_z:
          min_z = line_z
       elif line_z > max_z:
          max_z = line_z
-  
-   # Close file 
+
+   # Close file
    in_ascii_handler.close()
 
    return [[min_x,max_x],
            [min_y,max_y],
            [min_z,max_z]]
-

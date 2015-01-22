@@ -41,7 +41,7 @@ except ImportError as err:
    print(err, file=sys.stderr)
    sys.exit(1)
 
-def ascii_to_raster(in_ascii,out_raster=None, 
+def ascii_to_raster(in_ascii,out_raster=None,
                      remove_grassdb=True,
                      grassdb_path=None,
                      xyz_bounds=None,
@@ -57,7 +57,7 @@ def ascii_to_raster(in_ascii,out_raster=None,
    Create raster from lidar data in ASCII format using GRASS.
 
    The pixel values are the mean 'val_field' of all points within a pixel.
-   Default is to use the elevation and create a DSM. 
+   Default is to use the elevation and create a DSM.
    To create a DTM classify ground returns in LAS file and only export these
    to the ASCII file.
 
@@ -84,7 +84,7 @@ def ascii_to_raster(in_ascii,out_raster=None,
    * out_raster_type - GDAL datatype for output raster (e.g., Float32).
 
    Returns:
-   
+
    * out_raster path / out_raster name in GRASS database.
    * path to GRASS database / None.
 
@@ -93,7 +93,7 @@ def ascii_to_raster(in_ascii,out_raster=None,
    try:
       dem_common.LIDAR_ASCII_ORDER[val_field]
    except KeyError:
-      raise Exception('Could not find field "{}"'.format(val_field)) 
+      raise Exception('Could not find field "{}"'.format(val_field))
 
    if out_raster is not None:
       out_raster_name = os.path.basename(out_raster).replace("-","_")
@@ -122,10 +122,10 @@ def ascii_to_raster(in_ascii,out_raster=None,
    if xyz_bounds is None or xyz_bounds[0][0] is None:
       xyz_bounds = ascii_lidar.get_ascii_bounds(in_ascii_drop)
 
-   bounding_box['w'] = xyz_bounds[0][0] 
-   bounding_box['e'] = xyz_bounds[0][1] 
-   bounding_box['s'] = xyz_bounds[1][0] 
-   bounding_box['n'] = xyz_bounds[1][1] 
+   bounding_box['w'] = xyz_bounds[0][0]
+   bounding_box['e'] = xyz_bounds[0][1]
+   bounding_box['s'] = xyz_bounds[1][0]
+   bounding_box['n'] = xyz_bounds[1][1]
 
    # If GRASS database has not been passed in
    # need to create one and initialise
@@ -136,8 +136,8 @@ def ascii_to_raster(in_ascii,out_raster=None,
       location = projection
       mapset = 'PERMANENT'
       grass.setup.init(dem_common.GRASS_LIB_PATH,
-                  grassdb_path, 
-                  location, 
+                  grassdb_path,
+                  location,
                   mapset)
 
    # Set extent
@@ -145,16 +145,16 @@ def ascii_to_raster(in_ascii,out_raster=None,
 
    # Import lidar into GRASS and create DEM
    print('Importing {} to GRASS'.format(in_ascii_drop))
-   grass.run_command('r.in.xyz', 
-                      input=in_ascii_drop, 
+   grass.run_command('r.in.xyz',
+                      input=in_ascii_drop,
                       output=out_raster_name,
                       method='mean',
                       fs=' ',
                       x=dem_common.LIDAR_ASCII_ORDER['x'],
                       y=dem_common.LIDAR_ASCII_ORDER['y'],
                       z=dem_common.LIDAR_ASCII_ORDER[val_field],
-                      overwrite = True) 
-   
+                      overwrite = True)
+
    if not grass_library.checkFileExists(out_raster_name):
       raise Exception('Could not create output raster')
 
@@ -166,7 +166,7 @@ def ascii_to_raster(in_ascii,out_raster=None,
                      input=out_raster_name,
                      output=out_raster,
                      nodata=dem_common.NODATA_VALUE,
-                     overwrite=True) 
+                     overwrite=True)
 
       dem_utilities.remove_gdal_aux_file(out_raster)
 
@@ -177,11 +177,11 @@ def ascii_to_raster(in_ascii,out_raster=None,
    # Remove GRASS database if requested.
    if remove_grassdb:
       shutil.rmtree(grassdb_path)
-      return out_raster, None 
+      return out_raster, None
    else:
       return out_raster_name, grassdb_path
-   
-def las_to_raster(in_las,out_raster=None, 
+
+def las_to_raster(in_las,out_raster=None,
                      remove_grassdb=True,
                      grassdb_path=None,
                      val_field='z',
@@ -196,7 +196,7 @@ def las_to_raster(in_las,out_raster=None,
    Create a raster from lidar data in LAS format using GRASS.
 
    The pixel values are the mean 'val_field' of all points within a pixel.
-   Default is to use the elevation ('z') and create a DSM. 
+   Default is to use the elevation ('z') and create a DSM.
    To create a DTM classify ground returns in LAS file and select non-ground
    classes to be dropped using 'drop_class'.
 
@@ -228,14 +228,14 @@ def las_to_raster(in_las,out_raster=None,
    * out_raster_type - GDAL datatype for output raster (e.g., Float32)
 
    Returns:
-   
+
    * out_raster path / out_raster name in GRASS database
    * path to GRASS database / None"
 
    """
 
    tmp_ascii_fh, ascii_file_tmp = tempfile.mkstemp(suffix='.txt', prefix='lidar_',dir=dem_common.TEMP_PATH)
-   
+
    if out_raster is not None:
       out_raster_name = os.path.basename(out_raster).replace("-","_")
    else:
@@ -246,11 +246,11 @@ def las_to_raster(in_las,out_raster=None,
    xyz_bounds = None
    if laspy_lidar.HAVE_LASPY:
       try:
-         xyz_bounds = laspy_lidar.get_las_bounds(in_las, 
+         xyz_bounds = laspy_lidar.get_las_bounds(in_las,
                                                  from_header=True)
       except Exception as err:
          common_functions.WARNING('Could not get bounds from LAS file ({}). Will try from ASCII'.format(err))
-   
+
    # Convert LAS to ASCII
    print('Converting LAS file to ASCII')
 
@@ -258,10 +258,10 @@ def las_to_raster(in_las,out_raster=None,
                                        drop_class=drop_class,
                                        keep_class=keep_class,
                                        flags=las2txt_flags)
- 
+
    # Create raster from ASCII
    try:
-      out_raster_name, grassdb_path = ascii_to_raster(ascii_file_tmp,out_raster, 
+      out_raster_name, grassdb_path = ascii_to_raster(ascii_file_tmp,out_raster,
                                        remove_grassdb=remove_grassdb,
                                        grassdb_path=grassdb_path,
                                        xyz_bounds=xyz_bounds,
@@ -282,7 +282,7 @@ def las_to_raster(in_las,out_raster=None,
 
    return out_raster_name, grassdb_path
 
-def las_to_dsm(in_las,out_raster=None, 
+def las_to_dsm(in_las,out_raster=None,
                      remove_grassdb=True,
                      grassdb_path=None,
                      projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
@@ -290,13 +290,13 @@ def las_to_dsm(in_las,out_raster=None,
                      out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                      out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE):
    """
-   Helper function to generate a Digital Surface Model (DSM) from a LAS file using 
+   Helper function to generate a Digital Surface Model (DSM) from a LAS file using
    GRASS.
-      
+
    The DSM is created using only first returns.
 
    Arguments:
-   
+
    * in_las - Input LAS file.
    * out_raster - Output raster (set to None to leave in GRASS database).
    * remove_grassdb - Remove GRASS database after processing is complete.
@@ -307,7 +307,7 @@ def las_to_dsm(in_las,out_raster=None,
    * out_raster_type - GDAL datatype for output raster (e.g., Float32)
 
    Returns:
-   
+
    * out_raster path / out_raster name in GRASS database
    * path to GRASS database / None"
 
@@ -319,7 +319,7 @@ def las_to_dsm(in_las,out_raster=None,
 
    """
 
-   out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=out_raster, 
+   out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=out_raster,
                      remove_grassdb=remove_grassdb,
                      grassdb_path=grassdb_path,
                      val_field='z',
@@ -332,7 +332,7 @@ def las_to_dsm(in_las,out_raster=None,
 
    return out_raster_name, grassdb_path
 
-def las_to_dtm(in_las,out_raster=None, 
+def las_to_dtm(in_las,out_raster=None,
                      remove_grassdb=True,
                      grassdb_path=None,
                      projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
@@ -340,17 +340,17 @@ def las_to_dtm(in_las,out_raster=None,
                      out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                      out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE):
    """
-   Helper function to generate a Digital Terrain Model (DTM) from a LAS file using 
+   Helper function to generate a Digital Terrain Model (DTM) from a LAS file using
    GRASS.
 
-   The DTM is created using only last returns, therefore is not a true DTM. 
+   The DTM is created using only last returns, therefore is not a true DTM.
 
    To improve the quality of the DTM classification of ground returns is required.
-   If a ground classified LAS file is available a better DTM can be created using 
+   If a ground classified LAS file is available a better DTM can be created using
    'las_to_raster' and setting 'keep_class=2'.
-   
+
    Arguments:
-   
+
    * in_las - Input LAS file.
    * out_raster - Output raster (set to None to leave in GRASS database).
    * remove_grassdb - Remove GRASS database after processing is complete.
@@ -361,7 +361,7 @@ def las_to_dtm(in_las,out_raster=None,
    * out_raster_type - GDAL datatype for output raster (e.g., Float32)
 
    Returns:
-   
+
    * out_raster path / out_raster name in GRASS database
    * path to GRASS database / None"
 
@@ -372,7 +372,7 @@ def las_to_dtm(in_las,out_raster=None,
 
     """
 
-   out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=out_raster, 
+   out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=out_raster,
                      remove_grassdb=remove_grassdb,
                      grassdb_path=grassdb_path,
                      val_field='z',
@@ -385,7 +385,7 @@ def las_to_dtm(in_las,out_raster=None,
 
    return out_raster_name, grassdb_path
 
-def las_to_intensity(in_las,out_raster=None, 
+def las_to_intensity(in_las,out_raster=None,
                      remove_grassdb=True,
                      grassdb_path=None,
                      projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
@@ -393,11 +393,11 @@ def las_to_intensity(in_las,out_raster=None,
                      out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                      out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE):
    """
-   Helper function to generate an intensity image from a LAS file using 
+   Helper function to generate an intensity image from a LAS file using
    GRASS.
 
    Arguments:
-   
+
    * in_las - Input LAS file.
    * out_raster - Output raster (set to None to leave in GRASS database).
    * remove_grassdb - Remove GRASS database after processing is complete.
@@ -408,7 +408,7 @@ def las_to_intensity(in_las,out_raster=None,
    * out_raster_type - GDAL datatype for output raster (e.g., Float32)
 
    Returns:
-   
+
    * out_raster path / out_raster name in GRASS database
    * path to GRASS database / None"
 
@@ -416,7 +416,7 @@ def las_to_intensity(in_las,out_raster=None,
 
    # If JPEG output call export screenshot after to scale image
    if out_raster_format == 'JPEG' and out_raster is not None:
-      out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=None, 
+      out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=None,
                         remove_grassdb=False,
                         grassdb_path=grassdb_path,
                         val_field='intensity',
@@ -428,7 +428,7 @@ def las_to_intensity(in_las,out_raster=None,
                         out_raster_type=out_raster_type)
 
 
-      out_raster_type, grassdb_path = dem_utilities.export_screenshot(out_raster_name, 
+      out_raster_type, grassdb_path = dem_utilities.export_screenshot(out_raster_name,
                      out_raster,
                      import_to_grass=False,
                      projection=projection,
@@ -436,7 +436,7 @@ def las_to_intensity(in_las,out_raster=None,
                      remove_grassdb=remove_grassdb)
 
    else:
-      out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=out_raster, 
+      out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=out_raster,
                         remove_grassdb=remove_grassdb,
                         grassdb_path=grassdb_path,
                         val_field='intensity',
@@ -448,4 +448,3 @@ def las_to_intensity(in_las,out_raster=None,
                         out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE)
 
    return out_raster_name, grassdb_path
-  

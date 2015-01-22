@@ -10,13 +10,12 @@ License restrictions: Depends on GRASS library, subject to GNU GPL
 """
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
-import os, sys
+import sys
 import argparse
 
 # Import DEM library
 try:
    from arsf_dem import dem_common
-   from arsf_dem import dem_utilities
    from arsf_dem import dem_nav_utilities
    from arsf_dem import common_functions
 except ImportError as err:
@@ -71,12 +70,12 @@ Typical usage:
  create_apl_dem.py --demmosaic strm_mosaic.vrt --separation_file {0} \\
            --bil_navigation flightlines/navigation -o 2014_216_strm.dem
 
-If calling from within the project directory, there should be no need to specify the 
+If calling from within the project directory, there should be no need to specify the
 project path as it will be found from the current location.
 
 Known issues:
 If the correct project path is not found or passed in, or for another reason
-there is a problem finding hyperspectral navigation files the script will 
+there is a problem finding hyperspectral navigation files the script will
 print a warning but continue and produce a DEM much larger than required.
 
 Report bugs to:
@@ -89,7 +88,7 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
       parser = argparse.ArgumentParser(description=description_str, formatter_class=argparse.RawDescriptionHelpFormatter)
       parser.add_argument('-o', '--outdem',
                           metavar ='Out DEM',
-                          help ='''Output name for DEM. 
+                          help ='''Output name for DEM.
                           If not provided will output to standard location for hyperspectral data processing.''',
                           required=False,
                           default=None)
@@ -126,7 +125,7 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
                           default=None)
       parser.add_argument('--separation_file',
                           metavar ='Seperation file',
-                          help ='''File with Height offset to add if "--demmosaic" is used and 
+                          help ='''File with Height offset to add if "--demmosaic" is used and
                                  DEM heights are not relative to WGS-84 elepsoid.
                                  Not required if using "--aster", "--nextmap" or "--srtm" for standard DEMs.''',
                           required=False,
@@ -135,7 +134,7 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
                           metavar ='BIL Navigation Files',
                           help ='''Directory containing post-processed navigation files in BIL format.
                                    By default raw navigation data will be used for "--project".
-                                   If this is not available (e.g., for ARSF-DAN delivered data) use this option and point to 
+                                   If this is not available (e.g., for ARSF-DAN delivered data) use this option and point to
                                    "flightlines/navigation" within delivery directory''',
                           default=None,
                           required=False)
@@ -143,14 +142,14 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
                           action='store_true',
                           help='Keep GRASS database (default=False)',
                           default=False,
-                          required=False)      
+                          required=False)
       args=parser.parse_args()
 
       dem_source = None
 
       # ASTER DEM
       if args.aster:
-         dem_source = 'ASTER' 
+         dem_source = 'ASTER'
       # NEXTMap DEM
       elif args.nextmap:
          dem_source = 'NEXTMAP'
@@ -181,4 +180,3 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
          raise
       common_functions.ERROR(err)
       sys.exit(1)
-   

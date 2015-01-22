@@ -1,7 +1,7 @@
 #Author: Dan Clewley (dac)
 #Created On: 06/10/2014
 """
-General utilities for working with LiDAR data to perform common tasks. 
+General utilities for working with LiDAR data to perform common tasks.
 
 Available functions:
 
@@ -73,7 +73,7 @@ def create_patched_lidar_mosaic(in_lidar,
 
       # Input projection for lidar files
       in_lidar_projection = in_lidar_projection.upper()
-      
+
       # Set output projection - if not provided assume
       # the same as input.
       if out_projection is None:
@@ -93,7 +93,7 @@ def create_patched_lidar_mosaic(in_lidar,
 
       # Check if we want to patch with a DEM (default is not)
       patch_with_dem = False
-   
+
       # ASTER DEM
       if (dem_source is not None) and (dem_source.upper() == 'ASTER'):
          in_dem_mosaic = dem_common.ASTER_MOSAIC_FILE
@@ -107,9 +107,8 @@ def create_patched_lidar_mosaic(in_lidar,
          else:
             separation_file = dem_common.WWGSG_FILE
             ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
-         out_res = dem_common.ASTER_RES_DEGREES
          patch_with_dem = True
-      
+
       # NEXTMap DEM
       elif (dem_source is not None) and (dem_source.upper() == 'NEXTMAP'):
          in_dem_mosaic = dem_common.NEXTMAP_MOSAIC_FILE
@@ -138,7 +137,7 @@ def create_patched_lidar_mosaic(in_lidar,
             separation_file = dem_common.WWGSG_FILE
             ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
          patch_with_dem = True
-      
+
       # Custom DEM
       elif dem_mosaic is not None:
          in_dem_mosaic = dem_mosaic
@@ -169,13 +168,13 @@ def create_patched_lidar_mosaic(in_lidar,
       lidar_dem_mosaic_header = os.path.splitext(lidar_dem_mosaic)[0] + '.hdr'
       outdem_header = os.path.splitext(outdem)[0] + '.hdr'
 
-      # If a single file is provided for the screenshot and patching with a DEM 
+      # If a single file is provided for the screenshot and patching with a DEM
       # want screenshot of patched DEM not lidar.
       if (screenshot is not None and not os.path.isdir(screenshot)) and patch_with_dem:
          lidar_screenshots = None
       else:
          lidar_screenshots = screenshot
-   
+
       # Create DSM from individual lidar lines and patch together
       create_lidar_mosaic(in_lidar,lidar_dem_mosaic,
                      out_screenshot=lidar_screenshots,
@@ -186,7 +185,7 @@ def create_patched_lidar_mosaic(in_lidar,
                      lidar_format=lidar_format,
                      raster_type='DSM',
                      fill_nulls=False)
-      
+
       # Check if input projection is equal to output projection
       if in_lidar_projection != out_patched_projection:
          dem_utilities.call_gdalwarp(lidar_dem_mosaic, temp_lidar_dem,
@@ -197,7 +196,7 @@ def create_patched_lidar_mosaic(in_lidar,
          # At the moment only consider UKBNG to WGS84LL
          if in_lidar_projection == 'UKBNG' and out_patched_projection == 'WGS84LL':
             print('Applying vertical offset to LiDAR mosaic')
-            dem_utilities.offset_null_fill_dem(temp_lidar_dem, temp_lidar_dem, 
+            dem_utilities.offset_null_fill_dem(temp_lidar_dem, temp_lidar_dem,
                                                     import_to_grass=True,
                                                     separation_file=dem_common.UKBNG_SEP_FILE_WGS84,
                                                     ascii_separation_file=dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII,
@@ -221,8 +220,8 @@ def create_patched_lidar_mosaic(in_lidar,
                                  out_projection=grass_library.grass_projection_to_proj4(out_patched_projection),
                                  nodata=dem_common.NODATA_VALUE,
                                  out_res=None,
-                                 remove_grassdb=True, 
-                                 fill_nulls=True)        
+                                 remove_grassdb=True,
+                                 fill_nulls=True)
             except Exception as err:
                common_functions.ERROR('Could not subset DEM to navigation data.\n{}.'.format(err))
                common_functions.WARNING('Will try to subset using lidar bounds, coverage of DEM might not be sufficient for hyperspectral processing')
@@ -234,8 +233,8 @@ def create_patched_lidar_mosaic(in_lidar,
             lidar_bb = dem_utilities.get_gdal_dataset_bb(lidar_dem_mosaic, output_ll=True)
             buffered_lidar_bb = get_lidar_buffered_bb(lidar_bb)
 
-            dem_utilities.subset_dem_to_bounding_box(in_dem_mosaic, 
-                                 temp_mosaic_dem, 
+            dem_utilities.subset_dem_to_bounding_box(in_dem_mosaic,
+                                 temp_mosaic_dem,
                                  bounding_box=buffered_lidar_bb,
                                  separation_file=separation_file,
                                  ascii_separation_file=ascii_separation_file,
@@ -243,16 +242,16 @@ def create_patched_lidar_mosaic(in_lidar,
                                  out_projection=grass_library.grass_projection_to_proj4(out_patched_projection),
                                  nodata=dem_common.NODATA_VALUE,
                                  out_res=None,
-                                 remove_grassdb=True, 
-                                 fill_nulls=True) 
+                                 remove_grassdb=True,
+                                 fill_nulls=True)
 
-         dem_utilities.patch_files([lidar_dem_mosaic, temp_mosaic_dem], 
+         dem_utilities.patch_files([lidar_dem_mosaic, temp_mosaic_dem],
                      out_file=outdem,
                      import_to_grass=True,
                      nodata=dem_common.NODATA_VALUE,
                      projection=out_patched_projection,
                      grassdb_path=None,
-                     remove_grassdb=True) 
+                     remove_grassdb=True)
 
       # Check if file was reprojected but not patched (if so need to move from temp file)
       elif in_lidar_projection != out_patched_projection:
@@ -296,7 +295,7 @@ def create_patched_lidar_mosaic(in_lidar,
             os.remove(temp_file)
       raise
 
-def create_lidar_mosaic(in_lidar_files, out_mosaic, 
+def create_lidar_mosaic(in_lidar_files, out_mosaic,
                      out_screenshot=None,
                      shaded_relief_screenshots=False,
                      in_projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
@@ -308,9 +307,9 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                      remove_grassdb=True,
                      grassdb_path=None):
    """
-   Create raster mosaic from lidar files using GRASS by binning 
+   Create raster mosaic from lidar files using GRASS by binning
    to 'resolution' and taking the mean point attribute within each pixel.
-   
+
    Default is to use first returns to create a DSM but can create
    intensity image by setting 'raster_type' to 'INTENSITY'.
 
@@ -339,12 +338,12 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
    * fill_nulls - Null fill values
    * remove_grassdb - Remove GRASS database after processing is complete
    * grassdb_path - Input path to GRASS database, if not supplied will create one.
-          
+
    Returns:
-   
+
    * out_mosaic path / out_mosaic name in GRASS database
    * path to GRASS database / None
-                             
+
    """
    drop_class = None
    keep_class = None
@@ -353,7 +352,7 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
 
    # Set options for raster type to be exported
    # DSM - first returns (top of canopy)
-   if raster_type.upper() == 'DSM':   
+   if raster_type.upper() == 'DSM':
       val_field = 'z'
       drop_class = 7
       las2txt_flags = '-first_only'
@@ -373,7 +372,7 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
    elif raster_type.upper() == 'UNFILTEREDDEM':
       val_field = 'z'
    elif raster_type.upper() == 'INTENSITY':
-      val_field = 'intensity'   
+      val_field = 'intensity'
       drop_class = 7
       if shaded_relief_screenshots:
          common_functions.WARNING('Creating shaded relief screenshots makes no sense with intensity images. Ignoring')
@@ -391,7 +390,7 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
    # create list.
    if isinstance(in_lidar_files,str):
       in_lidar_files = [in_lidar_files]
-   
+
    # If a directory, look for files
    if os.path.isdir(in_lidar_files[0]):
       if lidar_format.upper() == 'LAS':
@@ -410,21 +409,21 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
       in_lidar_files_list = in_lidar_files
       if os.path.splitext(in_lidar_files_list[0])[-1].lower() != '.las' \
         and os.path.splitext(in_lidar_files_list[0])[-1].lower() != '.laz':
-         lidar_format = 'ASCII' 
+         lidar_format = 'ASCII'
 
    if len(in_lidar_files_list) == 0:
       raise Exception('No lidar files were passed in or found from path provided')
-   
+
    out_screenshots_dir = None
    try:
       if os.path.isdir(out_screenshot):
-         out_screenshots_dir = out_screenshot 
+         out_screenshots_dir = out_screenshot
    except TypeError:
       pass
 
    # Create variable for GRASS path
    raster_names = []
-   
+
    # Create raster from point cloud files
    linenum = 1
    totlines = len(in_lidar_files_list)
@@ -450,7 +449,7 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
          raise Exception('Could not open "{}"'.format(in_lidar_file))
 
       if lidar_format.upper() == 'LAS':
-         out_raster_name, grassdb_path = grass_lidar.las_to_raster(in_lidar_file,out_raster=out_single_raster, 
+         out_raster_name, grassdb_path = grass_lidar.las_to_raster(in_lidar_file,out_raster=out_single_raster,
                   remove_grassdb=False,
                   grassdb_path=grassdb_path,
                   val_field=val_field,
@@ -462,7 +461,7 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                   out_raster_format=out_raster_format,
                   out_raster_type=out_raster_type)
       elif lidar_format.upper() == 'ASCII':
-         out_raster_name, grassdb_path = grass_lidar.ascii_to_raster(in_lidar_file,out_raster=out_single_raster, 
+         out_raster_name, grassdb_path = grass_lidar.ascii_to_raster(in_lidar_file,out_raster=out_single_raster,
                   remove_grassdb=False,
                   grassdb_path=grassdb_path,
                   val_field=val_field,
@@ -486,7 +485,7 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                                     projection=in_projection,
                                     grassdb_path=grassdb_path,
                                     remove_grassdb=False)
-      
+
       linenum += 1
 
    if not fill_nulls:
@@ -495,7 +494,7 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
       out_patched_file = None
 
    if len(raster_names) > 1:
-      patched_name, grassdb_path = dem_utilities.patch_files(raster_names, 
+      patched_name, grassdb_path = dem_utilities.patch_files(raster_names,
                                      out_file=out_patched_file,
                                      import_to_grass=False,
                                      nodata=nodata,
@@ -506,11 +505,11 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                                      remove_grassdb=False)
       print('Tiles patched OK')
    else:
-      patched_name = raster_names[0] 
+      patched_name = raster_names[0]
 
    # Fill null values
    if fill_nulls:
-      patched_name, grassdb_path = dem_utilities.offset_null_fill_dem(patched_name, out_mosaic, 
+      patched_name, grassdb_path = dem_utilities.offset_null_fill_dem(patched_name, out_mosaic,
                                     import_to_grass=False,
                                     separation_file=None,
                                     ascii_separation_file=False,
@@ -554,7 +553,7 @@ def get_lidar_buffered_bb(in_bounding_box, bb_buffer=dem_common.DEFAULT_LIDAR_DE
    Arguments:
 
    * in_bounding_box - List of 4 values providing the bounding box of the format: [MinY, MaxY, MinX, MaxX]
-   * bb_buffer - Dictionary of values in metres e.g., {'N' : 2000, 'E' : 2000, 'S' : 2000, 'W' : 2000} 
+   * bb_buffer - Dictionary of values in metres e.g., {'N' : 2000, 'E' : 2000, 'S' : 2000, 'W' : 2000}
 
    Returns:
 
@@ -566,11 +565,11 @@ def get_lidar_buffered_bb(in_bounding_box, bb_buffer=dem_common.DEFAULT_LIDAR_DE
    lat = (in_bounding_box[0] + in_bounding_box[1]) / 2.0
 
    # Convert default lidar buffer (in degrees)
-   east_buffer, north_buffer = dem_utilities.m_to_deg(lat, 
-                                                bb_buffer['E'], 
+   east_buffer, north_buffer = dem_utilities.m_to_deg(lat,
+                                                bb_buffer['E'],
                                                 bb_buffer['N'])
-   west_buffer, south_buffer = dem_utilities.m_to_deg(lat, 
-                                                bb_buffer['W'], 
+   west_buffer, south_buffer = dem_utilities.m_to_deg(lat,
+                                                bb_buffer['W'],
                                                 bb_buffer['S'])
 
    out_bounding_box = [0,0,0,0]
@@ -581,5 +580,3 @@ def get_lidar_buffered_bb(in_bounding_box, bb_buffer=dem_common.DEFAULT_LIDAR_DE
    out_bounding_box[3] = in_bounding_box[3] + east_buffer
 
    return out_bounding_box
-
-

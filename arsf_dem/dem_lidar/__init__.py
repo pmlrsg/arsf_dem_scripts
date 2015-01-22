@@ -4,7 +4,7 @@
 # Created On: 06/10/2014
 
 """
-A collection of utilities for working with LiDAR data. 
+A collection of utilities for working with LiDAR data.
 """
 from . import lidar_utilities
 from . import grass_lidar
@@ -15,7 +15,7 @@ from . import laspy_lidar
 from .. import dem_common
 from .. import dem_utilities
 
-def las_to_dsm(in_las,out_raster, 
+def las_to_dsm(in_las,out_raster,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
                method='GRASS'):
    """
@@ -23,16 +23,16 @@ def las_to_dsm(in_las,out_raster,
 
    Utility function to call las_to_dsm from grass_lidar, lastools_lidar or
    spdlib_lidar
-      
+
    Arguments:
-   
+
    * in_las - Input LAS file.
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
    * method - GRASS, SPDLIB or LASTOOLS
 
    Returns:
-   
+
    None
 
    Example::
@@ -57,8 +57,8 @@ def las_to_dsm(in_las,out_raster,
       lastools_lidar.las_to_dsm(in_las, out_raster)
    else:
       raise Exception('Invalid method "{}", expected GRASS, SPDLIB or LASTOOLS'.format(method))
-       
-def las_to_dtm(in_las,out_raster, 
+
+def las_to_dtm(in_las,out_raster,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
                method='GRASS'):
    """
@@ -66,19 +66,19 @@ def las_to_dtm(in_las,out_raster,
 
    Utility function to call las_to_dtm from grass_lidar, lastools_lidar or
    spdlib_lidar
-      
-   When using GRASS the DTM will be created using only last returns. For SPDLib and 
+
+   When using GRASS the DTM will be created using only last returns. For SPDLib and
    LAStools methods, the data will be filtered to try and remove vegetation and buildings.
 
    Arguments:
-   
+
    * in_las - Input LAS file.
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
    * method - GRASS, SPDLIB or LASTOOLS
 
    Returns:
-   
+
    None
 
    Example::
@@ -103,4 +103,3 @@ def las_to_dtm(in_las,out_raster,
       lastools_lidar.las_to_dtm(in_las, out_raster)
    else:
       raise Exception('Invalid method "{}", expected GRASS, SPDLIB or LASTOOLS'.format(method))
-  

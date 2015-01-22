@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Script to generate .rst file for scripts documentation. Runs scripts to get output and 
+Script to generate .rst file for scripts documentation. Runs scripts to get output and
 inserts into text.
 
 Inspired by answer suggesting modifying Makefile here:
@@ -15,12 +15,12 @@ import os
 def get_command_out(command):
    """ Get output from command """
 
-   out = subprocess.Popen(command,stdin=subprocess.PIPE, 
+   out = subprocess.Popen(command,stdin=subprocess.PIPE,
                           stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-   
+
    (stdout, stderr) = out.communicate()
 
-   return stdout     
+   return stdout
 
 outfile = os.path.join(os.path.split(__file__)[0],'scripts.rst')
 
@@ -33,7 +33,7 @@ create_dem_from_lidar_out = create_dem_from_lidar_out.replace('create_dem_from_l
 
 scripts_text = '''
 
-ARSF DEM Scripts 
+ARSF DEM Scripts
 ================
 
 Note under Windows, there is no need to type the '.py' at the end of the scripts. Batch files have been created to run the Python scripts, which don't need an extension to be provided.
