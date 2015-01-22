@@ -14,7 +14,7 @@ Note, some functions require a valid LAStools license.
 """
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
-import os, sys
+import os 
 import tempfile
 import glob
 # Import common files
@@ -119,11 +119,11 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
       if isinstance(keep_class,list):
          keep_class_str = []
          for item in keep_class:
-            drop_class_str.append(str(item))
-         las2txt_cmd_base = las2txt_cmd_base + ['-drop_class'] + drop_class_str
+            keep_class_str.append(str(item))
+         las2txt_cmd_base = las2txt_cmd_base + ['-keep_class'] + keep_class_str
 
-      elif isinstance(drop_class,int):
-         las2txt_cmd_base = las2txt_cmd_base + ['-drop_class',str(drop_class)]
+      elif isinstance(keep_class,int):
+         las2txt_cmd_base = las2txt_cmd_base + ['-keep_class',str(keep_class)]
 
    # Check for flags
    if flags is not None:

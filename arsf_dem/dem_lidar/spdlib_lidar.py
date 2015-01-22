@@ -9,7 +9,7 @@ Requires SPDLib to be installed.
 """
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
-import os, sys
+import os
 import shutil
 import tempfile
 # Import common files
@@ -61,7 +61,7 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
                '--temppath',spdtmppath,
                '-i',in_las,'-o',out_spd]
    if wkt is not None:
-     spdCMD = spdCMD + ['--input_proj',wkt, '--output_proj', wkt]
+      spdCMD = spdCMD + ['--input_proj',wkt, '--output_proj', wkt]
 
    common_functions.CallSubprocessOn(spdCMD)
 

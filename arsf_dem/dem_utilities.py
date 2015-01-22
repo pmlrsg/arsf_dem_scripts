@@ -47,7 +47,6 @@ from . import grass_library
 sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
 try:
    import grass.script as grass
-   import grass.script.setup as gsetup
 except ImportError as err:
    print("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
    print(err, file=sys.stderr)
@@ -741,7 +740,7 @@ def reproject_bng_to_wgs84(in_file, out_file, vertical_reproject=False):
 
    if vertical_reproject:
       if not os.path.isfile(dem_common.UKBNG_SEP_FILE_WGS84):
-            raise Exception('Could not find UKBNG seperation file in speficied location:'
+         raise Exception('Could not find UKBNG seperation file in speficied location:'
                            ' "{}"'.format(dem_common.UKBNG_SEP_FILE_WGS84))
 
       tr_fh, temp_reproject_dem = tempfile.mkstemp(prefix='reproject_dem',suffix='.dem', dir=dem_common.TEMP_PATH)
@@ -1070,9 +1069,6 @@ def reproject_bounding_box(in_bounding_box,
    in_srs.ImportFromProj4(in_projection)
    out_srs.ImportFromProj4(out_projection)
 
-   in_wkt = in_srs.ExportToPrettyWkt()
-   out_wkt = out_srs.ExportToPrettyWkt()
-
    minX = in_bounding_box[2]
    maxX = in_bounding_box[3]
    minY = in_bounding_box[0]
@@ -1116,76 +1112,76 @@ def buffer_bounding_box_proportion(in_bounding_box, buffer_proportion=0.1):
    return out_bounding_box
 
 def deg_to_m(lat, lonsize, latsize):
-    """ 
-    Get the pixel size (in m) based on latitude and
-    pixel size in degrees.
+   """ 
+   Get the pixel size (in m) based on latitude and
+   pixel size in degrees.
 
-    Function taken from:
-    https://github.com/MiXIL/calcSlopeDegrees/
-    MIT license
+   Function taken from:
+   https://github.com/MiXIL/calcSlopeDegrees/
+   MIT license
 
-    Arguments:
+   Arguments:
 
-    * lat - latitude
-    * lonsize - numpy array of x pixel sizes (degrees)
-    * latsize - numpy array of y pixel sizes (degrees)
+   * lat - latitude
+   * lonsize - numpy array of x pixel sizes (degrees)
+   * latsize - numpy array of y pixel sizes (degrees)
 
-    Returns:
+   Returns:
 
-    * xsize - numpy array of x pixel sizes (m)
-    * ysize - numpy array of y pixel sizes (m)
-    
-    """
+   * xsize - numpy array of x pixel sizes (m)
+   * ysize - numpy array of y pixel sizes (m)
+   
+   """
 
-    # Set up parameters for ellipse
-    # Semi-major and semi-minor for WGS-84 ellipse
-    ellipse = [6378137.0, 6356752.314245]
-    
-    radlat = numpy.deg2rad(lat)
-    
-    Rsq = (ellipse[0]*numpy.cos(radlat))**2+(ellipse[1]*numpy.sin(radlat))**2
-    Mlat = (ellipse[0]*ellipse[1])**2/(Rsq**1.5)
-    Nlon = ellipse[0]**2/numpy.sqrt(Rsq)
-    xsize = numpy.pi/180*numpy.cos(radlat)*Nlon*lonsize
-    ysize = numpy.pi/180*Mlat*latsize
-
-    return xsize, ysize
+   # Set up parameters for ellipse
+   # Semi-major and semi-minor for WGS-84 ellipse
+   ellipse = [6378137.0, 6356752.314245]
+   
+   radlat = numpy.deg2rad(lat)
+   
+   Rsq = (ellipse[0]*numpy.cos(radlat))**2+(ellipse[1]*numpy.sin(radlat))**2
+   Mlat = (ellipse[0]*ellipse[1])**2/(Rsq**1.5)
+   Nlon = ellipse[0]**2/numpy.sqrt(Rsq)
+   xsize = numpy.pi/180*numpy.cos(radlat)*Nlon*lonsize
+   ysize = numpy.pi/180*Mlat*latsize
+   
+   return xsize, ysize
 
 def m_to_deg(lat, xsize, ysize):
-    """ 
-    Get the pixel size (in degrees) based on latitude and
-    pixel size in metres.
+   """ 
+   Get the pixel size (in degrees) based on latitude and
+   pixel size in metres.
 
-    Function modified from:
-    https://github.com/MiXIL/calcSlopeDegrees/
-    MIT license
+   Function modified from:
+   https://github.com/MiXIL/calcSlopeDegrees/
+   MIT license
 
-    Arguments:
+   Arguments:
 
-    * lat - latitude
-    * xsize - numpy array of x pixel sizes (m)
-    * ysize - numpy array of y pixel sizes (m)
+   * lat - latitude
+   * xsize - numpy array of x pixel sizes (m)
+   * ysize - numpy array of y pixel sizes (m)
 
-    Returns:
+   Returns:
 
-    * lonsize - numpy array of x pixel sizes (degrees)
-    * latsize - numpy array of y pixel sizes (degrees)
+   * lonsize - numpy array of x pixel sizes (degrees)
+   * latsize - numpy array of y pixel sizes (degrees)
 
-    """
+   """
 
-    # Set up parameters for ellipse
-    # Semi-major and semi-minor for WGS-84 ellipse
-    ellipse = [6378137.0, 6356752.314245]
-    
-    radlat = numpy.deg2rad(lat)
-    
-    Rsq = (ellipse[0]*numpy.cos(radlat))**2+(ellipse[1]*numpy.sin(radlat))**2
-    Mlat = (ellipse[0]*ellipse[1])**2/(Rsq**1.5)
-    Nlon = ellipse[0]**2/numpy.sqrt(Rsq)
-    lonsize = xsize / (numpy.pi/180*numpy.cos(radlat)*Nlon)
-    latsize = ysize / (numpy.pi/180*Mlat)
+   # Set up parameters for ellipse
+   # Semi-major and semi-minor for WGS-84 ellipse
+   ellipse = [6378137.0, 6356752.314245]
+   
+   radlat = numpy.deg2rad(lat)
+   
+   Rsq = (ellipse[0]*numpy.cos(radlat))**2+(ellipse[1]*numpy.sin(radlat))**2
+   Mlat = (ellipse[0]*ellipse[1])**2/(Rsq**1.5)
+   Nlon = ellipse[0]**2/numpy.sqrt(Rsq)
+   lonsize = xsize / (numpy.pi/180*numpy.cos(radlat)*Nlon)
+   latsize = ysize / (numpy.pi/180*Mlat)
 
-    return lonsize, latsize
+   return lonsize, latsize
 
 def get_gdal_type_from_path(file_name):
    """
@@ -1207,17 +1203,18 @@ def get_gdal_type_from_path(file_name):
    gdalStr = ''
    extension = os.path.splitext(file_name)[-1].lower()
    if extension == '.kea':
-       gdalStr = 'KEA'
+      gdalStr = 'KEA'
    elif extension == '.tif':
-       gdalStr = 'GTiff'
+      gdalStr = 'GTiff'
    elif extension == '.jpg':
-       gdalStr = 'JPEG'
+      gdalStr = 'JPEG'
    elif extension == '.img':
-       gdalStr = 'HFA'
+      gdalStr = 'HFA'
    elif extension == '.pix':
-       gdalStr = 'PCIDSK'
+      gdalStr = 'PCIDSK'
    elif extension == '.asc' or extension == '.txt':
-       gdalStr = 'GRASSASCIIGrid'
+      gdalStr = 'GRASSASCIIGrid'
    else:
-       gdalStr = 'ENVI' 
+      gdalStr = 'ENVI' 
    return gdalStr
+

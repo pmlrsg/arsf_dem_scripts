@@ -15,12 +15,9 @@ Available functions:
 """
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os
-import shutil
-import tempfile
 import csv
 # Import common files
 from .. import dem_common
-from .. import common_functions
 
 def get_ascii_bounds(in_ascii):
    """

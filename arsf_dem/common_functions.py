@@ -32,7 +32,7 @@ def ERROR(strOutput,tostdouttoo=False):
    try:
       callerid="%s : %s"%(inspect.stack()[1][1],inspect.stack()[1][3])
 
-   except:
+   except Exception:
       callerid=""
 
    if sys.platform != 'win32':
