@@ -73,11 +73,12 @@ def create_apl_dem_from_mosaic(outdem,
    * outdem - Output DEM file.
    * dem_source - Source of DEM.
    * dem_mosaic - Path to DEM if not using standard DEM.
+   * separation_file - Path to separation file to use for non-standard DEM.
    * project - Base name of project (used to get navigation data).
    * nav - Path to sbet / sol navigation file.
-   * bil_navigation - Directoy containing APL processed BIL format navigation files
-   * fill_nulls - fill NULL values (needed for use in APL)
-   * remove_grassdb - Remove GRASS database after processing is complete
+   * bil_navigation - Directoy containing APL processed BIL format navigation files.
+   * fill_nulls - fill NULL values (needed for use in APL).
+   * remove_grassdb - Remove GRASS database after processing is complete.
 
    """
    # ASTER DEM
@@ -111,7 +112,6 @@ def create_apl_dem_from_mosaic(outdem,
    elif dem_mosaic is not None:
       in_dem_mosaic = dem_mosaic
       in_dem_projection = None
-      separation_file = separation_file
       if separation_file is not None and \
       (os.path.splitext(separation_file)[-1] == '.dem' or os.path.splitext(separation_file)[-1] == '.bil'):
          ascii_separation_file = False
