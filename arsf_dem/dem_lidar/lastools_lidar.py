@@ -19,13 +19,13 @@ import tempfile
 import glob
 # Import common files
 from .. import dem_common
-from .. import common_functions
+from .. import dem_common_functions
 
 def checkFreeLAStools():
    """Check if LAStools are installed."""
 
    try:
-      common_functions.CallSubprocessOn([os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH,'las2txt'),'-h'],
+      dem_common_functions.CallSubprocessOn([os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH,'las2txt'),'-h'],
                         redirect=True, quiet=True)
       return True
    except OSError:
@@ -35,7 +35,7 @@ def checkPaidLAStools():
    """Check if paid LAStools are installed."""
 
    try:
-      common_functions.CallSubprocessOn([os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe'),'-h'],
+      dem_common_functions.CallSubprocessOn([os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe'),'-h'],
                         redirect=True, quiet=True)
       return True
    except OSError:
@@ -144,7 +144,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
          if print_only:
             print(" ", " ".join(las2txt_cmd))
          else:
-            common_functions.CallSubprocessOn(las2txt_cmd)
+            dem_common_functions.CallSubprocessOn(las2txt_cmd)
 
    elif os.path.isdir(in_las):
       # If a directoy is passed in
@@ -173,7 +173,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
          if print_only:
             print(" ", " ".join(las2txt_cmd))
          else:
-            common_functions.CallSubprocessOn(las2txt_cmd)
+            dem_common_functions.CallSubprocessOn(las2txt_cmd)
 
    else:
       las2txt_cmd = las2txt_cmd_base + ['-i',in_las,
@@ -182,7 +182,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
       if print_only:
          print(" ", " ".join(las2txt_cmd))
       else:
-         common_functions.CallSubprocessOn(las2txt_cmd)
+         dem_common_functions.CallSubprocessOn(las2txt_cmd)
 
 def classify_ground_las(in_las,out_las):
    """
@@ -211,7 +211,7 @@ def classify_ground_las(in_las,out_las):
                   '-i',in_las,
                   '-o',out_las]
 
-   common_functions.CallSubprocessOn(lasground_cmd)
+   dem_common_functions.CallSubprocessOn(lasground_cmd)
 
 
 def las_to_dsm(in_las, out_dsm):
@@ -241,7 +241,7 @@ def las_to_dsm(in_las, out_dsm):
                   '-i',in_las,
                   '-o',out_dsm]
 
-   common_functions.CallSubprocessOn(las2dem_cmd)
+   dem_common_functions.CallSubprocessOn(las2dem_cmd)
 
 def las_to_dtm(in_las, out_dtm, keep_las=False):
    """
@@ -277,7 +277,7 @@ def las_to_dtm(in_las, out_dtm, keep_las=False):
                   '-i',lasfile_grd_tmp,
                   '-o',out_dtm]
 
-   common_functions.CallSubprocessOn(las2dem_cmd)
+   dem_common_functions.CallSubprocessOn(las2dem_cmd)
 
    if keep_las:
       return lasfile_grd_tmp

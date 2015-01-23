@@ -29,7 +29,7 @@ import math
 # Import arsf_dem files
 from . import dem_common
 from . import dem_utilities
-from . import common_functions
+from . import dem_common_functions
 
 # Check DEM library is available
 # this is only used on ARSF systems
@@ -97,7 +97,7 @@ def create_apl_dem_from_mosaic(outdem,
       ascii_separation_file = dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII
       out_res = dem_common.NEXTMAP_RES_DEGREES
       if not os.path.isfile(dem_common.OSTN02_NTV2_BIN_FILE):
-         common_functions.ERROR("Could not find OSTN02 transform file.\nChecked {}".format(dem_common.OSTN02_NTV2_BIN_FILE))
+         dem_common_functions.ERROR("Could not find OSTN02 transform file.\nChecked {}".format(dem_common.OSTN02_NTV2_BIN_FILE))
          sys.exit(1)
 
    # SRTM DEM
@@ -135,7 +135,7 @@ def create_apl_dem_from_mosaic(outdem,
          print('Saving DEM to: {}'.format(outdem))
 
    if bil_navigation is not None:
-      common_functions.PrintTermWidth('Using post processed navigation data from {}'.format(bil_navigation))
+      dem_common_functions.PrintTermWidth('Using post processed navigation data from {}'.format(bil_navigation))
       out_demfile, grassdb_path = subset_dem_to_apl_nav_files(in_dem_mosaic,
                                      outdem,
                                      bil_navigation,
@@ -149,7 +149,7 @@ def create_apl_dem_from_mosaic(outdem,
                                      fill_nulls=fill_nulls)
 
    else:
-      common_functions.PrintTermWidth('Using navigation data for project {}'.format(project))
+      dem_common_functions.PrintTermWidth('Using navigation data for project {}'.format(project))
       # Set nodata to -9999 so an offset is also applied to pixels with a value of 0
       out_demfile, grassdb_path = subset_dem_to_nav(in_dem_mosaic,
                            outdem,
@@ -234,12 +234,12 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
    nav_bb, project_info_used = dem_library.getAplCal(project_dir,nav_file, max_view_angle=max_view_angle, sensor=sensor)
 
    if not project_info_used:
-      common_functions.WARNING('Could not find project from directory "{}".'.format(os.path.abspath(project_dir)))
+      dem_common_functions.WARNING('Could not find project from directory "{}".'.format(os.path.abspath(project_dir)))
       if nav_file is None:
          raise Exception('Could not find project and no navigiation data supplied')
       else:
-         common_functions.WARNING('Will subset DEM to bounds of "{}"'.format(nav_file))
-         common_functions.WARNING('This could result in a DEM which is much larger than required.'.format(nav_file))
+         dem_common_functions.WARNING('Will subset DEM to bounds of "{}"'.format(nav_file))
+         dem_common_functions.WARNING('This could result in a DEM which is much larger than required.'.format(nav_file))
 
    out_demfile, grassdb_path = dem_utilities.subset_dem_to_bounding_box(
                                           in_dem_mosaic,
@@ -465,6 +465,6 @@ def get_min_max_from_bil_nav_files(nav_files):
          dataset = None
 
       except Exception as err:
-         common_functions.WARNING('Could not get bounds for {}\n{}'.format(nav_bil,err))
+         dem_common_functions.WARNING('Could not get bounds for {}\n{}'.format(nav_bil,err))
 
    return nav_stats

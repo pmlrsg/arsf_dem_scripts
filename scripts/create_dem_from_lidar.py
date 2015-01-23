@@ -18,7 +18,7 @@ import argparse
 try:
    from arsf_dem import dem_common
    from arsf_dem import dem_lidar
-   from arsf_dem import common_functions
+   from arsf_dem import dem_common_functions
 except ImportError as err:
    print("Could not import ARSF DEM library.", file=sys.stderr)
    print(err, file=sys.stderr)
@@ -201,5 +201,5 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
    except Exception as err:
       if DEBUG:
          raise
-      common_functions.ERROR(err)
+      dem_common_functions.ERROR(err)
       sys.exit(1)

@@ -14,13 +14,13 @@ import shutil
 import tempfile
 # Import common files
 from .. import dem_common
-from .. import common_functions
+from .. import dem_common_functions
 
 def checkSPDLib():
    """Check if SPDLib is installed."""
 
    try:
-      common_functions.CallSubprocessOn([os.path.join(dem_common.SPDLIB_BIN_PATH,'spdtranslate')],
+      dem_common_functions.CallSubprocessOn([os.path.join(dem_common.SPDLIB_BIN_PATH,'spdtranslate')],
                         redirect=True, quiet=True)
       return True
    except OSError:
@@ -63,7 +63,7 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
    if wkt is not None:
       spdCMD = spdCMD + ['--input_proj',wkt, '--output_proj', wkt]
 
-   common_functions.CallSubprocessOn(spdCMD)
+   dem_common_functions.CallSubprocessOn(spdCMD)
 
    # Remove temp files
    shutil.rmtree(temp_dir)
@@ -100,7 +100,7 @@ def classify_ground_spd(in_spd,out_spd,
             '--maxfilter','14',
             '-i',in_spd,'-o',out_spd]
 
-   common_functions.CallSubprocessOn(pmfCMD)
+   dem_common_functions.CallSubprocessOn(pmfCMD)
 
 def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
@@ -136,7 +136,7 @@ def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
        '-b',str(bin_size),
        '-i',in_spd,'-o',out_dsm]
 
-   common_functions.CallSubprocessOn(dsmCMD)
+   dem_common_functions.CallSubprocessOn(dsmCMD)
 
 def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
@@ -181,7 +181,7 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
        '-b',str(bin_size),
        '-i',spdfile_grd_tmp,'-o',out_dtm]
 
-   common_functions.CallSubprocessOn(dtmCMD)
+   dem_common_functions.CallSubprocessOn(dtmCMD)
 
    if keep_spd:
       return spdfile_grd_tmp
