@@ -38,10 +38,4 @@ Available modules
       dem_lidar
       dem_common
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
