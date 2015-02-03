@@ -105,7 +105,7 @@ def FileListInDirectory(path):
 
    try:
       listing=os.listdir(path)
-   except Exception,e:
+   except Exception as e:
       ERROR("Error getting file listing of directory: %s\n%s"%(path,str(e)))
       return []
 

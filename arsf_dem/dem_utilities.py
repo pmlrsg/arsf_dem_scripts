@@ -208,12 +208,12 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
       elevated_name = 'patched_elevated'
       if subtract_seperation:
          print('Subtracting offset')
-         grass.mapcalc('{0}=if({2} != {3},{1}-{2},0)'.format(elevated_name,demname,separation_name,nodata),
+         grass.mapcalc('{0}=if({1} != {3},{1}-{2},0)'.format(elevated_name,demname,separation_name,nodata),
                               overwrite=True)
 
       else:
          print('Adding offset')
-         grass.mapcalc('{0}=if({2} != {3},{1}+{2},0)'.format(elevated_name,demname,separation_name, nodata),
+         grass.mapcalc('{0}=if({1} != {3},{1}+{2},0)'.format(elevated_name,demname,separation_name, nodata),
                               overwrite=True)
 
       if not grass_library.checkFileExists(elevated_name):
