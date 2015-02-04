@@ -34,7 +34,7 @@ import shutil
 
 # Import ARSF DEM
 try:
-   from arsf_dem import common_functions
+   from arsf_dem import dem_common_functions
    from arsf_dem import grass_library
    from arsf_dem import dem_nav_utilities
    from arsf_dem import dem_lidar
@@ -76,7 +76,7 @@ def report(dem_dict):
    try:
       print("Median:\t\t%s"%dem_dict['median'])
    except KeyError:
-      common_functions.WARNING("Median not available")
+      dem_common_functions.WARNING("Median not available")
    print("Absolute mean:\t%s"%dem_dict['mean_of_abs'])
    print("Std deviation:\t%s"%dem_dict['stddev'])
    print("Total cells:\t%s"%dem_dict['cells'])
@@ -89,7 +89,7 @@ def report(dem_dict):
             with the tmp folder above. Type g.gui then load 'comparison' into the map display \
             if it is one solid colour then sample it to check what that colour represents and \
             hope it is 0"
-      common_functions.WARNING(warning)
+      dem_common_functions.WARNING(warning)
 
 def main(commandline):
    unmaskeduniv=None
@@ -102,7 +102,7 @@ def main(commandline):
    grass_library.setGrassQuiet(commandline.v)
 
    if commandline.output is not None and os.path.isfile(commandline.output):
-      common_functions.ERROR("The output dem you are trying to create (%s) already exists!" % (commandline.output))
+      dem_common_functions.ERROR("The output dem you are trying to create (%s) already exists!" % (commandline.output))
       exit(1)
 
    # Create DEM from another dataset
@@ -111,7 +111,7 @@ def main(commandline):
          # Subset source DEM to navigation data and apply offset so heights are relative
          # to WGS84 datum. The seperation file to be used will be determined based on
          # the DEM source
-         common_functions.PrintTermWidth("Creating comparison DEM from %s data"%(COMPARISON_DEM_SOURCE),padding_char='*')
+         dem_common_functions.PrintTermWidth("Creating comparison DEM from %s data"%(COMPARISON_DEM_SOURCE),padding_char='*')
          base_dem, grassdb_path = dem_nav_utilities.create_apl_dem_from_mosaic(None,
                                           dem_source=COMPARISON_DEM_SOURCE,
                                           project=commandline.project,
@@ -120,21 +120,21 @@ def main(commandline):
                                           remove_grassdb=False,
                                           grassdb_path=tempfolder)
       except Exception as err:
-         common_functions.ERROR(err)
+         dem_common_functions.ERROR(err)
          exit(1)
    else:
       #attempt import of comparison dem (generally aster dem)
       try:
          base_dem, base_proj, base_location = grass_library.readDem(commandline.comparison_dem)
       except ValueError as v:
-         common_functions.ERROR(v)
+         dem_common_functions.ERROR(v)
          exit(1)
 
    #attempt import of the input dem (generally lidar dem)
    try:
       input_dem, input_proj, input_location = grass_library.readDem(commandline.dem)
    except ValueError as v:
-      common_functions.ERROR(v)
+      dem_common_functions.ERROR(v)
       exit(1)
 
    # If lidar directory is supplied, assume a lidar comparison
@@ -156,26 +156,26 @@ def main(commandline):
             if not os.path.isdir(las_lidar_path):
                las_lidar_path = commandline.lidar.replace("ascii", "las1.2")
             if not os.path.isdir(las_lidar_path):
-               common_functions.WARNING("Could not find LAS files based on the ASCII path given")
-               common_functions.WARNING("Assuming lidar files use default projection of %s"%(dem_common.DEFAULT_LIDAR_PROJECTION_GRASS))
+               dem_common_functions.WARNING("Could not find LAS files based on the ASCII path given")
+               dem_common_functions.WARNING("Assuming lidar files use default projection of %s"%(dem_common.DEFAULT_LIDAR_PROJECTION_GRASS))
                lidar_proj_info = dem_common.DEFAULT_LIDAR_PROJECTION_GRASS
             else:
                try:
                   lidar_proj_info = dem_library.get_project_proj(las_lidar_path)
                except:
-                  common_functions.ERROR("There was a problem finding the lidar projection automatically. specify this using -l (UTM##N|S or UKBNG)")
+                  dem_common_functions.ERROR("There was a problem finding the lidar projection automatically. specify this using -l (UTM##N|S or UKBNG)")
                   exit(1)
 
          if lidar_proj_info != 'Could not find any projection':
             loc_id = lidar_proj_info[1]
             if loc_id == 'WGS84LL':
-               common_functions.WARNING("Lidar projection has returned WGS84LL, this projection is not valid to read Lidar. Will try using input dem projection.")
+               dem_common_functions.WARNING("Lidar projection has returned WGS84LL, this projection is not valid to read Lidar. Will try using input dem projection.")
                loc_id = input_proj
          else:
             if input_proj == 'WGS84LL':
                raise ValueError("Could not find lidar projection automatically and input dem projection is not compatible with lidar. Specify what to use with -l.")
             else:
-               common_functions.WARNING("Could not find lidar projection automatically, will try using input dem projection("+input_proj+"). Check this is correct! If not specify with -l")
+               dem_common_functions.WARNING("Could not find lidar projection automatically, will try using input dem projection("+input_proj+"). Check this is correct! If not specify with -l")
                loc_id = input_proj
          if input_proj != loc_id:
             las_loc = grass_library.newLocation(loc_id)
@@ -240,9 +240,9 @@ def main(commandline):
          unmaskeduniv = None
 
    if commandline.comparison_dem is None:
-      common_functions.PrintTermWidth("Comparing supplied DEM (%s) with one created from %s"%(commandline.dem, COMPARISON_DEM_SOURCE))
+      dem_common_functions.PrintTermWidth("Comparing supplied DEM (%s) with one created from %s"%(commandline.dem, COMPARISON_DEM_SOURCE))
    else:
-      common_functions.PrintTermWidth("Comparing '%s' with '%s'"%(commandline.dem, commandline.comparison_dem))
+      dem_common_functions.PrintTermWidth("Comparing '%s' with '%s'"%(commandline.dem, commandline.comparison_dem))
 
    grass_library.createComparisonDem(base_dem, input_dem, "comparison")
 
@@ -327,7 +327,7 @@ def main(commandline):
       else:
          print(",".join(output))
    else:
-      common_functions.PrintTermWidth("Report",padding_char="*")
+      dem_common_functions.PrintTermWidth("Report",padding_char="*")
       print("Temp folder created at: %s"%tempfolder)
       print("Calculation performed: %s-%s"%(input_dem,base_dem))
       print("The maps were compared in: %s"%base_location)
@@ -341,16 +341,16 @@ def main(commandline):
       if len(statistics) != 0:
          report(statistics)
       else:
-         common_functions.ERROR("Something went wrong during comparison, do these dems definitely overlap? Does the mask cover both dems?")
+         dem_common_functions.ERROR("Something went wrong during comparison, do these dems definitely overlap? Does the mask cover both dems?")
 
       if unmaskeduniv is not None:
          print("\n\nUnmasked statistics:")
          report(unmaskeduniv)
-      common_functions.PrintTermWidth('',padding_char='*')
+      dem_common_functions.PrintTermWidth('',padding_char='*')
 
    if commandline.histogram is not None:
       if os.path.exists(commandline.histogram):
-         common_functions.WARNING("The file specified with --histogram already exists, adding _1 to the given name")
+         dem_common_functions.WARNING("The file specified with --histogram already exists, adding _1 to the given name")
          grass_library.histogram("comparison_unmasked", commandline.histogram.replace(".","_1."))
       else:
          grass_library.histogram("comparison_unmasked", commandline.histogram)
@@ -365,7 +365,7 @@ def main(commandline):
                         map=comparison_unmasked,
                         color=grey)
       if os.path.exists(commandline.png):
-         common_functions.WARNING("The file specified with --png already exists, adding _1 to the given name")
+         dem_common_functions.WARNING("The file specified with --png already exists, adding _1 to the given name")
          grass_library.outputpng("comparison_unmasked", commandline.png.replace(".", "_1."))
       else:
          grass_library.outputpng("comparison_unmasked", commandline.png)

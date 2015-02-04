@@ -40,7 +40,7 @@ import numpy
 
 # Import common files
 from . import dem_common
-from . import common_functions
+from . import dem_common_functions
 from . import grass_library
 
 # Import GRASS
@@ -141,8 +141,8 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
       if import_to_grass:
          in_proj = grass_library.getGRASSProjFromGDAL(in_demfile)
       if in_proj is None:
-         common_functions.WARNING('No projection supplied and could not determine projection from any input files.')
-         common_functions.WARNING('Assuming "WGS84LL".')
+         dem_common_functions.WARNING('No projection supplied and could not determine projection from any input files.')
+         dem_common_functions.WARNING('Assuming "WGS84LL".')
          in_proj = 'WGS84LL'
    else:
       in_proj = projection
@@ -208,12 +208,12 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
       elevated_name = 'patched_elevated'
       if subtract_seperation:
          print('Subtracting offset')
-         grass.mapcalc('{0}=if({2} != {3},{1}-{2},0)'.format(elevated_name,demname,separation_name,nodata),
+         grass.mapcalc('{0}=if({1} != {3},{1}-{2},0)'.format(elevated_name,demname,separation_name,nodata),
                               overwrite=True)
 
       else:
          print('Adding offset')
-         grass.mapcalc('{0}=if({2} != {3},{1}+{2},0)'.format(elevated_name,demname,separation_name, nodata),
+         grass.mapcalc('{0}=if({1} != {3},{1}+{2},0)'.format(elevated_name,demname,separation_name, nodata),
                               overwrite=True)
 
       if not grass_library.checkFileExists(elevated_name):
@@ -234,7 +234,7 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
 
       # Check file exists (to confirm command has run correctly
       if not grass_library.checkFileExists(null_filled_name):
-         common_functions.WARNING('Could not NULL fill DEM, possibly there are no NULL values to fill')
+         dem_common_functions.WARNING('Could not NULL fill DEM, possibly there are no NULL values to fill')
          null_filled_name = elevated_name
 
       # Smooth
@@ -326,8 +326,8 @@ def patch_files(in_file_list,
             while in_proj is not None:
                in_proj = grass_library.getGRASSProjFromGDAL(in_file)
       if in_proj is None:
-         common_functions.WARNING('No projection supplied and could not determine projection from any input files.')
-         common_functions.WARNING('Assuming "WGS84LL".')
+         dem_common_functions.WARNING('No projection supplied and could not determine projection from any input files.')
+         dem_common_functions.WARNING('Assuming "WGS84LL".')
          in_proj = 'WGS84LL'
    else:
       in_proj = projection
@@ -365,7 +365,7 @@ def patch_files(in_file_list,
          if grass_library.checkFileExists(file_name):
             file_names_list.append(file_name)
          else:
-            common_functions.ERROR('The file "{}" could not be imported'.format(in_file))
+            dem_common_functions.ERROR('The file "{}" could not be imported'.format(in_file))
 
    # Otherwise check they exist
    else:
@@ -373,7 +373,7 @@ def patch_files(in_file_list,
          if grass_library.checkFileExists(file_name):
             file_names_list.append(file_name)
          else:
-            common_functions.ERROR('The file "{}" does not exist in the supplied GRASS database'.format(file_name))
+            dem_common_functions.ERROR('The file "{}" does not exist in the supplied GRASS database'.format(file_name))
 
    # Check if at lest one file was imported / exists
    if len(file_names_list) == 0:
@@ -457,7 +457,7 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
    out_dem_name = None
 
    # Subset DEM to navigation bounding box
-   common_functions.PrintTermWidth('Subsetting DEM to bounding box')
+   dem_common_functions.PrintTermWidth('Subsetting DEM to bounding box')
    # When subsetting perform horizontal reprojection
    # If output projection is not WGS84LL need to reproject bounding box
    if out_projection is not None and out_projection != 'WGS84LL':
@@ -704,7 +704,7 @@ def subset_to_bb(in_dem_mosaic, out_demfile, bounding_box,
       gdal_translate_cmd.extend(['-ot',dem_common.GDAL_OUTFILE_DATATYPE])
       gdal_translate_cmd.extend(['-co',dem_common.GDAL_CREATION_OPTIONS])
       gdal_translate_cmd.extend([in_dem_mosaic, out_demfile])
-      common_functions.CallSubprocessOn(gdal_translate_cmd)
+      dem_common_functions.CallSubprocessOn(gdal_translate_cmd)
    else:
       call_gdalwarp(in_dem_mosaic, out_demfile,
                      s_srs=in_projection,
@@ -766,7 +766,7 @@ def reproject_bng_to_wgs84(in_file, out_file, vertical_reproject=False):
                             ascii_separation_file=dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII)
 
       except Exception as err:
-         common_functions.ERROR('Error adding seperation file:\n{}'.format(err))
+         dem_common_functions.ERROR('Error adding seperation file:\n{}'.format(err))
          for temp_file in temp_file_list:
             if os.path.isfile(temp_file):
                os.remove(temp_file)
@@ -833,7 +833,7 @@ def reproject_wgs84_to_bng(in_file, out_file, vertical_reproject=False):
                                subtract_seperation=True)
 
          except Exception as err:
-            common_functions.ERROR('Error subtracting seperation file:\n{}'.format(err))
+            dem_common_functions.ERROR('Error subtracting seperation file:\n{}'.format(err))
             for temp_file in temp_file_list:
                if os.path.isfile(temp_file):
                   os.remove(temp_file)
@@ -968,7 +968,7 @@ def call_gdaldem(in_file, out_file, dem_product='hillshade',
    gdaldem_cmd = ['gdaldem',dem_product,
                   '-of',of,
                   in_file, out_file]
-   common_functions.CallSubprocessOn(gdaldem_cmd)
+   dem_common_functions.CallSubprocessOn(gdaldem_cmd)
    remove_gdal_aux_file(out_file)
 
 def get_gdal_dataset_bb(in_file, output_ll=False):

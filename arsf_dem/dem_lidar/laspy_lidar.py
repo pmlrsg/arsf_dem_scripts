@@ -140,7 +140,7 @@ def get_las_bounds(in_las, from_header=True):
                max_z = las_bounds[2][1]
 
          except Exception as err:
-            common_functions.WARNING('Could not get bounds for {}'.format(in_las_file))
+            dem_common_functions.WARNING('Could not get bounds for {}'.format(in_las_file))
 
       return [[min_x,max_x],
               [min_y,max_y],

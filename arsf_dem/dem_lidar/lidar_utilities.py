@@ -19,7 +19,7 @@ import tempfile
 from .. import dem_common
 from .. import dem_utilities
 from .. import dem_nav_utilities
-from .. import common_functions
+from .. import dem_common_functions
 
 from . import grass_lidar
 from .. import grass_library
@@ -207,7 +207,7 @@ def create_patched_lidar_mosaic(in_lidar,
 
       if patch_with_dem:
          print('')
-         common_functions.PrintTermWidth('Patching with {}'.format(in_dem_mosaic), padding_char='*')
+         dem_common_functions.PrintTermWidth('Patching with {}'.format(in_dem_mosaic), padding_char='*')
          print('')
          subset_to_nav_failed = False
          if subset_to_navigation:
@@ -223,8 +223,8 @@ def create_patched_lidar_mosaic(in_lidar,
                                  remove_grassdb=True,
                                  fill_nulls=True)
             except Exception as err:
-               common_functions.ERROR('Could not subset DEM to navigation data.\n{}.'.format(err))
-               common_functions.WARNING('Will try to subset using lidar bounds, coverage of DEM might not be sufficient for hyperspectral processing')
+               dem_common_functions.ERROR('Could not subset DEM to navigation data.\n{}.'.format(err))
+               dem_common_functions.WARNING('Will try to subset using lidar bounds, coverage of DEM might not be sufficient for hyperspectral processing')
                subset_to_nav_failed = True
 
          if not subset_to_navigation or (subset_to_navigation and subset_to_nav_failed):
@@ -375,7 +375,7 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
       val_field = 'intensity'
       drop_class = 7
       if shaded_relief_screenshots:
-         common_functions.WARNING('Creating shaded relief screenshots makes no sense with intensity images. Ignoring')
+         dem_common_functions.WARNING('Creating shaded relief screenshots makes no sense with intensity images. Ignoring')
          shaded_relief_screenshots = False
    else:
       raise Exception('raster_type "{}" was not recognised'.format(raster_type))
@@ -437,13 +437,13 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
    # Create mosaic from lidar files
    print('')
    if len(in_lidar_files_list) > 1:
-      common_functions.PrintTermWidth('Creating LiDAR Mosaic from {} lines'.format(len(in_lidar_files_list)),padding_char='*')
+      dem_common_functions.PrintTermWidth('Creating LiDAR Mosaic from {} lines'.format(len(in_lidar_files_list)),padding_char='*')
    else:
-      common_functions.PrintTermWidth('Creating LiDAR raster for a single line',padding_char='*')
+      dem_common_functions.PrintTermWidth('Creating LiDAR raster for a single line',padding_char='*')
    print('')
 
    for in_lidar_file in in_lidar_files_list:
-      common_functions.PrintTermWidth('Creating {0} raster from "{1}" ({2}/{3})'.format(raster_type,os.path.split(in_lidar_file)[-1],linenum, totlines))
+      dem_common_functions.PrintTermWidth('Creating {0} raster from "{1}" ({2}/{3})'.format(raster_type,os.path.split(in_lidar_file)[-1],linenum, totlines))
       # Check file exists
       if not os.path.isfile(in_lidar_file):
          raise Exception('Could not open "{}"'.format(in_lidar_file))

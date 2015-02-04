@@ -30,7 +30,7 @@ from . import laspy_lidar
 from . import lastools_lidar
 from . import ascii_lidar
 from .. import grass_library
-from .. import common_functions
+from .. import dem_common_functions
 
 # Import GRASS
 sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
@@ -249,7 +249,7 @@ def las_to_raster(in_las,out_raster=None,
          xyz_bounds = laspy_lidar.get_las_bounds(in_las,
                                                  from_header=True)
       except Exception as err:
-         common_functions.WARNING('Could not get bounds from LAS file ({}). Will try from ASCII'.format(err))
+         dem_common_functions.WARNING('Could not get bounds from LAS file ({}). Will try from ASCII'.format(err))
 
    # Convert LAS to ASCII
    print('Converting LAS file to ASCII')

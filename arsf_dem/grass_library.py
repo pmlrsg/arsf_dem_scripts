@@ -52,7 +52,7 @@ Available functions:
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os, sys, re
 # Import from arsf_dem
-from . import common_functions
+from . import dem_common_functions
 from . import dem_common
 
 # Check DEM library is available
@@ -184,7 +184,7 @@ def createTiffDem(tilelist, outname, spheroidfile):
                                  quiet=False)
 
          except:
-            common_functions.WARNING("This tile %s was not imported, might not exist?" % tile)
+            dem_common_functions.WARNING("This tile %s was not imported, might not exist?" % tile)
             continue
          tiles.append(tilename)
       #if tiles is empty no tiles were imported :(
@@ -229,13 +229,13 @@ def readLidar(lasfolder,location=None,patch=True,datacolumn=dem_common.LIDAR_ASC
    lasfiles=[]
    asciifiles=[]
    if type(lasfolder) is str and os.path.isdir(lasfolder):
-      filelist=common_functions.FileListInDirectory(lasfolder)
+      filelist=dem_common_functions.FileListInDirectory(lasfolder)
    elif type(lasfolder) is str and os.path.isfile(lasfolder):
       filelist=[lasfolder]
    elif type(lasfolder) is list:
       filelist=lasfolder
    else:
-      common_functions.ERROR("lasfolder should be a file or directory path, or a list of files. I got %s"%lasfolder)
+      dem_common_functions.ERROR("lasfolder should be a file or directory path, or a list of files. I got %s"%lasfolder)
       return None
 
    for item in filelist:
@@ -244,7 +244,7 @@ def readLidar(lasfolder,location=None,patch=True,datacolumn=dem_common.LIDAR_ASC
       elif item.endswith('.LAS') or item.endswith('.las'):
          lasfiles.append(item)
       else:
-         common_functions.WARNING("Unrecognised file in lidar directory: %s"%item)
+         dem_common_functions.WARNING("Unrecognised file in lidar directory: %s"%item)
 
    #to store the returned varaibles from the readasciilidar + readlaslidar
    lasreturns=[]
@@ -589,7 +589,7 @@ def setLocation(projection):
    elif 'UTM' in projection:
       location = newLocation(projection)
    else:
-      common_functions.ERROR("No recognisable projection given")
+      dem_common_functions.ERROR("No recognisable projection given")
       location = None
    if location != None:
       print("changing location")
@@ -1009,7 +1009,7 @@ def outputToGDAL(inputname,outputname,imtype='JPEG',nodata=0,datatype='Byte',set
    JPGOUTPUTCELLSIZELIMIT=104857600 # this value was taken from an old script - don't know where it came from
    if imtype=='JPEG':
       while grass.region()['cells'] > JPGOUTPUTCELLSIZELIMIT:
-         common_functions.WARNING("Decreasing Resolution slightly so that output number of cells is less than %d"%JPGOUTPUTCELLSIZELIMIT)
+         dem_common_functions.WARNING("Decreasing Resolution slightly so that output number of cells is less than %d"%JPGOUTPUTCELLSIZELIMIT)
          grass.run_command('g.region',nsres=grass.region()['nsres']*1.01,ewres=grass.region()['ewres']*1.01)
 
    grass.run_command('r.out.gdal',format=imtype,input=inputname,output=outputname,nodata=nodata,type=datatype,flags='f')
@@ -1092,12 +1092,12 @@ def splitGroupIntoRasters(group):
             #group is actually not a group - is it a raster already? Yes - just remove the mapset name
             namelist=[re.sub('\@%s$'%grass.gisenv()['MAPSET'],'',item)]
          else:
-            common_functions.ERROR("splitGroupIntoRasters expected a group to be passed to it - this was neither a group or a raster: %s"%item)
+            dem_common_functions.ERROR("splitGroupIntoRasters expected a group to be passed to it - this was neither a group or a raster: %s"%item)
             namelist=[]
 
          return_list.extend(namelist)
    else:
-      common_functions.ERROR("splitGroupIntoRasters expected a string or list of strings to be passed to it - this was a: %s"%type(group))
+      dem_common_functions.ERROR("splitGroupIntoRasters expected a string or list of strings to be passed to it - this was a: %s"%type(group))
       return_list=[]
 
    if len(return_list) == 0:
@@ -1133,7 +1133,7 @@ def SetRegion(rast=None,bounds=None,res=None):
       else:
          grass.run_command('g.region',n=bounds['n'],s=bounds['s'],e=bounds['e'],w=bounds['w'],res=res)
    else:
-      common_functions.WARNING("Set region being called to do nothing!")
+      dem_common_functions.WARNING("Set region being called to do nothing!")
 
 
 def rescale(raster,bounds):
@@ -1167,7 +1167,7 @@ def rescale(raster,bounds):
          rasterout=None
    else:
       #What is it?
-      common_functions.ERROR("rescale function can currently only work with a raster or group within the current mapset.")
+      dem_common_functions.ERROR("rescale function can currently only work with a raster or group within the current mapset.")
       return None
 
    return rasterout
@@ -1178,7 +1178,7 @@ def rasterWithMapsetName(raster):
    """
    if raster.find("@%s"%grass.gisenv()['MAPSET']) != -1:
       #already contains the mapset in name - will not append
-      common_functions.WARNING("rasterWithMapsetName received raster string with mapset name already included - will not append again.")
+      dem_common_functions.WARNING("rasterWithMapsetName received raster string with mapset name already included - will not append again.")
       return raster
    else:
       return "%s@%s"%(raster,grass.gisenv()['MAPSET'])
@@ -1199,7 +1199,7 @@ def rescaleRGB(r,g,b,bounds='0,255'):
       #Test rescaled bands exist as can't figure out how to test for failure in above
       rasterlist=grass.list_strings(type = 'rast')
       if rasterWithMapsetName(rasterout) not in rasterlist:
-         common_functions.WARNING("Scaling doesn't seem to have worked - trying to use unscaled file (but renamed as though rescaled)")
+         dem_common_functions.WARNING("Scaling doesn't seem to have worked - trying to use unscaled file (but renamed as though rescaled)")
          grass.run_command('g.copy',rast=(raster,rasterout))
 
    groupname= '%s%s%srescaled.group'%(r,g,b)
@@ -1262,7 +1262,7 @@ def createMosaicFromRastersAndVectors(groupnames=None,vectorraster=None,vectorco
             grass.run_command('g.copy',rast=[namelist[0],namelist[0]+'_2'])
             Brasterlist.append(namelist[0]+'_2')
          else:
-            common_functions.ERROR("Can only create mosaics from groups with 3 bands in or single rasters, got length: %d"%len(namelist))
+            dem_common_functions.ERROR("Can only create mosaics from groups with 3 bands in or single rasters, got length: %d"%len(namelist))
             return None
 
       #rasterlist is used for region setting so update it here
@@ -1345,7 +1345,7 @@ def importVectors(directory,region=None,tables=None):
    flags=''
    #Is the directory a directory
    if not os.path.isdir(directory):
-      common_functions.ERROR("importVectors expects a directory containing Shapefiles. Received %s"%directory)
+      dem_common_functions.ERROR("importVectors expects a directory containing Shapefiles. Received %s"%directory)
       return None
    #if we have no tables given use all available ones
    if tables == None:
@@ -1358,7 +1358,7 @@ def importVectors(directory,region=None,tables=None):
       elif type(region) is list:
          SetRegion(rast=region)
       else:
-         common_functions.ERROR("region passed to importVectors should either be list or dict, I got %s"%type(region))
+         dem_common_functions.ERROR("region passed to importVectors should either be list or dict, I got %s"%type(region))
          return None
       flags='r'
 
