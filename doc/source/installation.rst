@@ -36,20 +36,14 @@ Linux
 
 1. Install GRASS from the package manager using::
 
-.. code-block:: bash
-
    sudo yum install grass
 
 If you are using a Red Hat derivative e.g., Fedora or CentOS.
-For a Debian derivative (e.g., Ubuntu) use:
-      
-.. code-block:: bash
+For a Debian derivative (e.g., Ubuntu) use::
 
    sudo apt-get install grass
 
 2. Install the arsf_dem library using::
-   
-.. code-block:: bash
 
    python setup.py
    sudo python setup.py install
@@ -59,12 +53,9 @@ OS X
 
 1. Follow the instructions to install GRASS from http://www.kyngchaos.com/software/grass
 2. Install the arsf_dem library using::
-   
-.. code-block:: bash
 
    python setup.py
    sudo python setup.py install
-   
 
 
 
