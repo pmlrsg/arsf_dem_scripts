@@ -166,7 +166,8 @@ def ascii_to_raster(in_ascii,out_raster=None,
                      input=out_raster_name,
                      output=out_raster,
                      nodata=dem_common.NODATA_VALUE,
-                     overwrite=True)
+                     overwrite=True,
+                     flags='f')
 
       dem_utilities.remove_gdal_aux_file(out_raster)
 

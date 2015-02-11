@@ -150,6 +150,11 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
                                   If DEM is not required to be used with APL this option is recommended.'''.format(dem_common.DEFAULT_LIDAR_DEM_BUFFER['N']),
                           default=False,
                           required=False)
+      parser.add_argument('-t', '--rastertype',
+                          metavar ='Output raster type',
+                          help ='Output raster type (default DSM)',
+                          default='DSM',
+                          required=False)
       parser.add_argument('--keepgrassdb',
                           action='store_true',
                           help='Keep GRASS database (default=False)',
@@ -190,6 +195,7 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
                                                 out_projection=args.out_projection,
                                                 screenshot=args.screenshot,
                                                 shaded_relief_screenshots=args.shadedrelief,
+                                                out_raster_type=args.rastertype,
                                                 dem_source=dem_source,
                                                 dem_mosaic=args.demmosaic,
                                                 project=args.project,
