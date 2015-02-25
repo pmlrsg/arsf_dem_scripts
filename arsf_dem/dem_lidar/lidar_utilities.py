@@ -32,6 +32,7 @@ def create_patched_lidar_mosaic(in_lidar,
                      out_projection=None,
                      screenshot=None,
                      shaded_relief_screenshots=False,
+                     out_raster_type='DSM',
                      dem_source=None,
                      dem_mosaic=None,
                      project='.',
@@ -175,6 +176,9 @@ def create_patched_lidar_mosaic(in_lidar,
       else:
          lidar_screenshots = screenshot
 
+      if patch_with_dem and out_raster_type.upper() not in ['DSM','DTM','DEM']:
+         raise Exception('Output type must be DSM or DTM to patch with another DEM')
+
       # Create DSM from individual lidar lines and patch together
       create_lidar_mosaic(in_lidar,lidar_dem_mosaic,
                      out_screenshot=lidar_screenshots,
@@ -183,7 +187,7 @@ def create_patched_lidar_mosaic(in_lidar,
                      resolution=resolution,
                      nodata=dem_common.NODATA_VALUE,
                      lidar_format=lidar_format,
-                     raster_type='DSM',
+                     raster_type=out_raster_type,
                      fill_nulls=False)
 
       # Check if input projection is equal to output projection
