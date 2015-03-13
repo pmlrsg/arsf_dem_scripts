@@ -150,6 +150,12 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
                                   If DEM is not required to be used with APL this option is recommended.'''.format(dem_common.DEFAULT_LIDAR_DEM_BUFFER['N']),
                           default=False,
                           required=False)
+      parser.add_argument('--fill_lidar_nulls',
+                          action='store_true',
+                          help='''Fill NULL values in LiDAR data using interpolation.
+                                  Not available if patching with another DEM''',
+                          default=False,
+                          required=False)
       parser.add_argument('-t', '--rastertype',
                           metavar ='Output raster type',
                           help ='Output raster type (default DSM)',
@@ -200,7 +206,8 @@ https://arsf-dan.nerc.ac.uk/trac/ticket/545
                                                 dem_mosaic=args.demmosaic,
                                                 project=args.project,
                                                 nav=args.nav,
-                                                lidar_bounds=use_lidar_bounds)
+                                                lidar_bounds=use_lidar_bounds,
+                                                fill_lidar_nulls=args.fill_lidar_nulls)
 
    except KeyboardInterrupt:
       sys.exit(2)

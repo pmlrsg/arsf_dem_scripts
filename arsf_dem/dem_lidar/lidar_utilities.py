@@ -37,7 +37,8 @@ def create_patched_lidar_mosaic(in_lidar,
                      dem_mosaic=None,
                      project='.',
                      nav=None,
-                     lidar_bounds=True):
+                     lidar_bounds=True,
+                     fill_lidar_nulls=False):
 
    """
    Create patched DSM of lidar files and optionally an additional DEM to fill
@@ -60,7 +61,7 @@ def create_patched_lidar_mosaic(in_lidar,
    * project - project directory, used to calculated DEM bounds for APL.
    * nav - path to navigation data file.
    * lidar_bounds - create patched DEM using lidar bounds plus buffer (for when hyperspectral navigation data is not available.
-
+   * fill_lidar_nulls - fill null values in lidar data.
    """
 
    # Set up list to hold temp files
@@ -179,6 +180,10 @@ def create_patched_lidar_mosaic(in_lidar,
       if patch_with_dem and out_raster_type.upper() not in ['DSM','DTM','DEM']:
          raise Exception('Output type must be DSM or DTM to patch with another DEM')
 
+      if patch_with_dem and fill_lidar_nulls:
+         dem_common_functions.WARNING('Skipping filling NULL values in LiDAR data by interpolation as patching with DEM')
+         fill_lidar_nulls = False
+
       # Create DSM from individual lidar lines and patch together
       create_lidar_mosaic(in_lidar,lidar_dem_mosaic,
                      out_screenshot=lidar_screenshots,
@@ -188,7 +193,7 @@ def create_patched_lidar_mosaic(in_lidar,
                      nodata=dem_common.NODATA_VALUE,
                      lidar_format=lidar_format,
                      raster_type=out_raster_type,
-                     fill_nulls=False)
+                     fill_nulls=fill_lidar_nulls)
 
       # Check if input projection is equal to output projection
       if in_lidar_projection != out_patched_projection:
