@@ -7,10 +7,10 @@ Required Software:
 
 * Python (Needs to be the same version used by GRASS, currently 2.7)
 * GRASS
+* LAStools (free/paid) - Free tools required for importing LAS files, paid tools can be used to create DTMs/DSMs.
 
 Optional Software:
 
-* LAStools (free/paid) - Free tools required for importing LAS files, paid tools can be used to create DTMs/DSMs.
 * SPDLib - Can be used to create DTMs/DSMs.
 * laspy - Used to get bounds of LAS file (if not available will use ASCII).
 
@@ -21,8 +21,7 @@ The recommended way to install GRASS is using the OSGeo4W installer:
 
 1. Download the OSGeo4W installer from: http://trac.osgeo.org/osgeo4w/
 2. Select Advanced install and select 'QGIS Full' and 'GRASS' from Desktop applications, choose the standard install location of C:\OSGeo4W
-3. (Optional, required for LAS files) Download LAStools from http://lastools.org, unzip the folder and copy LAStools to the C drive.
-4. Download the arsf_dem library, open a command prompt and navigate to the directory the code was downloaded to. Then run:
+3. Download the arsf_dem library, open a command prompt and navigate to the directory the code was downloaded to. Then run:
 
 .. code-block:: bash
 
@@ -30,6 +29,8 @@ The recommended way to install GRASS is using the OSGeo4W installer:
    sudo python setup.py install
 
 For more information on installing Python modules see https://docs.python.org/2/install/.
+4. Download LAStools from http://lastools.org, unzip the folder and copy the folder 'LAStools' to the C drive.
+5. Download Windows binaries of SPDLib from https://bitbucket.org/petebunting/spdlib/downloads and copy the folder 'spdlib' to the C drive.
 
 Linux
 ~~~~~~
@@ -57,12 +58,13 @@ For a Debian derivative (e.g., Ubuntu) use:
 This will install the scripts to /usr/local/bin, so they will be available on the
 main path.
 
-3. Download the ARSF LAStools form from https://github.com/arsf/LAStools and install using:
+3. Download the ARSF fork of LAStools from from https://github.com/arsf/LAStools and install using:
 
 .. code-block:: bash
 
    make
    sudo make install
+
 
 OS X
 ~~~~~
@@ -75,7 +77,7 @@ OS X
    python setup.py
    sudo python setup.py install
 
-3. Download the ARSF LAStools form from https://github.com/arsf/LAStools and install using:
+3. Download the ARSF fork of LAStools from from https://github.com/arsf/LAStools and install using:
 
 .. code-block:: bash
 
