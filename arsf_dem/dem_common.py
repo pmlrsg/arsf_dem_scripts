@@ -159,6 +159,34 @@ def get_lastools_path():
    else:
       return ''
 
+def get_spdlib_path():
+   """
+   Function to get path to SPDLib
+
+   Under Windows assume SPDLib has been installed to
+   'C:\spdlib'
+
+   Under other platforms try to see if they have been installed through
+   conda (which is the recommended way to install SPDLib) to a standard location.
+   """
+
+   anaconda_install_names = ['miniconda','miniconda3'
+                             'anaconda', 'anaconda3']
+   if sys.platform == 'win32':
+      win_lastools_path = 'C:/spdlib'
+      if os.path.isdir(win_lastools_path):
+         return win_lastools_path
+      else:
+         # Don't complain if SPDLib isn't found, will raise exception once a
+         # tool which requires SPDLib is installed.
+         return ''
+   else:
+      user_dir = os.path.expanduser('~')
+      for anaconda_dir in anaconda_install_names:
+         if os.path.isfile(os.path.join(user_dir, anaconda_dir,'bin','spdtranslate')):
+            return os.path.join(user_dir, anaconda_dir, 'bin')
+      return ''
+
 # Read in config parser file
 config_current_dir = os.path.join(os.path.abspath('.'),'arsf_dem.cfg')
 config_home_dir = os.path.join(os.path.expanduser('~'),'.arsf_dem')
@@ -340,7 +368,7 @@ HYPERSPECTRAL_VIEW_ANGLE_MAX = float(get_config_fallback(config, 'hyperspectral'
 
 # Set paths for other libraries
 #: Path to SPDLib binaries
-SPDLIB_BIN_PATH = get_config_fallback(config,'spdlib','SPDLIB_BIN_PATH',fallback='')
+SPDLIB_BIN_PATH = get_config_fallback(config,'spdlib','SPDLIB_BIN_PATH',fallback=get_spdlib_path())
 #: Default interpolation used by SPDLib
 SPD_DEFAULT_INTERPOLATION = get_config_fallback(config,'spdlib','SPD_DEFAULT_INTERPOLATION',
                      fallback='NATURAL_NEIGHBOR')
