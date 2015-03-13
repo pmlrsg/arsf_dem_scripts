@@ -168,7 +168,7 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    if not os.path.isfile(in_spd):
       raise Exception('Input SPD file "{}" does not exist'.format(in_spd))
 
-   spdfile_grd_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)[1]
+   spdfile_handler, spdfile_grd_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
 
    print('Classifying ground returns')
    classify_ground_spd(in_spd, spdfile_grd_tmp)
@@ -183,6 +183,7 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
 
    dem_common_functions.CallSubprocessOn(dtmCMD)
 
+   os.close(spdfile_handler)
    if keep_spd:
       return spdfile_grd_tmp
    else:
@@ -215,7 +216,7 @@ def las_to_dsm(in_las, out_dsm,
 
    """
 
-   spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)[1]
+   spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
 
    convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size)
    spd_to_dsm(spdfile_tmp, out_dsm,
@@ -223,6 +224,7 @@ def las_to_dsm(in_las, out_dsm,
                out_raster_format=out_raster_format,
                bin_size=bin_size)
 
+   os.close(spdfile_handler)
    if keep_spd:
       return spdfile_tmp
    else:
@@ -255,19 +257,19 @@ def las_to_dtm(in_las, out_dtm,
 
    """
 
-   spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)[1]
+   spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
 
    convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size)
    spdfile_grd_tmp = spd_to_dtm(spdfile_tmp, out_dtm,
                interpolation=interpolation,
                out_raster_format=out_raster_format,
                bin_size=bin_size,
-               keep_spd=True)
+               keep_spd=keep_spd)
 
+   os.close(spdfile_handler)
    os.remove(spdfile_tmp)
 
    if keep_spd:
       return spdfile_grd_tmp
    else:
-      os.remove(spdfile_grd_tmp)
       return None
