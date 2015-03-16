@@ -31,6 +31,10 @@ create_apl_dem_out = create_apl_dem_out.replace('gdalbuildvrt','.. code-block:: 
 create_dem_from_lidar_out = get_command_out(['create_dem_from_lidar.py','-h'])
 create_dem_from_lidar_out = create_dem_from_lidar_out.replace('create_dem_from_lidar.py','.. code-block:: bash\n\n   create_dem_from_lidar.py')
 
+las_to_dsm_out = get_command_out(['las_to_dsm.py','-h'])
+
+las_to_dtm_out = get_command_out(['las_to_dtm.py','-h'])
+
 scripts_text = '''
 
 ARSF DEM Scripts
@@ -52,7 +56,24 @@ create_dem_from_lidar.py
 
    {}
 
-'''.format(create_apl_dem_out, create_dem_from_lidar_out)
+las_to_dsm.py
+--------------
+
+.. code-block:: bash
+
+   {}
+
+las_to_dtm.py
+--------------
+
+.. code-block:: bash
+
+   {}
+
+'''.format(create_apl_dem_out,
+           create_dem_from_lidar_out,
+           las_to_dsm_out,
+           las_to_dtm_out)
 
 f = open(outfile,'w')
 f.write(scripts_text)
