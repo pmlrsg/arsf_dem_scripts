@@ -12,11 +12,18 @@ if sys.platform == 'win32':
    scripts_list = ['scripts\\create_apl_dem.py',
                    'scripts\\create_apl_dem.bat',
                    'scripts\\create_dem_from_lidar.py',
-                   'scripts\\create_dem_from_lidar.bat']
+                   'scripts\\create_dem_from_lidar.bat',
+                   'scripts\\las_to_dtm.py',
+                   'scripts\\las_to_dtm.bat',
+                   'scripts\\las_to_dsm.py',
+                   'scripts\\las_to_dsm.bat']
 else:
    scripts_list = ['scripts/create_apl_dem.py',
                    'scripts/create_dem_from_lidar.py',
-                   'scripts/demcompare.py']
+                   'scripts/demcompare.py',
+                   'scripts/las_to_dsm.py',
+                   'scripts/las_to_dtm.py']
+
 setup(
   name='arsf_dem',
   version = '0.1',

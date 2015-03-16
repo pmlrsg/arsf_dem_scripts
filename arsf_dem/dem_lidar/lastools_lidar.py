@@ -42,15 +42,23 @@ def checkPaidLAStools():
       return False
 
 def check_flag(in_flag):
-   """Check if flags have been
-   passed in in format '-flag'.
-   If not add dash.
+   """
+   Check if flags have been passed in in format '-flag'.
+   If not add dash. If flag contains spaces splits and returns as list
+
+   Arguments:
+
+   * in_flag
+
+   Returns:
+
+   * list containing flag to pass to subprocess
    """
 
-   if in_flag[0] == '-':
-      return in_flag
-   else:
-      return '-' + in_flag
+   if in_flag[0] != '-':
+      in_flag = '-' + in_flag
+
+   return in_flag.split()
 
 def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,flags=None,print_only=False):
    """
@@ -129,10 +137,10 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
    if flags is not None:
       if isinstance(flags,list):
          for item in flags:
-            las2txt_cmd_base = las2txt_cmd_base + [check_flag(item)]
+            las2txt_cmd_base = las2txt_cmd_base + check_flag(item)
 
       elif isinstance(flags,str):
-         las2txt_cmd_base = las2txt_cmd_base + [check_flag(flags)]
+         las2txt_cmd_base = las2txt_cmd_base + check_flag(flags)
 
    if isinstance(in_las,list):
       # If a list is passed in, run for each file
@@ -184,7 +192,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
       else:
          dem_common_functions.CallSubprocessOn(las2txt_cmd)
 
-def classify_ground_las(in_las,out_las):
+def classify_ground_las(in_las,out_las, flags=None):
    """
    Classify ground returns in a LAS file.
 
@@ -198,6 +206,7 @@ def classify_ground_las(in_las,out_las):
 
    * in_las - Input LAS file
    * out_las - Output LAS file
+   * flags - List of additional flags for lasground
 
    Returns:
 
@@ -207,14 +216,22 @@ def classify_ground_las(in_las,out_las):
    if not checkPaidLAStools():
       raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
 
-   lasground_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'lasground.exe'),
-                  '-i',in_las,
-                  '-o',out_las]
+   lasground_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'lasground.exe')]
+   # Check for flags
+   if flags is not None:
+      if isinstance(flags,list):
+         for item in flags:
+            lasground_cmd.extend(check_flag(item))
+
+      elif isinstance(flags,str):
+         lasground_cmd.extend(check_flag(flags))
+
+   lasground_cmd.extend(['-i',in_las, '-o',out_las])
 
    dem_common_functions.CallSubprocessOn(lasground_cmd)
 
 
-def las_to_dsm(in_las, out_dsm):
+def las_to_dsm(in_las, out_dsm, flags=None):
    """
    Create Digital Surface Model (DSM)
    from LAS file using the las2dem tool.
@@ -227,6 +244,7 @@ def las_to_dsm(in_las, out_dsm):
 
    * in_las - Input LAS file
    * out_dsm - Output DSM, format depends on extension.
+   * flags - List of additional flags for las2dem
 
    Returns:
 
@@ -237,13 +255,22 @@ def las_to_dsm(in_las, out_dsm):
    if not checkPaidLAStools():
       raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
 
-   las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe'),
-                  '-i',in_las,
-                  '-o',out_dsm]
+   print('Creating DSM')
+   las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe')]
+   # Check for flags
+   if flags is not None:
+      if isinstance(flags,list):
+         for item in flags:
+            las2dem_cmd.extend(check_flag(item))
+
+      elif isinstance(flags,str):
+         las2dem_cmd.extend(check_flag(flags))
+
+   las2dem_cmd.extend(['-i',in_las, '-o',out_dsm])
 
    dem_common_functions.CallSubprocessOn(las2dem_cmd)
 
-def las_to_dtm(in_las, out_dtm, keep_las=False):
+def las_to_dtm(in_las, out_dtm, keep_las=False, flags=None):
    """
    Create Digital Terrain Model (DTM) from LAS file
    using the las2dem tool.
@@ -257,6 +284,7 @@ def las_to_dtm(in_las, out_dtm, keep_las=False):
    * in_las - Input LAS file
    * out_dtm - Output DTM, format depends on extension.
    * keep_las - Keep ground classified LAS file
+   * flags - List of additional flags for las2dem
 
    Returns:
 
@@ -272,10 +300,19 @@ def las_to_dtm(in_las, out_dtm, keep_las=False):
    print('Classifying ground returns')
    classify_ground_las(in_las, lasfile_grd_tmp)
 
-   las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe'),
-                  '-keep_class', '2',
-                  '-i',lasfile_grd_tmp,
-                  '-o',out_dtm]
+   print('Creating DTM')
+   las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe')]
+   # Check for flags
+   if flags is not None:
+      if isinstance(flags,list):
+         for item in flags:
+            las2dem_cmd.extend(check_flag(item))
+
+      elif isinstance(flags,str):
+         las2dem_cmd.extend(check_flag(flags))
+
+   las2dem_cmd.extend(['-keep_class', '2'])
+   las2dem_cmd.extend(['-i',lasfile_grd_tmp, '-o',out_dtm])
 
    dem_common_functions.CallSubprocessOn(las2dem_cmd)
 
@@ -284,3 +321,29 @@ def las_to_dtm(in_las, out_dtm, keep_las=False):
    else:
       os.remove(lasfile_grd_tmp)
       return None
+
+def grass_proj_to_lastools_flag(in_grass_proj):
+
+   """
+   Converts GRASS projection (e.g., UTM30N)
+   into projection flags for LAStools
+
+   Currently only works with UTM
+
+   Arguments:
+
+   * in_grass_proj - Input GRASS projection.
+
+   Returns:
+
+   * flags for LAStools (e.g., -utm 30N)
+
+   """
+
+   if in_grass_proj[:3].upper() != 'UTM':
+      raise Exception('Currently only UTM projections are supported')
+   else:
+      return '-utm {}'.format(in_grass_proj[3:])
+
+
+

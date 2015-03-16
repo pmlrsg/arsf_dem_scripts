@@ -194,6 +194,7 @@ def las_to_dsm(in_las, out_dsm,
                interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
+               wkt=None,
                keep_spd=False):
    """
    Create Digital Surface Model (DSM) from a LAS file using SPDLib
@@ -208,6 +209,7 @@ def las_to_dsm(in_las, out_dsm,
    * interpolation - Interpolation method
    * out_raster_format - GDAL format name for output raster (e.g., ENVI)
    * bin_size - Bin size for spatial indexing
+   * wkt - WKT file defining projection (will obtain from LAS if not provided)
    * keep_spd - Keep SPD file and return path (default is to remove)
 
    Returns:
@@ -218,7 +220,7 @@ def las_to_dsm(in_las, out_dsm,
 
    spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
 
-   convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size)
+   convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size, wkt=wkt)
    spd_to_dsm(spdfile_tmp, out_dsm,
                interpolation=interpolation,
                out_raster_format=out_raster_format,
@@ -235,6 +237,7 @@ def las_to_dtm(in_las, out_dtm,
                interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
+               wkt=None,
                keep_spd=False):
    """
    Create Digital Terrain Model (DTM) from a LAS file using SPDLib
@@ -249,6 +252,7 @@ def las_to_dtm(in_las, out_dtm,
    * interpolation - Interpolation method
    * out_raster_format - GDAL format name for output raster (e.g., ENVI)
    * bin_size - Bin size for spatial indexing
+   * wkt - WKT file defining projection (will obtain from LAS if not provided)
    * keep_spd - Keep SPD file and return path (default is to remove).
 
    Returns:
@@ -259,7 +263,7 @@ def las_to_dtm(in_las, out_dtm,
 
    spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
 
-   convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size)
+   convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size, wkt=wkt)
    spdfile_grd_tmp = spd_to_dtm(spdfile_tmp, out_dtm,
                interpolation=interpolation,
                out_raster_format=out_raster_format,
