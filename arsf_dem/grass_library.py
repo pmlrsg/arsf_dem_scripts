@@ -743,6 +743,51 @@ def grass_projection_to_proj4(in_grass_proj):
    else:
       raise Exception('Could not determine projection for {}'.format(in_grass_proj))
 
+def grass_projection_to_wkt(in_grass_proj, outfile=None):
+   """
+   Converts GRASS projection (e.g., UKBNG)
+   to a WKT string / File.
+
+   Arguments:
+
+   * in_grass_proj - Input GRASS projection.
+   * outfile (optional) - File to save wkt string to.
+
+   Returns:
+
+   * wkt string
+
+   """
+
+   if not HAVE_GDAL:
+      raise ImportError('Could not import GDAL')
+
+   spatial_ref = osr.SpatialReference()
+   if in_grass_proj == 'UKBNG':
+      spatial_ref.ImportFromProj4(dem_common.OSTN02_PROJ4_STRING)
+   elif in_grass_proj == 'WGS84LL':
+      spatial_ref.ImportFromProj4(dem_common.WGS84_PROJ4_STRING)
+   elif in_grass_proj[0:3] == 'UTM':
+      if in_grass_proj[-1] == 'N':
+         epsg_code = 32600 + int(in_grass_proj[3:5])
+      elif in_grass_proj[-1] == 'S':
+         epsg_code = 32700 + int(in_grass_proj[3:5])
+      else:
+         raise Exception('UTM projection must end in "N" or "S"')
+      spatial_ref.ImportFromEPSG(epsg_code)
+   else:
+      raise Exception('Could not determine projection for {}'.format(in_grass_proj))
+
+   wkt_str = spatial_ref.ExportToWkt()
+
+   # If output file is provided write WKT string to it
+   if outfile is not None:
+      out_wkt = open(outfile,'w')
+      out_wkt.write(wkt_str)
+      out_wkt.close()
+
+   return wkt_str
+
 def proj4_to_grass_projection(in_proj4):
    """
    Converts Proj4 string to GRASS projection
