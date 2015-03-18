@@ -7,6 +7,7 @@
 A collection of utilities for working with LiDAR data.
 """
 import tempfile
+import os
 from . import lidar_utilities
 from . import grass_lidar
 from . import ascii_lidar
