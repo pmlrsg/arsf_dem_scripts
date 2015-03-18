@@ -18,6 +18,7 @@ import argparse
 # Import DEM library
 try:
    from arsf_dem import dem_common
+   from arsf_dem import dem_utilities
    from arsf_dem import dem_lidar
    from arsf_dem import dem_common_functions
 except ImportError as err:
@@ -46,6 +47,11 @@ or email arsf-processing@pml.ac.uk
                           metavar ='Out DEM',
                           help ='Output name for DTM',
                           required=True)
+      parser.add_argument('--hillshade',
+                          metavar ='Out Hillshade',
+                          help ='Output name for hillshade image (optional)',
+                          default=None,
+                          required=False)
       parser.add_argument('-r', '--resolution',
                           metavar ='Resolution',
                           help ='Resolution for output DEM (default={})'.format(dem_common.DEFAULT_LIDAR_RES_METRES),
@@ -67,6 +73,14 @@ or email arsf-processing@pml.ac.uk
                            resolution=args.resolution,
                            projection=args.projection,
                            method=args.method)
+
+      # If hillshade image is required, create this
+      if args.hillshade is not None:
+         out_raster_format = dem_utilities.get_gdal_type_from_path(args.hillshade)
+
+         dem_utilities.call_gdaldem(args.outdem, args.hillshade,
+                      dem_product='hillshade',
+                      of=out_raster_format)
 
    except KeyboardInterrupt:
       sys.exit(2)
