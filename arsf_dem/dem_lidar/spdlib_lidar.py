@@ -35,6 +35,11 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
    Indexes using last return
    Uses temp files for conversion process.
 
+   Known Issues: If LAS file isn't sorted SPDLib will print lots of warnings
+   about writing incomplete pulses (1 for each pulse in the worst case), which
+   seems to cause problems for CallSubprocessOn. Better LAS reading for SPDLib
+   is currently in-progress.
+
    Arguments:
 
    * in_las - Input LAS file
