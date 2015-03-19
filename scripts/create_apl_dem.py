@@ -82,6 +82,8 @@ Report bugs to:
 
 https://arsf-dan.nerc.ac.uk/trac/ticket/545
 
+or email arsf-processing@pml.ac.uk
+
    '''.format(dem_common.WWGSG_FILE)
 
    try:

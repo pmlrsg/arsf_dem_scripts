@@ -62,6 +62,8 @@ Report bugs to:
 
 https://arsf-dan.nerc.ac.uk/trac/ticket/545
 
+or email arsf-processing@pml.ac.uk
+
 '''.format(dem_common.DEFAULT_LIDAR_PROJECTION_GRASS, dem_common.DEFAULT_LIDAR_DEM_BUFFER['N'])
 
    try:

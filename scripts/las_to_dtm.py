@@ -27,7 +27,7 @@ except ImportError as err:
    sys.exit(1)
 
 #: Debug mode
-DEBUG = False
+DEBUG = True
 
 if __name__ == '__main__':
    description_str = '''Create a Digital Terrain Model (DTM) from a LAS file.
@@ -64,7 +64,7 @@ or email arsf-processing@pml.ac.uk
                           required=False)
       parser.add_argument('--method',
                           metavar ='Method',
-                          help ='Software package to use: GRASS (Defaults), SPDLib or LAStools.',
+                          help ='Software package to use: GRASS (Default), SPDLib or LAStools.',
                           default='GRASS',
                           required=False)
       args=parser.parse_args()
