@@ -1,22 +1,6 @@
 ARSF DEM Scripts
 =================
 
-These scripts are currently still in development and are not yet part of the main ARSF operational code. 
-
-As they are designed to replace many existing DEM scripts the plan is to move them to operational following a tidy up of existing DEM scripts (possibly after we move to git).
-
-For testing the scripts can be run from dac's home directory by running:
-
-   source ~dac/dem_scripts_update/load_new_dem_scripts
-
-to add them to your PATH and PYTHONPATH.
-
-Submit any bugs or general feedback to:
-
-https://arsf-dan.nerc.ac.uk/trac/ticket/545
-
-(dac 11/12/14)
-
 Installation
 -------------
 
