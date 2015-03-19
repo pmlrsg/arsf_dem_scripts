@@ -16,7 +16,7 @@ import tempfile
 from .. import dem_common
 from .. import dem_common_functions
 
-def checkSPDLib():
+def _checkSPDLib():
    """Check if SPDLib is installed."""
 
    try:
@@ -53,7 +53,7 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
 
    """
 
-   if not checkSPDLib():
+   if not _checkSPDLib():
       raise Exception('Could not find SPDLib')
 
    temp_dir = tempfile.mkdtemp(dir=dem_common.TEMP_PATH)
@@ -92,7 +92,7 @@ def classify_ground_spd(in_spd,out_spd,
    * None
 
     """
-   if not checkSPDLib():
+   if not _checkSPDLib():
       raise Exception('Could not find SPDLib')
 
    if not os.path.isfile(in_spd):
@@ -128,7 +128,7 @@ def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    * None
 
    """
-   if not checkSPDLib():
+   if not _checkSPDLib():
       raise Exception('Could not find SPDLib')
 
    if not os.path.isfile(in_spd):
@@ -167,7 +167,7 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    * Path to ground classified SPD file
 
    """
-   if not checkSPDLib():
+   if not _checkSPDLib():
       raise Exception('Could not find SPDLib')
 
    if not os.path.isfile(in_spd):
