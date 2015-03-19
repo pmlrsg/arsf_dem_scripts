@@ -17,6 +17,7 @@ from __future__ import print_function # Import print function (so we can use Pyt
 import os
 import tempfile
 import glob
+import subprocess
 # Import common files
 from .. import dem_common
 from .. import dem_common_functions
@@ -228,8 +229,9 @@ def classify_ground_las(in_las,out_las, flags=None):
 
    lasground_cmd.extend(['-i',in_las, '-o',out_las])
 
-   dem_common_functions.CallSubprocessOn(lasground_cmd)
-
+   # Run directly through subprocess, as CallSubprocessOn
+   # raises exception under windows for unlicensed LAStools
+   subprocess.check_output(lasground_cmd)
 
 def las_to_dsm(in_las, out_dsm, flags=None):
    """
@@ -268,7 +270,9 @@ def las_to_dsm(in_las, out_dsm, flags=None):
 
    las2dem_cmd.extend(['-i',in_las, '-o',out_dsm])
 
-   dem_common_functions.CallSubprocessOn(las2dem_cmd)
+   # Run directly through subprocess, as CallSubprocessOn
+   # raises exception under windows for unlicensed LAStools
+   subprocess.check_output(las2dem_cmd)
 
 def las_to_dtm(in_las, out_dtm, keep_las=False, flags=None):
    """
@@ -314,7 +318,9 @@ def las_to_dtm(in_las, out_dtm, keep_las=False, flags=None):
    las2dem_cmd.extend(['-keep_class', '2'])
    las2dem_cmd.extend(['-i',lasfile_grd_tmp, '-o',out_dtm])
 
-   dem_common_functions.CallSubprocessOn(las2dem_cmd)
+   # Run directly through subprocess, as CallSubprocessOn
+   # raises exception under windows for unlicensed LAStools
+   subprocess.check_output(las2dem_cmd)
 
    if keep_las:
       return lasfile_grd_tmp

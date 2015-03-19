@@ -82,8 +82,9 @@ def las_to_dsm(in_las,out_raster,
 
       # Get projection
       try:
-         lastools_proj = lastools_lidar.grass_proj_to_lastools_flag(projection)
-         lastools_flags.extend([lastools_proj])
+         if projection is not None:
+            lastools_proj = lastools_lidar.grass_proj_to_lastools_flag(projection)
+            lastools_flags.extend([lastools_proj])
       except Exception:
          dem_common_functions.WARNING('Could not convert projection {} to LAStools flags. Will try to get projection from LAS file'.format(projection))
 
@@ -157,8 +158,9 @@ def las_to_dtm(in_las,out_raster,
 
       # Get projection
       try:
-         lastools_proj = lastools_lidar.grass_proj_to_lastools_flag(projection)
-         lastools_flags.extend([lastools_proj])
+         if projection is not None:
+            lastools_proj = lastools_lidar.grass_proj_to_lastools_flag(projection)
+            lastools_flags.extend([lastools_proj])
       except Exception as err:
          dem_common_functions.WARNING('Could not convert projection to LAStools flags. {}. Will try to get projection from LAS file'.format(err))
 
