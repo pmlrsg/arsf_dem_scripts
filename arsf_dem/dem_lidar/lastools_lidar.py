@@ -22,7 +22,7 @@ import subprocess
 from .. import dem_common
 from .. import dem_common_functions
 
-def checkFreeLAStools():
+def _checkFreeLAStools():
    """Check if LAStools are installed."""
 
    try:
@@ -32,7 +32,7 @@ def checkFreeLAStools():
    except OSError:
       return False
 
-def checkPaidLAStools():
+def _checkPaidLAStools():
    """Check if paid LAStools are installed."""
 
    try:
@@ -42,24 +42,37 @@ def checkPaidLAStools():
    except OSError:
       return False
 
-def check_flag(in_flag):
+def _check_flags(in_flags):
    """
    Check if flags have been passed in in format '-flag'.
    If not add dash. If flag contains spaces splits and returns as list
 
    Arguments:
 
-   * in_flag
+   * in_flag / list of input flags
 
    Returns:
 
    * list containing flag to pass to subprocess
    """
+   outflags_list = []
 
-   if in_flag[0] != '-':
-      in_flag = '-' + in_flag
+   if isinstance(in_flags,list):
+      for flag in in_flags:
+         if flag[0] != '-':
+            flag = '-' + flag
+         # Split strings into separate list components for
+         # subprocess.
+         outflags_list.extend(flag.split())
 
-   return in_flag.split()
+   elif isinstance(in_flags,str):
+      if in_flags[0] != '-':
+         in_flags = '-' + in_flags
+      # Split strings into separate list components for
+      # subprocess.
+      outflags_list.extend(in_flags.split())
+
+   return outflags_list
 
 def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,flags=None,print_only=False):
    """
@@ -105,7 +118,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
    * None
 
    """
-   if not checkFreeLAStools():
+   if not _checkFreeLAStools():
       raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
 
    las2txt_cmd_base = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH,'las2txt'),
@@ -136,12 +149,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
 
    # Check for flags
    if flags is not None:
-      if isinstance(flags,list):
-         for item in flags:
-            las2txt_cmd_base = las2txt_cmd_base + check_flag(item)
-
-      elif isinstance(flags,str):
-         las2txt_cmd_base = las2txt_cmd_base + check_flag(flags)
+      las2txt_cmd_base += _check_flags(flags)
 
    if isinstance(in_las,list):
       # If a list is passed in, run for each file
@@ -214,23 +222,19 @@ def classify_ground_las(in_las,out_las, flags=None):
    * None
 
     """
-   if not checkPaidLAStools():
+   if not _checkPaidLAStools():
       raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
 
    lasground_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'lasground.exe')]
    # Check for flags
    if flags is not None:
-      if isinstance(flags,list):
-         for item in flags:
-            lasground_cmd.extend(check_flag(item))
-
-      elif isinstance(flags,str):
-         lasground_cmd.extend(check_flag(flags))
+      lasground_cmd += _check_flags(flags)
 
    lasground_cmd.extend(['-i',in_las, '-o',out_las])
 
    # Run directly through subprocess, as CallSubprocessOn
    # raises exception under windows for unlicensed LAStools
+   print('Attempting to run command: ' + ' '.join(lasground_cmd))
    subprocess.check_output(lasground_cmd)
 
 def las_to_dsm(in_las, out_dsm, flags=None):
@@ -254,24 +258,20 @@ def las_to_dsm(in_las, out_dsm, flags=None):
 
    """
 
-   if not checkPaidLAStools():
+   if not _checkPaidLAStools():
       raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
 
    print('Creating DSM')
    las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe')]
    # Check for flags
    if flags is not None:
-      if isinstance(flags,list):
-         for item in flags:
-            las2dem_cmd.extend(check_flag(item))
-
-      elif isinstance(flags,str):
-         las2dem_cmd.extend(check_flag(flags))
+      las2dem_cmd += _check_flags(flags)
 
    las2dem_cmd.extend(['-i',in_las, '-o',out_dsm])
 
    # Run directly through subprocess, as CallSubprocessOn
    # raises exception under windows for unlicensed LAStools
+   print('Attempting to run command: ' + ' '.join(las2dem_cmd))
    subprocess.check_output(las2dem_cmd)
 
 def las_to_dtm(in_las, out_dtm, keep_las=False, flags=None):
@@ -296,7 +296,7 @@ def las_to_dtm(in_las, out_dtm, keep_las=False, flags=None):
 
    """
 
-   if not checkPaidLAStools():
+   if not _checkPaidLAStools():
       raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
 
    lasfile_grd_tmp = tempfile.mkstemp(suffix='.LAS', dir=dem_common.TEMP_PATH)[1]
@@ -308,18 +308,14 @@ def las_to_dtm(in_las, out_dtm, keep_las=False, flags=None):
    las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe')]
    # Check for flags
    if flags is not None:
-      if isinstance(flags,list):
-         for item in flags:
-            las2dem_cmd.extend(check_flag(item))
-
-      elif isinstance(flags,str):
-         las2dem_cmd.extend(check_flag(flags))
+      las2dem_cmd += _check_flags(flags)
 
    las2dem_cmd.extend(['-keep_class', '2'])
    las2dem_cmd.extend(['-i',lasfile_grd_tmp, '-o',out_dtm])
 
    # Run directly through subprocess, as CallSubprocessOn
    # raises exception under windows for unlicensed LAStools
+   print('Attempting to run command: ' + ' '.join(las2dem_cmd))
    subprocess.check_output(las2dem_cmd)
 
    if keep_las:
