@@ -79,8 +79,11 @@ def _las_to_dem(in_las,out_raster,
 
    elif method.upper() == 'SPDLIB':
       # Create WKT file with projection
-      wktfile_handler, wkt_tmp = tempfile.mkstemp(suffix='.wkt', dir=dem_common.TEMP_PATH)
-      grass_library.grass_projection_to_wkt(projection, wkt_tmp)
+      if projection is not None:
+         wktfile_handler, wkt_tmp = tempfile.mkstemp(suffix='.wkt', dir=dem_common.TEMP_PATH)
+         grass_library.grass_projection_to_wkt(projection, wkt_tmp)
+      else:
+         wkt_tmp = None
 
       if demtype.upper() == 'DSM':
          spdlib_lidar.las_to_dsm(in_las, out_raster,
@@ -95,9 +98,10 @@ def _las_to_dem(in_las,out_raster,
       else:
          raise Exception('DEM Type not recognised - options are DSM or DTM')
 
-      # Close and remove temp WKT file created
-      os.close(wktfile_handler)
-      os.remove(wkt_tmp)
+      if projection is not None:
+         # Close and remove temp WKT file created
+         os.close(wktfile_handler)
+         os.remove(wkt_tmp)
 
    elif method.upper() == 'LASTOOLS':
       # Set resolution flag
