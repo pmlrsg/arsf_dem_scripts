@@ -27,7 +27,7 @@ except ImportError as err:
    sys.exit(1)
 
 #: Debug mode
-DEBUG = True
+DEBUG = False
 
 if __name__ == '__main__':
    description_str = '''Create a Digital Terrain Model (DTM) from a LAS file.
