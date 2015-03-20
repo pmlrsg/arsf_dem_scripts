@@ -43,6 +43,7 @@ Available functions:
 * cleanup: Cleans out map files used in program.
 * grass_projection_to_proj4: Convert GRASS style projection to Proj4 format
 * proj4_to_grass_projection: Convert Proj4 projection to GRASS style
+* grass_projection_to_wkt: Convert GRASS style projection to WKT
 
 """
 
@@ -51,6 +52,7 @@ Available functions:
 ################################################################################
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os, sys, re
+import subprocess
 # Import from arsf_dem
 from . import dem_common_functions
 from . import dem_common
@@ -385,6 +387,8 @@ def removeASCIIClass(filename, newfilename, drop_class=7, keep_class=None, first
    Function to copy points from one ascii file to another, dropping
    points with a given classification.
 
+   Under Linux/OS X uses awk to remove class which takes about half the time.
+
    Arguments:
 
    * filename - Input file.
@@ -401,16 +405,31 @@ def removeASCIIClass(filename, newfilename, drop_class=7, keep_class=None, first
    if first_only and last_only:
       raise Exception('Setting "first_only" and "last_only" makes no sense!')
 
+   if not os.path.isfile(filename):
+      raise Exception('Could not find input file "{}"'.format(filename))
+
+   if not os.path.isdir(os.path.split(newfilename)[0]):
+      raise Exception('Output directory "{}" does not exist'.format(os.path.split(newfilename)[0]))
+
    print('Updating "{}" to file "{}". '.format(filename, newfilename),end='')
+
+   awk_select = '1'
 
    if drop_class is not None:
       print('Removing classification {}. '.format(drop_class),end='')
+      # Convert drop_class to int as will raise exception if it can't be converted
+      awk_select += ' && ${} != {}'.format(dem_common.LIDAR_ASCII_ORDER['classification'],int(drop_class))
    elif keep_class is not None:
       print('Keeping classification {}. '.format(keep_class),end='')
+      # Convert keep_class to int as will raise exception if it can't be converted
+      awk_select += ' && ${} == {}'.format(dem_common.LIDAR_ASCII_ORDER['classification'],int(keep_class))
    if first_only:
       print('Keeping only first returns.')
+      awk_select += ' && ${} == 1'.format(dem_common.LIDAR_ASCII_ORDER['returnnumber'])
    elif last_only:
       print('Keeping only last returns.')
+      awk_select += ' && ${} == ${}'.format(dem_common.LIDAR_ASCII_ORDER['returnnumber'],
+                                            dem_common.LIDAR_ASCII_ORDER['numberofreturns'])
    else:
       print('')
 
@@ -420,35 +439,47 @@ def removeASCIIClass(filename, newfilename, drop_class=7, keep_class=None, first
    if keep_class is not None:
       keep_class = str(keep_class)
 
-   fin=open(filename)
-   fout=open(newfilename,'w')
+   # If not on windows use awk, which looks messy but is about twice the speed
+   if sys.platform != 'win32':
+      awk_command = "cat {0} | awk '{{ if({1}) print $0 }}' > {2}".format(filename,
+                                                                   awk_select,
+                                                                   newfilename)
+      # Need shell=True for this to work, all inputs are checked first
+      try:
+         subprocess.check_call(awk_command, shell=True)
+      except subprocess.CalledProcessError:
+         dem_common_functions.ERROR('Error running command: {}'.format(awk_command))
+         raise
+   else:
+      fin=open(filename)
+      fout=open(newfilename,'w')
 
-   for line in fin.readlines():
-      writeLine = False
-      classCheck = False
-      elements = line.split()
-      # Check class
-      if (drop_class is not None) and (elements[dem_common.LIDAR_ASCII_ORDER['classification']-1] != drop_class):
-         classCheck = True
-      elif (keep_class is not None) and (elements[dem_common.LIDAR_ASCII_ORDER['classification']-1] == keep_class):
-         classCheck = True
+      for line in fin.readlines():
+         writeLine = False
+         classCheck = False
+         elements = line.split()
+         # Check class
+         if (drop_class is not None) and (elements[dem_common.LIDAR_ASCII_ORDER['classification']-1] != drop_class):
+            classCheck = True
+         elif (keep_class is not None) and (elements[dem_common.LIDAR_ASCII_ORDER['classification']-1] == keep_class):
+            classCheck = True
 
-      # Check return
-      if classCheck:
-         if first_only:
-            if elements[dem_common.LIDAR_ASCII_ORDER['returnnumber']-1] == '1':
+         # Check return
+         if classCheck:
+            if first_only:
+               if elements[dem_common.LIDAR_ASCII_ORDER['returnnumber']-1] == '1':
+                  writeLine = True
+            elif last_only:
+               if elements[dem_common.LIDAR_ASCII_ORDER['returnnumber']-1] == elements[dem_common.LIDAR_ASCII_ORDER['numberofreturns']-1]:
+                  writeLine = True
+            else:
                writeLine = True
-         elif last_only:
-            if elements[dem_common.LIDAR_ASCII_ORDER['returnnumber']-1] == elements[dem_common.LIDAR_ASCII_ORDER['numberofreturns']-1]:
-               writeLine = True
-         else:
-            writeLine = True
 
-      if writeLine:
-         fout.write(line)
+         if writeLine:
+            fout.write(line)
 
-   fin.close()
-   fout.close()
+      fin.close()
+      fout.close()
 
    return newfilename
 
