@@ -39,7 +39,7 @@ Linux
 
 .. code-block:: bash
 
-   sudo yum install grass
+   sudo yum install  grass
 
 if you are using a Red Hat derivative e.g., Fedora or CentOS.
 For a Debian derivative (e.g., Ubuntu) use:
@@ -70,6 +70,7 @@ OS X
 ~~~~~
 
 1. Follow the instructions to install GRASS from http://www.kyngchaos.com/software/grass
+
 2. Install the arsf_dem library using:
 
 .. code-block:: bash
@@ -83,7 +84,6 @@ OS X
 
    make
    sudo make install
-
 
 Configuration
 ---------------
