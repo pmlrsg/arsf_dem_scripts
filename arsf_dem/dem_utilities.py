@@ -431,7 +431,7 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
    If projections are supplied must use Proj4 format, can convert
    between GRASS style (e.g., UKBNG) using::
 
-      grass_library.grass_projection_to_proj4('UKBNG')
+      grass_library.grass_location_to_proj4('UKBNG')
 
 
    Arguments:
@@ -472,7 +472,7 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
       # will cause problems.
       # Therefore, need to subset first (using a buffered bounding box) and then reproject.
       # A buffered bounding box is used on the initial subset to ensure full coverage.
-      if grass_library.proj4_to_grass_projection(in_dem_projection) == 'WGS84LL':
+      if grass_library.proj4_to_grass_location(in_dem_projection) == 'WGS84LL':
          subset_to_bb(in_dem_mosaic, temp_mosaic_dem,
                                     buffer_bounding_box_proportion(bounding_box),
                                     in_projection=in_dem_projection,

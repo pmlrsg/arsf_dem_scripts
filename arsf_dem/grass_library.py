@@ -41,9 +41,9 @@ Available functions:
 * histogram: Outputs png of histogram using pngmonitor.
 * closePngMonitor: Closes png monitor and writes commands.
 * cleanup: Cleans out map files used in program.
-* grass_projection_to_proj4: Convert GRASS style projection to Proj4 format
-* proj4_to_grass_projection: Convert Proj4 projection to GRASS style
-* grass_projection_to_wkt: Convert GRASS style projection to WKT
+* grass_location_to_proj4: Convert GRASS style projection to Proj4 format
+* proj4_to_grass_location: Convert Proj4 projection to GRASS style
+* grass_location_to_wkt: Convert GRASS style projection to WKT
 
 """
 
@@ -101,6 +101,20 @@ GISBASE = os.environ['GISBASE'] = dem_common.GRASS_LIB_PATH
 ################################################################################
 ###############################Grass Setup Functions############################
 ################################################################################
+
+def _remove_leading_trailing_quotes(in_string):
+   """
+   Check if string contains leading or trailing quotes
+   and remove them
+   """
+   # Leading quotes
+   if in_string[0] == '"' or in_string[0] == '\'':
+      in_string = in_string[1:]
+   # Trailing quotes
+   if in_string[-1] == '"' or in_string[-1] == '\'':
+      in_string = in_string[:-1]
+
+   return in_string
 
 def grassDBsetup():
    """Function grassDBsetup
@@ -546,7 +560,7 @@ def checkDemProj(dem):
 
 def getGRASSProjFromGDAL(in_file):
    """
-   Gets GRASS projection from image
+   Gets GRASS location name from image
    using GDAL (if GDAL Python bindings are available).
 
    Similar to 'checkDemProj but tries to be more general
@@ -635,7 +649,7 @@ def newLocation(projection):
 
    Creates a new location from a GRASS type projection or
    Proj4 string. Checks for a valid proj4 string using
-   'proj4_to_grass_projection'.
+   'proj4_to_grass_location'.
 
    Currently only works with UKBNG, WGS84LL and UTM
 
@@ -651,11 +665,11 @@ def newLocation(projection):
 
    """
    try:
-      grass_loc = proj4_to_grass_projection(projection)
+      grass_loc = proj4_to_grass_location(projection)
       proj4_str = projection
    except Exception:
       grass_loc = projection
-      proj4_str = grass_projection_to_proj4(grass_loc)
+      proj4_str = grass_location_to_proj4(grass_loc)
 
    grass.run_command('g.proj',
                         flags='c',
@@ -739,14 +753,16 @@ def reproject(project_map, project_from, mapset, output_map, vertical_reproject=
       mapCalculate(output_map, seperation, "A-B", output_map)
 #end function
 
-def grass_projection_to_proj4(in_grass_proj):
+def grass_location_to_proj4(in_grass_proj):
    """
-   Converts GRASS projection (e.g., UKBNG)
+   Converts GRASS location name (e.g., UKBNG)
    to a Proj4 string.
+
+   If Proj4 string is passed in, will just return it.
 
    Arguments:
 
-   * in_grass_proj - Input GRASS projection
+   * in_grass_proj - Input GRASS location name
 
    Returns:
 
@@ -757,7 +773,12 @@ def grass_projection_to_proj4(in_grass_proj):
    if not HAVE_GDAL:
       raise ImportError('Could not import GDAL')
 
-   if in_grass_proj == 'UKBNG':
+   spatial_ref = osr.SpatialReference()
+
+   # Check if Proj4 string was passed in - if so just return it
+   if spatial_ref.ImportFromProj4(_remove_leading_trailing_quotes(in_grass_proj)) == 0:
+      return _remove_leading_trailing_quotes(in_grass_proj)
+   elif in_grass_proj == 'UKBNG':
       return dem_common.OSTN02_PROJ4_STRING
    elif in_grass_proj == 'WGS84LL':
       return dem_common.WGS84_PROJ4_STRING
@@ -768,20 +789,21 @@ def grass_projection_to_proj4(in_grass_proj):
          epsg_code = 32700 + int(in_grass_proj[3:5])
       else:
          raise Exception('UTM projection must end in "N" or "S"')
-      spatial_ref = osr.SpatialReference()
       spatial_ref.ImportFromEPSG(epsg_code)
       return spatial_ref.ExportToProj4()
    else:
       raise Exception('Could not determine projection for {}'.format(in_grass_proj))
 
-def grass_projection_to_wkt(in_grass_proj, outfile=None):
+def grass_location_to_wkt(in_grass_proj, outfile=None):
    """
-   Converts GRASS projection (e.g., UKBNG)
+   Converts GRASS location name (e.g., UKBNG)
    to a WKT string / File.
+
+   If Proj4 string is passed in will create WKT file from this.
 
    Arguments:
 
-   * in_grass_proj - Input GRASS projection.
+   * in_grass_proj - Input GRASS location name.
    * outfile (optional) - File to save wkt string to.
 
    Returns:
@@ -794,7 +816,10 @@ def grass_projection_to_wkt(in_grass_proj, outfile=None):
       raise ImportError('Could not import GDAL')
 
    spatial_ref = osr.SpatialReference()
-   if in_grass_proj == 'UKBNG':
+   # Check if Proj4 string was passed in
+   if spatial_ref.ImportFromProj4(_remove_leading_trailing_quotes(in_grass_proj)) == 0:
+      spatial_ref.ImportFromProj4(_remove_leading_trailing_quotes(in_grass_proj))
+   elif in_grass_proj == 'UKBNG':
       spatial_ref.ImportFromProj4(dem_common.OSTN02_PROJ4_STRING)
    elif in_grass_proj == 'WGS84LL':
       spatial_ref.ImportFromProj4(dem_common.WGS84_PROJ4_STRING)
@@ -819,18 +844,18 @@ def grass_projection_to_wkt(in_grass_proj, outfile=None):
 
    return wkt_str
 
-def proj4_to_grass_projection(in_proj4):
+def proj4_to_grass_location(in_proj4):
    """
-   Converts Proj4 string to GRASS projection
+   Converts Proj4 string to GRASS location name
    (e.g., UKBNG)
 
    Arguments:
 
-   * in_proj4 - Input GRASS projection
+   * in_proj4 - Input GRASS location name
 
    Returns:
 
-   * GRASS projection string
+   * GRASS location name string
 
    """
 
@@ -839,8 +864,7 @@ def proj4_to_grass_projection(in_proj4):
 
    # Check if Proj4 string is within quotes
    # remove if so.
-   if in_proj4[0] == '"' or in_proj4[0] == '\'':
-      in_proj4 = in_proj4[1:-1]
+   in_proj4 = _remove_leading_trailing_quotes(in_proj4)
 
    spatial_ref = osr.SpatialReference()
    osr_out = spatial_ref.ImportFromProj4(in_proj4)
@@ -872,7 +896,7 @@ def proj4_to_grass_projection(in_proj4):
             (spheroid.lower().find("airy") > -1):
       grass_proj = "UKBNG"
    else:
-      raise Exception('Could not determine GRASS projection from {}'.format(in_proj4))
+      raise Exception('Could not determine GRASS location name from {}'.format(in_proj4))
 
    return grass_proj
 

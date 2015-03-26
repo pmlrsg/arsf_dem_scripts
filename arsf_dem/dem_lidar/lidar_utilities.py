@@ -198,8 +198,8 @@ def create_patched_lidar_mosaic(in_lidar,
       # Check if input projection is equal to output projection
       if in_lidar_projection != out_patched_projection:
          dem_utilities.call_gdalwarp(lidar_dem_mosaic, temp_lidar_dem,
-                s_srs=grass_library.grass_projection_to_proj4(in_lidar_projection),
-                t_srs=grass_library.grass_projection_to_proj4(out_patched_projection))
+                s_srs=grass_library.grass_location_to_proj4(in_lidar_projection),
+                t_srs=grass_library.grass_location_to_proj4(out_patched_projection))
 
          # Check if a vertical datum shift is required.
          # At the moment only consider UKBNG to WGS84LL
@@ -225,8 +225,8 @@ def create_patched_lidar_mosaic(in_lidar,
                                  nav, project,
                                  separation_file=separation_file,
                                  ascii_separation_file=ascii_separation_file,
-                                 in_dem_projection=grass_library.grass_projection_to_proj4(in_dem_mosaic_projection),
-                                 out_projection=grass_library.grass_projection_to_proj4(out_patched_projection),
+                                 in_dem_projection=grass_library.grass_location_to_proj4(in_dem_mosaic_projection),
+                                 out_projection=grass_library.grass_location_to_proj4(out_patched_projection),
                                  nodata=dem_common.NODATA_VALUE,
                                  out_res=None,
                                  remove_grassdb=True,
@@ -247,8 +247,8 @@ def create_patched_lidar_mosaic(in_lidar,
                                  bounding_box=buffered_lidar_bb,
                                  separation_file=separation_file,
                                  ascii_separation_file=ascii_separation_file,
-                                 in_dem_projection=grass_library.grass_projection_to_proj4(in_dem_mosaic_projection),
-                                 out_projection=grass_library.grass_projection_to_proj4(out_patched_projection),
+                                 in_dem_projection=grass_library.grass_location_to_proj4(in_dem_mosaic_projection),
+                                 out_projection=grass_library.grass_location_to_proj4(out_patched_projection),
                                  nodata=dem_common.NODATA_VALUE,
                                  out_res=None,
                                  remove_grassdb=True,

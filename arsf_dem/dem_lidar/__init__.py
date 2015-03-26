@@ -41,7 +41,7 @@ def _las_to_dem(in_las,out_raster,
    * in_las - Input LAS file.
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
-   * projection - Projection of input LAS files (and output DEM) in GRASS format (e.g., UTM30N)
+   * projection - Projection of input LAS files (and output DEM) as GRASS location format (e.g., UTM30N).
    * method - GRASS, SPDLib or LAStools
 
    Returns:
@@ -60,19 +60,19 @@ def _las_to_dem(in_las,out_raster,
 
    if method.upper() == 'GRASS':
       # Set projection to default if not provided
-      grass_projection = projection
-      if grass_projection is None:
-         grass_projection = dem_common.DEFAULT_LIDAR_PROJECTION_GRASS
+      grass_location = projection
+      if grass_location is None:
+         grass_location = dem_common.DEFAULT_LIDAR_PROJECTION_GRASS
 
       if demtype.upper() == 'DSM':
          grass_lidar.las_to_dsm(in_las, out_raster,
                               bin_size=resolution,
-                              projection=grass_projection,
+                              projection=grass_location,
                               out_raster_format=out_raster_format)
       elif demtype.upper() == 'DTM':
          grass_lidar.las_to_dtm(in_las, out_raster,
                               bin_size=resolution,
-                              projection=grass_projection,
+                              projection=grass_location,
                               out_raster_format=out_raster_format)
       else:
          raise Exception('DEM Type not recognised - options are DSM or DTM')
@@ -81,7 +81,7 @@ def _las_to_dem(in_las,out_raster,
       # Create WKT file with projection
       if projection is not None:
          wktfile_handler, wkt_tmp = tempfile.mkstemp(suffix='.wkt', dir=dem_common.TEMP_PATH)
-         grass_library.grass_projection_to_wkt(projection, wkt_tmp)
+         grass_library.grass_location_to_wkt(projection, wkt_tmp)
       else:
          wkt_tmp = None
 
@@ -139,7 +139,7 @@ def las_to_dsm(in_las,out_raster,
    * in_las - Input LAS file.
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
-   * projection - Projection of input LAS files (and output DEM) in GRASS format (e.g., UTM30N)
+   * projection - Projection of input LAS files (and output DEM) as GRASS location format (e.g., UTM30N).
    * method - GRASS, SPDLib or LAStools
 
    Returns:
@@ -177,7 +177,7 @@ def las_to_dtm(in_las,out_raster,
    * in_las - Input LAS file.
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
-   * projection - Projection of input LAS files (and output DEM) in GRASS format (e.g., UTM30N)
+   * projection - Projection of input LAS files (and output DEM) as GRASS location format (e.g., UTM30N).
    * method - GRASS, SPDLib or LAStools
 
    Returns:

@@ -192,7 +192,7 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
    If projections are supplied must use Proj4 format, can convert
    between GRASS style (e.g., UKBNG) using::
 
-      grass_library.grass_projection_to_proj4('UKBNG')
+      grass_library.grass_location_to_proj4('UKBNG')
 
    The navigation data to use is determined from the project directory, and the maximum
    bounding box over all lines is taken.
@@ -276,9 +276,9 @@ def subset_dem_to_apl_nav_files(in_dem_mosaic,
    dem_utilities.subset_dem_to_bounding_box
 
    If projections are supplied must use Proj4 format, can convert
-   between GRASS style (e.g., UKBNG) using::
+   between GRASS location style (e.g., UKBNG) using::
 
-      grass_library.grass_projection_to_proj4('UKBNG')
+      grass_library.grass_location_to_proj4('UKBNG')
 
    For ARSF internal processing subset_dem_to_nav should generally be used as
    a) the DEM needs to be created before any APL commands are run
