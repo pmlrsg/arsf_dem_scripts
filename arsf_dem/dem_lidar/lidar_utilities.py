@@ -404,9 +404,9 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
    if os.path.isdir(in_lidar_files[0]):
       if lidar_format.upper() == 'LAS':
          in_lidar_files_list = glob.glob(
-                           os.path.join(in_lidar_files[0],'*LAS'))
+                           os.path.join(in_lidar_files[0],'*[Ll][Aa][Ss]'))
          in_lidar_files_list.extend(glob.glob(
-                           os.path.join(in_lidar_files[0],'*las')))
+                           os.path.join(in_lidar_files[0],'*[Ll][Aa][Zz]')))
 
       # If ASCII format or not las files found check for txt files
       if lidar_format.upper() == 'ASCII' or len(in_lidar_files_list) == 0:
@@ -414,6 +414,10 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                            os.path.join(in_lidar_files[0],'*txt'))
          if len(in_lidar_files_list) != 0:
             lidar_format = 'ASCII'
+   # Check if wild character has been passed in which wasn't expanded (e.g., on windows)
+   # or no matching files were found (which will raise exception later).
+   elif in_lidar_files[0].find('*') > -1:
+      in_lidar_files_list = glob.glob(in_lidar_files[0])
    else:
       in_lidar_files_list = in_lidar_files
       if os.path.splitext(in_lidar_files_list[0])[-1].lower() != '.las' \
