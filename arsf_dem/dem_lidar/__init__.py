@@ -13,6 +13,7 @@ from . import grass_lidar
 from . import ascii_lidar
 from . import lastools_lidar
 from . import spdlib_lidar
+from . import fusion_lidar
 from . import laspy_lidar
 from .. import dem_common
 from .. import dem_utilities
@@ -42,7 +43,7 @@ def _las_to_dem(in_las,out_raster,
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
    * projection - Projection of input LAS files (and output DEM) as GRASS location format (e.g., UTM30N).
-   * method - GRASS, SPDLib or LAStools
+   * method - GRASS, SPDLib, LAStools or FUSION
 
    Returns:
 
@@ -121,6 +122,15 @@ def _las_to_dem(in_las,out_raster,
          lastools_lidar.las_to_dtm(in_las, out_raster, flags=lastools_flags)
       else:
          raise Exception('DEM Type not recognised - options are DSM or DTM')
+
+   elif method.upper() == 'FUSION':
+      if demtype.upper() == 'DSM':
+         fusion_lidar.las_to_dsm(in_las, out_raster, resolution=resolution)
+      elif demtype.upper() == 'DTM':
+         fusion_lidar.las_to_dtm(in_las, out_raster, resolution=resolution)
+      else:
+         raise Exception('DEM Type not recognised - options are DSM or DTM')
+
    else:
       raise Exception('Invalid method "{}", expected GRASS, SPDLIB or LASTOOLS'.format(method))
 

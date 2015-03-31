@@ -173,9 +173,9 @@ def get_spdlib_path():
    anaconda_install_names = ['miniconda','miniconda3'
                              'anaconda', 'anaconda3']
    if sys.platform == 'win32':
-      win_lastools_path = 'C:/spdlib'
-      if os.path.isdir(win_lastools_path):
-         return win_lastools_path
+      win_spd_path = 'C:/spdlib'
+      if os.path.isdir(win_spd_path):
+         return win_spd_path
       else:
          # Don't complain if SPDLib isn't found, will raise exception once a
          # tool which requires SPDLib is installed.
@@ -186,6 +186,32 @@ def get_spdlib_path():
          if os.path.isfile(os.path.join(user_dir, anaconda_dir,'bin','spdtranslate')):
             return os.path.join(user_dir, anaconda_dir, 'bin')
       return ''
+
+def get_fusion_bin_path():
+   """
+   Function to get path to FUSION
+
+   Under Windows assume FUSION has been installed to
+   'C:\FUSION'
+
+   Under Linux assume installed to wine install folder
+   """
+
+   if sys.platform == 'win32':
+      win_fusion_path = 'C:/FUSION'
+      if os.path.isdir(win_fusion_path):
+         return win_fusion_path
+      else:
+         # Don't complain if FUSION isn't found, will raise exception once a
+         # tool which requires FUSION is installed.
+         return ''
+   else:
+      user_dir = os.path.expanduser('~')
+      wine_fusion_path = os.path.join(user_dir,'.wine','drive_c','FUSION')
+      if os.path.isdir(wine_fusion_path):
+         return wine_fusion_path
+      else:
+         return ''
 
 # Read in config parser file
 config_current_dir = os.path.join(os.path.abspath('.'),'arsf_dem.cfg')
@@ -377,3 +403,8 @@ SPD_DEFAULT_INTERPOLATION = get_config_fallback(config,'spdlib','SPD_DEFAULT_INT
 LASTOOLS_FREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_FREE_BIN_PATH',fallback=get_lastools_path())
 #: Path to commercial LAStools binaries
 LASTOOLS_NONFREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_NONFREE_BIN_PATH',fallback=get_lastools_path())
+
+#: Path to FUSION
+FUSION_BIN_PATH = get_config_fallback(config,'fusion','FUSION_BIN_PATH',fallback=get_fusion_bin_path())
+
+
