@@ -14,11 +14,14 @@ from . import ascii_lidar
 from . import lastools_lidar
 from . import spdlib_lidar
 from . import fusion_lidar
+from . import points2grid_lidar
 from . import laspy_lidar
 from .. import dem_common
 from .. import dem_utilities
 from .. import dem_common_functions
 from .. import grass_library
+
+LAS_TO_DEM_METHODS = ['GRASS','SPDLib','LAStools','FUSION','points2grid']
 
 def _las_to_dem(in_las,out_raster,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
@@ -43,7 +46,7 @@ def _las_to_dem(in_las,out_raster,
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
    * projection - Projection of input LAS files (and output DEM) as GRASS location format (e.g., UTM30N).
-   * method - GRASS, SPDLib, LAStools or FUSION
+   * method - GRASS, SPDLib, LAStools, FUSION or points2grid
 
    Returns:
 
@@ -131,6 +134,27 @@ def _las_to_dem(in_las,out_raster,
       else:
          raise Exception('DEM Type not recognised - options are DSM or DTM')
 
+   elif method.upper() == 'POINTS2GRID':
+      # Create WKT file with projection
+      if projection is not None:
+         wktfile_handler, wkt_tmp = tempfile.mkstemp(suffix='.wkt', dir=dem_common.TEMP_PATH)
+         grass_library.grass_location_to_wkt(projection, wkt_tmp)
+      else:
+         wkt_tmp = None
+
+      if demtype.upper() == 'DSM':
+         points2grid_lidar.las_to_dsm(in_las, out_raster,
+                              resolution=resolution,
+                              projection=wkt_tmp)
+      elif demtype.upper() == 'DTM':
+         raise Exception('DTM is not currently available with points2grid')
+      else:
+         raise Exception('DEM Type not recognised - options are DSM or DTM')
+
+      if projection is not None:
+         # Close and remove temp WKT file created
+         os.close(wktfile_handler)
+         os.remove(wkt_tmp)
    else:
       raise Exception('Invalid method "{}", expected GRASS, SPDLIB or LASTOOLS'.format(method))
 

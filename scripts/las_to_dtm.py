@@ -64,7 +64,7 @@ or email arsf-processing@pml.ac.uk
                           required=False)
       parser.add_argument('--method',
                           metavar ='Method',
-                          help ='Software package to use: GRASS (Default), SPDLib, LAStools or FUSION.',
+                          help ='Software package to use. Options are:\n{}'.format(','.join(dem_lidar.LAS_TO_DEM_METHODS)),
                           default='GRASS',
                           required=False)
       args=parser.parse_args()

@@ -407,4 +407,5 @@ LASTOOLS_NONFREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_NONF
 #: Path to FUSION
 FUSION_BIN_PATH = get_config_fallback(config,'fusion','FUSION_BIN_PATH',fallback=get_fusion_bin_path())
 
-
+#: Path to points2dem
+POINTS2GRID_BIN_PATH = get_config_fallback(config,'points2grid','POINTS2GRID_BIN_PATH',fallback='')
