@@ -260,7 +260,7 @@ os.environ['GISBASE'] = GRASS_LIB_PATH
 
 #: Path for GRASS database template
 GRASS_DATABASE_TEMPLATE = get_config_fallback(config,'grass','GRASS_DATABASE_TEMPLATE',
-                           fallback='/users/rsg/arsf/usr/share/grass_db_template/')
+                           fallback=None)
 
 # Set some common options for raster creation
 
@@ -306,7 +306,7 @@ DEFAULT_APL_DEM_BUFFER = {'N' : 0.05,
 
 #: Default location of ASTER DEM mosaic
 ASTER_MOSAIC_FILE = get_config_fallback(config,'dems','ASTER_MOSAIC_FILE',
-            fallback='/users/rsg/arsf/aster/aster_v2_dem_mosaic.vrt')
+            fallback=None)
 #: Resolution of ASTER DEM (in degrees)
 ASTER_RES_DEGREES = (0.000277777777778,-0.000277777777778)
 #: Resolution of ASTER DEM (in metres)
@@ -314,7 +314,7 @@ ASTER_RES_METRES = (30,-30)
 
 #: Default location of NextMap DEM mosaic
 NEXTMAP_MOSAIC_FILE = get_config_fallback(config,'dems','NEXTMAP_MOSAIC_FILE',
-            fallback='/users/rsg/arsf/nextmap/neodc/nextmap_dsm_mosaic_bng.vrt')
+            fallback=None)
 #: Resolution of NextMap DEM (in degrees)
 NEXTMAP_RES_DEGREES = (0.0000554040,-0.0000554040)
 #: Resolution of NextMap DEM (in metres)
@@ -322,7 +322,7 @@ NEXTMAP_RES_METRES = (5,-5)
 
 #: Default location of SRTM Mosaic
 SRTM_MOSAIC_FILE = get_config_fallback(config,'dems','SRTM_MOSAIC_FILE',
-            fallback='/users/rsg/arsf/SRTM/global/srtm_global_mosaic_90m.tif')
+            fallback=None)
 #: Resolution of SRTM DEM (in degrees)
 SRTM_RES_DEGREES = (0.000277777777778,-0.000277777777778)
 #: Resolution of SRTM DEM (in metres)
@@ -331,31 +331,31 @@ SRTM_RES_METRES = (30,-30)
 # Set locations of separation files
 #: Default location of vertical separation file between Newlyn and WGS-84 datum (WGS84LL projection)
 UKBNG_SEP_FILE_WGS84  = get_config_fallback(config,'separationfiles','UKBNG_SEP_FILE_WGS84',
-                  fallback='/users/rsg/arsf/dems/aster/separation_files/uk_separation_file_WGS84LL.dem')
+                  fallback=None)
 #: If UKBNG_SEP_FILE_WGS84 is ASCII format
 UKBNG_SEP_FILE_WGS84_IS_ASCII = False
 
 #: Default location of vertical separation file between Newlyn and WGS-84 datum (UKBNG projection)
 UKBNG_SEP_FILE_UKBNG = get_config_fallback(config,'separationfiles','UKBNG_SEP_FILE_UKBNG',
-                  fallback='/users/rsg/arsf/dems/aster/separation_files/uk_separation_file_UKBNG.dem')
+                  fallback=None)
 #: If UKBNG_SEP_FILE_UKBNG is ASCII format
 UKBNG_SEP_FILE_UKBNG_IS_ASCII = False
 
 #: Default location of vertical separation file between geoid and WGS-84 datum.
 WWGSG_FILE = get_config_fallback(config,'separationfiles','WWGSG_FILE',
-                  fallback='/users/rsg/arsf/dems/geoid-spheroid/ww15mgh.grd')
+                  fallback=None)
 #: If WWGSG_FILE is ASCII
 WWGSG_FILE_IS_ASCII = True
 
 #: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection).
 EGM96_UKBNG_SEP_FILE_WGS84 = get_config_fallback(config,'separationfiles','EGM96_UKBNG_SEP_FILE_WGS84',
-                  fallback='/users/rsg/arsf/dems/aster/separation_files/ww15mgh_minus_uk_separation_file_WGS84LL.dem')
+                  fallback=None)
 #: If EMG96_UKBNG_SEP_FILE_UKBNG is ASCII format
 EGM96_UKBNG_SEP_FILE_WGS84_IS_ASCII = False
 
 #: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection).
 EGM96_UKBNG_SEP_FILE_UKBNG = get_config_fallback(config,'separationfiles','EGM96_UKBNG_SEP_FILE_UKBNG',
-                  fallback='/users/rsg/arsf/dems/aster/separation_files/ww15mgh_minus_uk_separation_file_UKBNG.dem')
+                  fallback=None)
 #: If EMG96_UKBNG_SEP_FILE_UKBNG is ASCII format
 EGM96_UKBNG_SEP_FILE_UKBNG_IS_ASCII = False
 
