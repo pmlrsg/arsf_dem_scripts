@@ -76,6 +76,9 @@ def las_to_dsm(in_las, out_dsm,
    * resolution - output resolution
 
    """
+   if not _checkPoints2Grid():
+      raise Exception('Could not find points2grid, checked {}'.format(dem_common.POINTS2GRID_BIN_PATH))
+
    outdsm_handler, dsm_tmp = tempfile.mkstemp(suffix='', dir=dem_common.TEMP_PATH)
 
    print('Creating surface')
