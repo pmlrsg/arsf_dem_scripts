@@ -5,6 +5,37 @@
 
 """
 A collection of utilities for working with LiDAR data.
+
+Two high level functions las_to_dsm and las_dtm are included which are used
+to create a Digital Surface Model (DSM) and Digital Terrain Model (DTM) from
+LAS files.
+
+You can use these Python fuctions to look through all LAS files in an directory
+and create a DSM / DTM for each.
+
+For example::
+
+   import os
+   import glob
+   from arsf_dem import dem_lidar
+
+   # Search current directory for all files ending matching '*.LAS'
+   in_las_list = glob.glob('*.LAS')
+
+   # Iterate through list of files found
+   for in_las in in_las_list:
+      # Set name of output DEM as the same as LAS file
+      # but with '_dsm.tif' suffix
+      out_dem_basename = os.path.splitext(os.path.split(in_las)[-1])[0]
+      out_dsm = os.path.join(out_dir, out_dem_basename + '_dsm.tif')
+      out_dtm = os.path.join(out_dir, out_dem_basename + '_dtm.tif')
+
+      # Run function to create DSM
+      dem_lidar.las_to_dsm(in_las,out_dsm, method='GRASS')
+
+      # Run function to create DTM
+      dem_lidar.las_to_dtm(in_las,out_dtm, method='GRASS')
+
 """
 import tempfile
 import os

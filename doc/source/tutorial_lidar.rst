@@ -1,96 +1,135 @@
-LiDAR Tutorials
-================
+LiDAR DEM Tutorial
+===================
+
+This tutorial introduces some of the tools available in arsf_dem for creating a Digital Elevation Model (DEM) from lidar point clouds.
+It can be run using ARSF provided tutorial data available to download (lidardata_; 1.8 GB zipped) or on your own LAS format
+lidar data.
+
+This tutorial assumes Windows is being used and all pre-requisites and scripts have already been installed.
+However, usage is the same when running under Linux / OS X apart from you need to add '.py' to the end of all command line tools.
+If you are copy and pasting commands you also need to use '\\' where commands span multiple lines rather than '^'.
+
 
 Create a DSM using the command line utility
 ---------------------------------------------
 
-The recomended way to create a Digital Surface Model (DSM), which represents the
+The recommended way to create a Digital Surface Model (DSM), which represents the
 top of canopy and buildings is to utilise the `create_dem_from_lidar` script
-line tool. This tutorial assumes Windows is being used and GRASS has been installed
-through OSGeo4W. Under Linux / OS X the script needs to be called using
+line tool. Under Linux / OS X the script needs to be called using
 `create_dem_from_lidar.py` and is run from a standard terminal.
 
-LiDAR Only
-~~~~~~~~~~~
+Create a LiDAR DSM
+~~~~~~~~~~~~~~~~~~~~
 
 1. Open the OSGeo4W Shell
-2. Navigate to the directory the directory containing LiDAR data (in LAS or ASCII format)
-e.g.,
+2. Navigate to the directory the directory containing the discrete LiDAR data point cloud (LAS format). E.g, if you have saved the tutorial data to the C: drive:
 
-.. code-block:: bash
+.. code-block:: text
 
-   cd C:\ARSF-LiDAR\
+   cd C:\lidar_dem_tutorial\
 
 3. Run the following command to create a DSM using only LiDAR data:
 
-.. code-block:: bash
+.. code-block:: text
 
-   create_dem_from_lidar --in_projection UKBNG \
-                         --outdem lidar_dsm.dem \
-                         las1.2
+   create_dem_from_lidar --in_projection UTM33N ^
+                         --outdem EUFAR11_02-2011-187_dsm.dem ^
+                         las1.0
 
-This will create a DSM mosaic, in ENVI format, from all 'LAS' files in the folder 'las1.2'
-at the default resolution (2 m). Any points classified as noise within the LAS file
-will be dropped. You can create a tiff by changing the extension of the output file to '.tif'
+This will create a DSM from each line in the folder 'las1.0' and then create a mosaic from all lines at the default resolution (2 m).
+The flag '--in_projection' is used to specify the projection of the LAS files is UTM33N, it this is not provided it will default to UKBNG.
 
-Note, as part of the process a text file is made from each line, dropping points classified as noise.
+As part of the process of creating a DSM, only points which are the first return are kept and any points flagged as noise (class 7) are dropped.
 
+Using the extension 'dem' provides an ENVI format file (binary with text header), it is also possible to export other formats (e.g., GeoTiff)
+by changing the extension.
 
-LiDAR and Additional DEM for APL
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It will take a couple of minutes to run, while it is running you will output to the terminal showing a temporary ASCII file being created from the LAS file using the las2txt_ command, dropping class 7 and keeping only the first return. 
+This ASCII file is then imported into GRASS_ and gridded at the specified resolution taking the mean elevation of all points in each cell. Once all files have been imported into GRASS and gridded a mosaic is generated and exported.
 
-To create a DSM from the LiDAR, suitible for using in the Airborne Processing
-Library to geocorrect hyperspectral data, some extra consideration are needed:
+The mosaic can be opened in TuiView (if installed) by typing:
 
-   * The DSM needs to use WGS-84 Lat/Long projection and heights need to be relative to the WGS-84 elipsoid.
-   * Areas of no-data need to be filled.
+.. code-block:: text
+
+   tuiview EUFAR11_02-2011-187_dsm.dem
+
+or another packages such as QGIS or ArcMap.
+
+4. To help visualise the data you can create a hillshade image using the gdaldem_ command:
+
+.. code-block:: text
+
+   gdaldem hillshade ^
+         EUFAR11_02-2011_187_dsm.dem ^
+         EUFAR11_02-2011_187_dsm_hillshade.tif
+
+5. You can also create contour lines using the gdal_contour_ command:
+
+.. code-block:: text
+
+   gdal_contour -i 20 -a elevation ^
+         EUFAR11_02-2011_187_dsm.dem ^
+         EUFAR11_02-2011_187_dsm_20m_contours.shp
+
+.. image:: figures/EUFAR11_02-2011_187_dsm_20m_contours.png
+   :width: 60 %
+   :align: center
+
+Create a LiDAR / ASTER DSM for use in APL
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To create a DSM from the LiDAR, suitable for using in the Airborne Processing
+Library (APL) to geocorrect hyperspectral data, some extra consideration are needed:
+
+   * The DSM needs to use WGS-84 Lat/Long projection and heights need to be relative to the WGS-84 ellipsoid.
+   * Areas of no-data need to be filled (e.g., with a courser resolution DEM).
    * The format needs to be ENVI Band Interleaved by Line (BIL) or Band Sequential (BSQ).
 
-Similar to creating a DEM using only LiDAR data open the OSGeo4W Shell and navigate
-to the directory containing LiDAR data. Then run the following command:
+The same `create_dem_from_lidar` script can be used to generate a DSM for use in APL, by setting some options.
+Again, open the OSGeo4W Shell and navigate to the directory containing LiDAR data.
+Then run the following command
 
-.. code-block:: bash
+.. code-block:: text
 
-   create_dem_from_lidar --in_projection UKBNG \
-                         --out_projection WGS84LL \
-                         --demmosaic RG12_09-2014_088-ASTER.dem \
-                         --lidar_bounds \
-                         --outdem lidar_aster_dsm.dem \
-                         lidar_files_dir
+   create_dem_from_lidar --in_projection UTM33N ^
+                         --out_projection WGS84LL ^
+                         --lidar_bounds ^
+                         --demmosaic EUFAR11_02-2011-187-ASTER.dem  ^
+                         --outdem EUFAR11_02-2011-187-lidar_ASTER-wgs84_latlong.dem ^
+                         las1.0
 
 This will create a DSM mosaic from the LAS files in 'lidar_files_dir',
 reproject (horizontally and vertically) to WGS84 Lat/Long and patch with
-'RG12_09-2014_088-ASTER.dem', cropped to the bounding box of all LiDAR data
-plus a buffer of 2 km.
+'EUFAR11_02-2011-187-ASTER.dem' (as provided with ARSF hyperspectral delivery), cropped to the bounding box of all LiDAR data plus a buffer of 2 km.
 
 This assumes the vertical datum of the data is the same as that required for the
-output projection.
+output projection. 
 
-To use downloaded ASTER or SRTM files, which use vertical heights relative to the
-geoid you can subset and reproject first.
-The first step is to create a virtual raster from all downloaded tiles.
+To use ASTER or SRTM files you have downloaded yourself, which use vertical heights relative to the
+geoid you can subset and reproject first. The first step is to create a virtual raster from all downloaded tiles using gdalbuildvrt_
 
-.. code-block:: bash
+.. code-block:: text
 
-   gdalbuildvrt srtm_mosaic.vrt *1arc_v3.tif
+   gdalbuildvrt srtm_mosaic.vrt tile1.tif tile2.tif
 
 The second step is to subset and apply a height offset to the DEM
 
-.. code-block:: bash
+.. code-block:: text
 
-   create_apl_dem --demmosaic strm_mosaic.vrt \
-                     --separation_file geoid-spheroid/ww15mgh.grd \
-                     --bil_navigation flightlines/navigation \
+   create_apl_dem --demmosaic strm_mosaic.vrt ^
+                     --separation_file geoid-spheroid/ww15mgh.grd ^
+                     --bil_navigation flightlines/navigation ^
                      --outdem 2014_088_strm.dem
 
 Where:
 
-`--separation_file` is a file providing the seperation between the geoid and the spheriod.
+`--separation_file` is a file providing the separation between the geoid and the spheroid.
 
-`--bil_navigation` is a folder containing the processed BIL format nagivation files
+`--bil_navigation` is a folder containing the processed BIL format navigation files
 produced by APL and supplied with delivered hyperspectral data.
 
 Note, if running under Linux / OS X `create_apl_dem.py` needs to be used.
+
 
 Create DSM / DTM using additional programs
 --------------------------------------------
@@ -102,91 +141,62 @@ These packages offer more advanced interpolation and classification of ground re
 Creation of a DEM can be done in a Python script, using functions from the arsf_dem library, or through
 command line tools.
 
-Python Functions
-~~~~~~~~~~~~~~~~~
-
-To create a DSM using GRASS the following is used
-
-.. code-block:: python
-
-   from arsf_dem import dem_lidar
-   las_to_dsm('in_las.las', 'out_dsm_grass.tif',
-              resolution=2, method='GRASS')
-
-The format of the output file is set using the extension, using '.tif' will create a GeoTIFF.
-Using '.dem' will create an ENVI file.
-
-If SPDLib is available, and the path has been set in the config file a DSM can be
-created using:
-
-.. code-block:: python
-
-   from arsf_dem import dem_lidar
-   las_to_dsm('in_las.las', 'out_dsm_spdlib.tif',
-               resolution=2, method='SPDLIB')
-
-Similarly, if LAStools are available a DSM can be created using:
-
-.. code-block:: python
-
-   from arsf_dem import dem_lidar
-   las_to_dsm('in_las.las', 'out_dsm_lastools.tif',
-              resolution=2, method='LASTOOLS')
-
-Note, if you don't have a license for LAStools, this command will still run but will introduce
-artefacts, such as diagonal black lines.
-
-You can use these Python functions to iterate through a list of files within a
-Python script and create a DSM for each. For example:
-
-.. code-block:: python
-
-   import os
-   import glob
-   from arsf_dem import dem_lidar
-
-   # Search current directory for all files ending matching '*.LAS'
-   in_las_list = glob.glob('*.LAS')
-
-   # Iterate through list of files found
-   for in_las in in_las_list:
-      # Set name of output DEM as the same as LAS file
-      # but with '_dsm.tif' suffix
-      out_dsm_basename = os.path.splitext(os.path.split(in_las)[-1])[0]
-      out_dsm = os.path.join(out_dir, out_dsm_basename + '_dsm.tif')
-
-      # Run function to create DSM
-      dem_lidar.las_to_dsm(in_las,out_dsm)
-
-To create a DTM a similar function las_to_dtm is used. When the method is GRASS this just takes the last
-return. When SPDLib or LAStools are used a progressive morphology filter is used to classify ground
-returns and a DTM is generated by interpolating these points.
-
-.. code-block:: python
-
-   from arsf_dem import dem_lidar
-   # GRASS
-   las_to_dtm('in_las.las', 'out_dtm_grass.tif',
-              resolution=2, method='GRASS')
-   # SPDLib
-   las_to_dtm('in_las.las', 'out_dtm_spdlib.tif',
-              resolution=2, method='SPDLIB')
-   # LAStools
-   las_to_dtm('in_las.las', 'out_dtm_lastools.tif',
-              resolution=2, method='LASTOOLS')
-
 Command line tools
 ~~~~~~~~~~~~~~~~~~~
 
 Two utility command line tools are provided to call the Python functions for
-producing a DSM / DTM `las_to_dsm` and `las_to_dtm`. Usage is:
+producing a DSM / DTM `las_to_dsm` and `las_to_dtm` (remember to add .py on the end if not running under windows)
 
-.. code-block:: bash
+To create a DSM using GRASS the following is used
 
-   las_to_dsm -o out_dsm.tif \
-              --projection UTM30N \
-              in_las.las
+.. code-block:: text
 
+   las_to_dsm -o LDR-EUFAR11_02-2011-187-01_grass_dsm.tif ^
+              --projection UTM33N ^
+              --method GRASS ^
+              las1.0\LDR-EUFAR11_02-2011-187-01.LAS
 
+The format of the output file is set using the extension, using '.tif' will create a GeoTIFF.
 
+Other programs such as LAStools_ (if a license is available [1]), SPDLib_, FUSION_ and points2grid_ can be used by setting the `--method` flag [2].
+If these programs require data to be converted to different formats, this will be done within the script using temporary files.
+
+Creating a DTM, which represents the elevation of a 'bare-earth' (i.e., with no buildings or vegetation) requires first identifying ground returns and then creating a raster using only these points. When GRASS is used the last return is assumed to be a ground return, which is not always a good assumption in dense vegetation.
+
+Other programs (e.g., LAStools_, SPDLib_ and FUSION_) have more advanced methods for classifying ground returns (see their respective manuals for more details).
+When a method which allows classification of ground returns is specified the `las_to_dtm` script first classifies ground returns, saving to a temporary file, and then creates DTM from this.
+
+To create a DTM `las_to_dtm` is used:
+
+.. code-block:: text
+
+   las_to_dtm -o LDR-EUFAR11_02-2011-187-01_spdlib_dtm.tif ^
+              --projection UTM33N ^
+              --method SPDLib ^
+              las1.0\LDR-EUFAR11_02-2011-187-01.LAS
+
+In this case using a progressive morphology filter to classify ground returns and a Natural Neighbour interpolation implemented within SPDLib.
+
+A comparison of DTMs and DSMs generated using these tools, applied to a flight over the New Forest is shown below.
+
+.. image:: figures/dtm_dsm.png
+   :width: 40 %
+   :align: center
+
+Note, depending on the cover the default classification and interpolation parameters used by `las_to_dtm` may not provide the best results.
+In these cases it is recommended you access the programs directly, as this will provide more control over the available options.
+
+.. [1] It is possible to run LAStools without a license but it will add diagonal black lines to the output file and add small amounts of noise. For details of licensing LAStools see the LAStools_ website.
+.. [2] Note these programs are not affiliated with ARSF and have their own support systems (normally mailing lists). See their respective websites for more details on getting help.
+
+.. _lidardata: http://arsf-dan.nerc.ac.uk/files/lidar_dem_data.zip
+.. _gdalbuildvrt: http://www.gdal.org/gdalbuildvrt.html
+.. _las2txt: http://www.cs.unc.edu/~isenburg/lastools/download/las2txt_README.txt
+.. _GRASS: http://grass.osgeo.org/grass64/manuals/r.in.xyz.html
+.. _gdaldem: http://www.gdal.org/gdaldem.html
+.. _gdal_contour: http://www.gdal.org/gdal_contour.html
+.. _SPDLib: http://spdlib.org
+.. _LAStools: http://rapidlasso.com/lastools/
+.. _FUSION: http://forsys.cfr.washington.edu/fusion/fusion_overview.html
+.. _points2grid: https://github.com/CRREL/points2grid
 
