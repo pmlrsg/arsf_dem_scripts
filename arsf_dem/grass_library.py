@@ -1096,6 +1096,8 @@ def outputToGDAL(inputname,outputname,imtype='JPEG',nodata=0,datatype='Byte',set
    """Function outputToGDAL
 
       Write out a raster data set to a GDAL supported file type
+      If output type is JPEG checks number of cells is less than allowed limit.
+      Decreases resolution until it is.
    """
    #Set the output region to the raster if requested
    if setregiontoimage:
