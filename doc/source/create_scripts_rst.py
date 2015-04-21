@@ -20,19 +20,19 @@ def get_command_out(command):
 
    (stdout, stderr) = out.communicate()
 
-   return stdout
+   out_tabs = ''
+
+   for line in stdout.decode().split('\n'):
+      out_tabs += '   {}\n'.format(line)
+
+   return out_tabs
 
 outfile = os.path.join(os.path.split(__file__)[0],'scripts.rst')
 
+# Run commands and get output
 create_apl_dem_out = get_command_out(['create_apl_dem.py','-h'])
-create_apl_dem_out = create_apl_dem_out.replace('create_apl_dem.py','.. code-block:: bash\n\n   create_apl_dem.py')
-create_apl_dem_out = create_apl_dem_out.replace('gdalbuildvrt','.. code-block:: bash\n\n   gdalbuildvrt')
-
 create_dem_from_lidar_out = get_command_out(['create_dem_from_lidar.py','-h'])
-create_dem_from_lidar_out = create_dem_from_lidar_out.replace('create_dem_from_lidar.py','.. code-block:: bash\n\n   create_dem_from_lidar.py')
-
 las_to_dsm_out = get_command_out(['las_to_dsm.py','-h'])
-
 las_to_dtm_out = get_command_out(['las_to_dtm.py','-h'])
 
 scripts_text = '''
@@ -42,33 +42,33 @@ ARSF DEM Scripts
 
 Note under Windows, there is no need to type the '.py' at the end of the scripts. Batch files have been created to run the Python scripts, which don't need an extension to be provided.
 
-create_apl_dem.py
+create_apl_dem
 -------------------
 
 .. code-block:: bash
 
-   {}
+{}
 
-create_dem_from_lidar.py
+create_dem_from_lidar
 -------------------------
 
 .. code-block:: bash
 
-   {}
+{}
 
-las_to_dsm.py
+las_to_dsm
 --------------
 
 .. code-block:: bash
 
-   {}
+{}
 
-las_to_dtm.py
+las_to_dtm
 --------------
 
 .. code-block:: bash
 
-   {}
+{}
 
 '''.format(create_apl_dem_out,
            create_dem_from_lidar_out,
