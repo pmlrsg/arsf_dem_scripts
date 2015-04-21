@@ -556,7 +556,7 @@ def export_screenshot(in_file, out_file,
                      remove_grassdb=True):
    """
    Export a screenshot in JPEG format with pixel values rescaled using
-   histogram equalisation.
+   histogram equalisation or as a shaded relief (hillshade) image.
 
    Arguments:
 
@@ -647,14 +647,14 @@ def export_screenshot(in_file, out_file,
       raise Exception('Could not rescale image')
 
    # Export as JPEG
-   grass.run_command('r.out.gdal',
-                format='JPEG',
-                type='Byte',
-                input=rescaled_name,
-                flags='f',
-                nodata=dem_common.NODATA_VALUE,
-                output=out_file,
-                overwrite=True)
+   # Use function in grass_library which will ensure
+   # image is not larger than maximum number of pixels.
+   grass_library.outputToGDAL(rescaled_name,out_file,
+                              imtype='JPEG',
+                              nodata=0,
+                              datatype='Byte',
+                              setregiontoimage=True,
+                              resolution=None,tidyup=False)
    remove_gdal_aux_file(out_file)
 
    # Remove GRASS database created
