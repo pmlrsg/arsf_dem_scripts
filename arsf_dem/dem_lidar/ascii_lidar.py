@@ -5,6 +5,10 @@
 #
 # remove_ascii_class from grass_library by Stephen Gould
 
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
+
 """
 Functions for working with lidar data in ASCII format.
 

@@ -4,7 +4,10 @@
 #
 # Author: Dan Clewley (dac@pml.ac.uk)
 # Created on: 05 November 2014
-# Licensing:
+
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 """
 A set of common variables (default parameters, paths etc.,) for the arsf_dem module.

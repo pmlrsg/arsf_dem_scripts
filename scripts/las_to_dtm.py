@@ -5,10 +5,9 @@ Author: Dan Clewley (dac)
 
 Created on: 16 March 2015
 
-Known issues:
-
-License restrictions: Depends on GRASS library, subject to GNU GPL.
-Can also use SPDLib (GPL) and LAStools (commercial license required)
+This file has been created by ARSF Data Analysis Node and
+is licensed under the GPL v3 Licence. A copy of this
+licence is available to download with this file.
 
 """
 

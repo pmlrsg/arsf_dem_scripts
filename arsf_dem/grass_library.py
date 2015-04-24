@@ -6,6 +6,9 @@
 # Modified by Dan Clewley (dac) to
 # become part of arsf_dem library
 #
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 """
 A Python library of useful grass functions, these are built from the grass python scripting library. (advanced sysopen calls mostly)

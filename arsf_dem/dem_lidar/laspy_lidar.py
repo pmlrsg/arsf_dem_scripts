@@ -2,7 +2,11 @@
 #
 # Author: Dan Clewley (dac)
 # Created on: 10 November 2014
-# Licensing: Uses Laspy library
+
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
+
 """
 Functions for working with LiDAR data in LAS format using the laspy
 Python library.

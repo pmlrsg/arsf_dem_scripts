@@ -5,7 +5,9 @@ Author: Dan Clewley (dac)
 
 Created on: 29 October 2014
 
-License restrictions: Depends on GRASS library, subject to GNU GPL
+This file has been created by ARSF Data Analysis Node and
+is licensed under the GPL v3 Licence. A copy of this
+licence is available to download with this file.
 
 """
 

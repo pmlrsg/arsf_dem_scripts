@@ -3,6 +3,10 @@
 # Author: Dan Clewley (dac)
 # Created On: 06/10/2014
 
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
+
 """
 A collection of utilities for working with LiDAR data.
 

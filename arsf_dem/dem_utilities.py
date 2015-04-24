@@ -4,7 +4,10 @@
 #
 # Author: Dan Clewley (dac@pml.ac.uk)
 # Created on: 05 November 2014
-# Licensing: Uses GRASS GIS Python scripting library, subject to GNU GPL.
+
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 """
 General DEM utility scripts. Most are built on GRASS but are designed to be used with an existing GRASS database (if data has already been imported) or independently and will import data as required.

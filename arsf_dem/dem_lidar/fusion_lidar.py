@@ -1,5 +1,9 @@
 #Author: Dan Clewley (dac)
 #Created on: 31 March 2015
+
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 """
 Functions for working with LiDAR data using FUSION (http://forsys.cfr.washington.edu/fusion/fusion_overview.html)
 

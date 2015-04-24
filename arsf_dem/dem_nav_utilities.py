@@ -2,7 +2,10 @@
 #
 # Author: Dan Clewley (dac)
 # Created on: 05 November 2014
-# License restrictions: Uses GRASS GIS Python scripting library, subject to GNU GPL.
+
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 """
 Utilities for working with DEMs and navigation data, mostly for creating DEMs suitible for use in APL for processing hyperspectral data.

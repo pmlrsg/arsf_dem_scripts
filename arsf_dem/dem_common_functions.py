@@ -4,11 +4,12 @@
 Copy of common ARSF Python functions required
 by arsf_dem.
 
-Functions have been modified so they should also work under Windows.
-
-License Restrictions: PrintTermWidth uses code from GPLv3 library
+Functions have been modified so they also work under Windows.
 
 """
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os

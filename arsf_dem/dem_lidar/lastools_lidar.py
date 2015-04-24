@@ -2,7 +2,10 @@
 #
 # Author: Dan Clewley (dac)
 # Created on: 05 November 2014
-# Licensing restrictions: Uses a mixture of GPL and commercial LAStools
+
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 """
 Functions for working with LiDAR data using LAStools:
