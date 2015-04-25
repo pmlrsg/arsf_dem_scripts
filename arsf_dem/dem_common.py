@@ -114,6 +114,21 @@ def get_grass_python_lib_path(GRASS_LIB_PATH=None):
       print('You need to define in config file using "GRASS_PYTHON_LIB_PATH".',file=sys.stderr)
       sys.exit(1)
 
+def get_grass_db_template_path():
+   """
+   Gets path to grass_db_template.
+   Installed to PREFIX/share.
+   """
+   python_lib_str = '/lib/python{}.{}'.format(sys.version_info[0],sys.version_info[1])
+   install_prefix = __file__[:__file__.find(python_lib_str)]
+   grass_db_template_path = os.path.join(install_prefix,'share','grass_db_template')
+
+   if os.path.isdir(grass_db_template_path):
+      return grass_db_template_path
+   else:
+     print('Could not find grass_db_template with arsf_dem library.',file=sys.stderr)
+     return None
+
 def get_temp_path():
    """Function to get temp path by trying
    common environmental variables.
@@ -234,7 +249,16 @@ os.environ['GISBASE'] = GRASS_LIB_PATH
 
 #: Path for GRASS database template
 GRASS_DATABASE_TEMPLATE = get_config_fallback(config,'grass','GRASS_DATABASE_TEMPLATE',
-                           fallback='/users/rsg/arsf/usr/share/grass_db_template/')
+                           fallback=None)
+
+if GRASS_DATABASE_TEMPLATE is None:
+   GRASS_DATABASE_TEMPLATE = get_grass_db_template_path()
+
+if not os.path.isdir(GRASS_DATABASE_TEMPLATE):
+   print('''Could not find GRASS database template. 
+Try downloading from http://arsf-dan.nerc.ac.uk/trac/raw-attachment/wiki/Help/DEM_scripts/grass_db_template.zip
+and setting path in config file using "GRASS_DATABASE_TEMPLATE"'''.format(GRASS_DATABASE_TEMPLATE),file=sys.stderr)
+   
 
 # Set some common options for raster creation
 
