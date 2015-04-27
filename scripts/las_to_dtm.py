@@ -31,11 +31,11 @@ DEBUG = True
 if __name__ == '__main__':
    description_str = '''Create a Digital Terrain Model (DTM) from a LAS file.
 
-Report bugs to:
+'las_to_dtm' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+and made available under the terms of the GPLv3 license.
 
-https://arsf-dan.nerc.ac.uk/trac/ticket/545
-
-or email arsf-processing@pml.ac.uk
+The programs used by las_to_dtm are available under a range of licenses, please
+consult their respective documentation for more details.
 
 '''
 

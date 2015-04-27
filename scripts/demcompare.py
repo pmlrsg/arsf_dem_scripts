@@ -383,9 +383,8 @@ For documentation and details on usage see:
 
 https://arsf-dan.nerc.ac.uk/trac/wiki/Processing/demcompare
 
-Report bugs to:
-
-https://arsf-dan.nerc.ac.uk/trac/ticket/545
+'dem_compare' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+and made available under the terms of the GPLv3 license.
 
 '''
 

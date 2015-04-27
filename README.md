@@ -1,28 +1,33 @@
 ARSF DEM Scripts
 =================
 
+About
+------
+
+A collection of scripts developed by the Airborne Research and Survey Facility
+Data Analysis Node (ARSF-DAN), based at Plymouth Marine Laboratory (PML) for working
+with DEMs.
+
+Licensing
+----------
+
+This software is available under the General Public License (GPL) Version 3.
+See the file 'LICENSE' for more details.
+
 Installation
 -------------
 
-Install using:
+For the scripts to work a number of other software packages, coordinate transform and offset files are also required.
+
+Required Software:
+
+* GRASS
+* Python (Needs to be the same version used by GRASS, currently 2.7)
+* LAStools (free/paid) - Free tools required for importing LAS files, paid tools can be used to create DTMs/DSMs.
+
+Following installation of these packages, install ARSF DEM scripts using:
 
    python setup.py install --prefix=~/install/path
 
-Config file
-------------
+More advanced functionality (e.g., coordinate transforms) requires additional files and packages. For more details see 'installation' in documentation.
 
-The parameters for configuration are stored in `arsf_dem/arsf_dem.cfg`
-by changing these values you can adjust system level default values.
-
-It is also possible to copy the config folder to `~/.arsf_dem` to 
-overwrite the settings for a user or to `arsf_dem.cfg` within the current
-working directory to overwite the settings for a project.
-
-Documentation
---------------
-
-Documentation for each function is stored as standard Python docstrings. You can generate Sphinx documentation by running:
-
-   make html
-
-from within 'doc'

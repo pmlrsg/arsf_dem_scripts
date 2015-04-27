@@ -33,6 +33,9 @@ if __name__ == '__main__':
    description_str = '''A script to create a DEM for use in APL subset to bounds
 of hyperspectral navigation data.
 
+If not running on ARSF systems need to pass in bil format navigation files
+(supplied with delivered hyperspectral data).
+
 Typical usage:
 
 1) Create Next map DEM
@@ -80,11 +83,8 @@ If the correct project path is not found or passed in, or for another reason
 there is a problem finding hyperspectral navigation files the script will
 print a warning but continue and produce a DEM much larger than required.
 
-Report bugs to:
-
-https://arsf-dan.nerc.ac.uk/trac/ticket/545
-
-or email arsf-processing@pml.ac.uk
+'create_apl_dem' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+and made available under the terms of the GPLv3 license.
 
    '''.format(dem_common.WWGSG_FILE)
 
