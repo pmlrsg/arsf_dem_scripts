@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 """
 Setup script for arsf_dem
+
+This file has been created by ARSF Data Analysis Node and
+is licensed under the GPL v3 Licence. A copy of this
+licence is available to download with this file.
+
 """
 
 import glob, os, sys
@@ -20,7 +25,6 @@ if sys.platform == 'win32':
 else:
    scripts_list = ['scripts/create_apl_dem.py',
                    'scripts/create_dem_from_lidar.py',
-                   'scripts/demcompare.py',
                    'scripts/las_to_dsm.py',
                    'scripts/las_to_dtm.py']
 

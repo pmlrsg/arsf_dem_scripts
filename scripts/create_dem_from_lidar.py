@@ -25,7 +25,7 @@ except ImportError as err:
    sys.exit(1)
 
 #: Debug mode
-DEBUG = True
+DEBUG = False
 
 if __name__ == '__main__':
    description_str = '''A script to create a DEM from LiDAR data in LAS or ASCII format and optionally patch with a DEM
@@ -59,7 +59,7 @@ the flag '--lidar_bounds', which only uses the bounds of the lidar data, not nav
 plus a buffer of {1} m.
 
 'create_dem_from_lidar' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
-and made available under the terms of the GPLv3 license.
+and is made available under the terms of the GPLv3 license.
 
 '''.format(dem_common.DEFAULT_LIDAR_PROJECTION_GRASS, dem_common.DEFAULT_LIDAR_DEM_BUFFER['N'])
 

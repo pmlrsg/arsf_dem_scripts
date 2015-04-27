@@ -84,7 +84,7 @@ there is a problem finding hyperspectral navigation files the script will
 print a warning but continue and produce a DEM much larger than required.
 
 'create_apl_dem' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
-and made available under the terms of the GPLv3 license.
+and is made available under the terms of the GPLv3 license.
 
    '''.format(dem_common.WWGSG_FILE)
 

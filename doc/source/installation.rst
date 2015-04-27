@@ -93,6 +93,6 @@ locations of files (e.g., DEMs, separation files). These can be overridden by se
 them in 'arsf_dem.cfg', by default this file is installed to the same location as the
 Python library. By placing a copy in the home directory (`~\.arsf_dem.cfg`) the settings
 can be changed for a particular user. They can also be changed by placing a copy
-of arsf_dem in the working directory.
+of arsf_dem.cfg in the working directory.
 
 

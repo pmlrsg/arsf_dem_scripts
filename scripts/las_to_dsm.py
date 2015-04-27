@@ -31,7 +31,7 @@ if __name__ == '__main__':
    description_str = '''Create a Digital Surface Model (DSM) from a LAS file.
 
 'las_to_dsm' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
-and made available under the terms of the GPLv3 license.
+and is made available under the terms of the GPLv3 license.
 
 The programs used by las_to_dsm are available under a range of licenses, please
 consult their respective documentation for more details.
