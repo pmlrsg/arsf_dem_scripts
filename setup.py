@@ -36,7 +36,7 @@ setup(
   packages = ['arsf_dem','arsf_dem.dem_lidar'],
   package_dir={'arsf_dem': 'arsf_dem'},
   package_data={'arsf_dem' : ['arsf_dem.cfg']},
-  data_files=[('share/grass_db_template/WGS84LL/PERMANENT/',glob.glob('data/grass_db_template/WGS84LL/PERMANENT/*')),
-              ('share/grass_db_template/UKBNG/PERMANENT/',glob.glob('data/grass_db_template/UKBNG/PERMANENT/*')) ],
+  data_files=[(os.path.join('share','grass_db_template','WGS84LL','PERMANENT'),glob.glob(os.path.join('data','grass_db_template','WGS84LL','PERMANENT','*'))),
+              (os.path.join('share','grass_db_template','UKBNG','PERMANENT'),glob.glob(os.path.join('data','grass_db_template','UKBNG','PERMANENT','*')))],
   scripts = scripts_list,
 )

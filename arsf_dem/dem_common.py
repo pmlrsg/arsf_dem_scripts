@@ -122,8 +122,7 @@ def get_grass_db_template_path():
    Gets path to grass_db_template.
    Installed to PREFIX/share.
    """
-   python_lib_str = '/lib/python{}.{}'.format(sys.version_info[0],sys.version_info[1])
-   install_prefix = __file__[:__file__.find(python_lib_str)]
+   install_prefix = __file__[:__file__.find('lib')]
    grass_db_template_path = os.path.join(install_prefix,'share','grass_db_template')
 
    if os.path.isdir(grass_db_template_path):
