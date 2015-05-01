@@ -5,8 +5,7 @@ About
 ------
 
 A collection of scripts developed by the Airborne Research and Survey Facility
-Data Analysis Node (ARSF-DAN), based at Plymouth Marine Laboratory (PML) for working
-with DEMs.
+Data Analysis Node (ARSF-DAN; https://arsf-dan.nerc.ac.uk/trac/) for working with DEMs.
 
 Licensing
 ----------
@@ -29,5 +28,6 @@ Following installation of these packages, install ARSF DEM scripts using:
 
    python setup.py install --prefix=~/install/path
 
-More advanced functionality (e.g., coordinate transforms) requires additional files and packages. For more details see 'installation' in documentation.
+More advanced functionality (e.g., coordinate transforms) requires additional files and packages.
+For more details see 'installation' in documentation.
 
