@@ -310,7 +310,13 @@ def readLasLidar(lasfolder,location=None,patch=True,datacolumn=dem_common.LIDAR_
    lastools_lidar.convert_las_to_ascii(lasfolder, tempdir)
 
    #Call readAsciiLidar on the files
-   return readAsciiLidar(tempdir,location=location,patch=patch,datacolumn=datacolumn,resolution=resolution)
+   out_grass_names = readAsciiLidar(tempdir,location=location,patch=patch,datacolumn=datacolumn,resolution=resolution)
+
+   # Remove temp file with ASCII files (now all imported to GRASS)
+   shutil.rmtree(tempdir)
+
+   return out_grass_names
+
 
 def readAsciiLidar(lasfolder, location=None,patch=True,datacolumn=dem_common.LIDAR_ASCII_ORDER['z'],resolution=2,ignoreclassification=True):
    """Function readAsciiLidar
