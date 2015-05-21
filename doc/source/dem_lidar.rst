@@ -40,6 +40,20 @@ SPDLib LiDAR
    :members:
    :undoc-members:
 
+FUSION LiDAR
+--------------
+
+.. automodule:: arsf_dem.dem_lidar.fusion_lidar
+   :members:
+   :undoc-members:
+
+points2grid LiDAR
+--------------
+
+.. automodule:: arsf_dem.dem_lidar.points2grid_lidar
+   :members:
+   :undoc-members:
+
 Laspy LiDAR
 --------------
 

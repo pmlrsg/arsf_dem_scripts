@@ -1,14 +1,32 @@
 #!/usr/bin/env python
 """
 Setup script for arsf_dem
+
+This file has been created by ARSF Data Analysis Node and
+is licensed under the GPL v3 Licence. A copy of this
+licence is available to download with this file.
+
 """
 
-import glob, os
-from numpy.distutils.core import setup
+import glob, os, sys
+from distutils.core import setup
 
-scripts_list = ['scripts/create_apl_dem.py',
-                'scripts/create_dem_from_lidar.py',
-                'scripts/demcompare.py']
+# For windows also copy batch files, incase .py files
+# aren't associated with Python.
+if sys.platform == 'win32':
+   scripts_list = ['scripts\\create_apl_dem.py',
+                   'scripts\\create_apl_dem.bat',
+                   'scripts\\create_dem_from_lidar.py',
+                   'scripts\\create_dem_from_lidar.bat',
+                   'scripts\\las_to_dtm.py',
+                   'scripts\\las_to_dtm.bat',
+                   'scripts\\las_to_dsm.py',
+                   'scripts\\las_to_dsm.bat']
+else:
+   scripts_list = ['scripts/create_apl_dem.py',
+                   'scripts/create_dem_from_lidar.py',
+                   'scripts/las_to_dsm.py',
+                   'scripts/las_to_dtm.py']
 
 setup(
   name='arsf_dem',
@@ -18,5 +36,7 @@ setup(
   packages = ['arsf_dem','arsf_dem.dem_lidar'],
   package_dir={'arsf_dem': 'arsf_dem'},
   package_data={'arsf_dem' : ['arsf_dem.cfg']},
+  data_files=[(os.path.join('share','grass_db_template','WGS84LL','PERMANENT'),glob.glob(os.path.join('data','grass_db_template','WGS84LL','PERMANENT','*'))),
+              (os.path.join('share','grass_db_template','UKBNG','PERMANENT'),glob.glob(os.path.join('data','grass_db_template','UKBNG','PERMANENT','*')))],
   scripts = scripts_list,
 )

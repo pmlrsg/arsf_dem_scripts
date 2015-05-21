@@ -9,24 +9,24 @@ Requires SPDLib to be installed.
 """
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
-import os, sys
+import os
 import shutil
 import tempfile
 # Import common files
 from .. import dem_common
-from .. import common_functions
+from .. import dem_common_functions
 
-def checkSPDLib():
+def _checkSPDLib():
    """Check if SPDLib is installed."""
-   
+
    try:
-      common_functions.CallSubprocessOn([os.path.join(dem_common.SPDLIB_BIN_PATH,'spdtranslate')],
+      dem_common_functions.CallSubprocessOn([os.path.join(dem_common.SPDLIB_BIN_PATH,'spdtranslate')],
                         redirect=True, quiet=True)
       return True
    except OSError:
-      return False 
+      return False
 
-def convert_las_to_spd(in_las,out_spd,wkt=None, 
+def convert_las_to_spd(in_las,out_spd,wkt=None,
                   bin_size=dem_common.DEFAULT_LIDAR_RES_METRES):
    """
    Convert LAS file to spatially indexed SPD file by calling
@@ -34,7 +34,12 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
 
    Indexes using last return
    Uses temp files for conversion process.
-   
+
+   Known Issues: If LAS file isn't sorted SPDLib will print lots of warnings
+   about writing incomplete pulses (1 for each pulse in the worst case), which
+   seems to cause problems for CallSubprocessOn. Better LAS reading for SPDLib
+   is currently in-progress.
+
    Arguments:
 
    * in_las - Input LAS file
@@ -45,10 +50,10 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
    Returns:
 
    * None
-   
+
    """
-   
-   if not checkSPDLib():
+
+   if not _checkSPDLib():
       raise Exception('Could not find SPDLib')
 
    temp_dir = tempfile.mkdtemp(dir=dem_common.TEMP_PATH)
@@ -61,9 +66,9 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
                '--temppath',spdtmppath,
                '-i',in_las,'-o',out_spd]
    if wkt is not None:
-     spdCMD = spdCMD + ['--input_proj',wkt, '--output_proj', wkt]
+      spdCMD = spdCMD + ['--input_proj',wkt, '--output_proj', wkt]
 
-   common_functions.CallSubprocessOn(spdCMD)
+   dem_common_functions.CallSubprocessOn(spdCMD)
 
    # Remove temp files
    shutil.rmtree(temp_dir)
@@ -71,11 +76,11 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
 def classify_ground_spd(in_spd,out_spd,
                bin_size=dem_common.DEFAULT_LIDAR_RES_METRES):
    """
-   Classify ground returns in an SPD file using a 
+   Classify ground returns in an SPD file using a
    Progressive Morphology filter.
 
    Calls the spdpmfgrd tool.
-   
+
    Arguments:
 
    * in_spd - Input SPD File
@@ -83,24 +88,24 @@ def classify_ground_spd(in_spd,out_spd,
    * bin_size - Bin size for spatial indexing
 
    Returns:
-   
+
    * None
- 
+
     """
-   if not checkSPDLib():
+   if not _checkSPDLib():
       raise Exception('Could not find SPDLib')
 
    if not os.path.isfile(in_spd):
       raise Exception('Input SPD file "{}" does not exist'.format(in_spd))
 
-   pmfCMD = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdpmfgrd'), 
+   pmfCMD = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdpmfgrd'),
             '-b',str(bin_size),
             '-r','50',
             '--overlap','10',
             '--maxfilter','14',
             '-i',in_spd,'-o',out_spd]
 
-   common_functions.CallSubprocessOn(pmfCMD)
+   dem_common_functions.CallSubprocessOn(pmfCMD)
 
 def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
@@ -109,7 +114,7 @@ def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    Create a Digital Surface Model (DSM) from an SPD file
 
    Calls the spdinterp tool.
-   
+
    Arguments:
 
    * in_spd - Input SPD File
@@ -119,11 +124,11 @@ def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    * bin_size - Bin size for spatial indexing
 
    Returns:
-   
+
    * None
 
    """
-   if not checkSPDLib():
+   if not _checkSPDLib():
       raise Exception('Could not find SPDLib')
 
    if not os.path.isfile(in_spd):
@@ -136,18 +141,18 @@ def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
        '-b',str(bin_size),
        '-i',in_spd,'-o',out_dsm]
 
-   common_functions.CallSubprocessOn(dsmCMD)
+   dem_common_functions.CallSubprocessOn(dsmCMD)
 
 def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
                keep_spd=False):
    """
-   Create a Digital Surface Model (DTM) from an SPD file 
+   Create a Digital Surface Model (DTM) from an SPD file
 
    First classifies ground returns using a Progressive Morphology
    filter (spdpmfgrd) then calls the spdinterp tool.
-   
+
    Arguments:
 
    * in_spd - Input SPD File
@@ -158,18 +163,18 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    * keep_spd - Keep ground classified SPD file and return path (default is to remove)
 
    Returns:
-   
+
    * Path to ground classified SPD file
 
    """
-   if not checkSPDLib():
+   if not _checkSPDLib():
       raise Exception('Could not find SPDLib')
 
    if not os.path.isfile(in_spd):
       raise Exception('Input SPD file "{}" does not exist'.format(in_spd))
 
-   spdfile_grd_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)[1]
-   
+   spdfile_handler, spdfile_grd_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
+
    print('Classifying ground returns')
    classify_ground_spd(in_spd, spdfile_grd_tmp)
 
@@ -181,18 +186,20 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
        '-b',str(bin_size),
        '-i',spdfile_grd_tmp,'-o',out_dtm]
 
-   common_functions.CallSubprocessOn(dtmCMD)
+   dem_common_functions.CallSubprocessOn(dtmCMD)
 
+   os.close(spdfile_handler)
    if keep_spd:
       return spdfile_grd_tmp
    else:
       os.remove(spdfile_grd_tmp)
       return None
 
-def las_to_dsm(in_las, out_dsm, 
+def las_to_dsm(in_las, out_dsm,
                interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
+               wkt=None,
                keep_spd=False):
    """
    Create Digital Surface Model (DSM) from a LAS file using SPDLib
@@ -207,32 +214,35 @@ def las_to_dsm(in_las, out_dsm,
    * interpolation - Interpolation method
    * out_raster_format - GDAL format name for output raster (e.g., ENVI)
    * bin_size - Bin size for spatial indexing
+   * wkt - WKT file defining projection (will obtain from LAS if not provided)
    * keep_spd - Keep SPD file and return path (default is to remove)
 
    Returns:
-   
+
    * Path to SPD file
 
    """
-      
-   spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)[1]
 
-   convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size)
-   spd_to_dsm(spdfile_tmp, out_dsm, 
+   spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
+
+   convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size, wkt=wkt)
+   spd_to_dsm(spdfile_tmp, out_dsm,
                interpolation=interpolation,
                out_raster_format=out_raster_format,
                bin_size=bin_size)
 
+   os.close(spdfile_handler)
    if keep_spd:
       return spdfile_tmp
    else:
       os.remove(spdfile_tmp)
       return None
 
-def las_to_dtm(in_las, out_dtm, 
+def las_to_dtm(in_las, out_dtm,
                interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
+               wkt=None,
                keep_spd=False):
    """
    Create Digital Terrain Model (DTM) from a LAS file using SPDLib
@@ -247,28 +257,28 @@ def las_to_dtm(in_las, out_dtm,
    * interpolation - Interpolation method
    * out_raster_format - GDAL format name for output raster (e.g., ENVI)
    * bin_size - Bin size for spatial indexing
+   * wkt - WKT file defining projection (will obtain from LAS if not provided)
    * keep_spd - Keep SPD file and return path (default is to remove).
 
    Returns:
-   
+
    * Path to ground classified SPD file
 
-   """ 
-      
-   spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)[1]
+   """
 
-   convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size)
-   spdfile_grd_tmp = spd_to_dtm(spdfile_tmp, out_dtm, 
+   spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
+
+   convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size, wkt=wkt)
+   spdfile_grd_tmp = spd_to_dtm(spdfile_tmp, out_dtm,
                interpolation=interpolation,
                out_raster_format=out_raster_format,
                bin_size=bin_size,
-               keep_spd=True)
+               keep_spd=keep_spd)
 
+   os.close(spdfile_handler)
    os.remove(spdfile_tmp)
 
    if keep_spd:
       return spdfile_grd_tmp
    else:
-      os.remove(spdfile_grd_tmp)
       return None
-  

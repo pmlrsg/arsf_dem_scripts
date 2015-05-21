@@ -4,11 +4,12 @@
 Copy of common ARSF Python functions required
 by arsf_dem.
 
-Functions have been modified so they should also work under Windows.
-
-License Restrictions: PrintTermWidth uses code from GPLv3 library
+Functions have been modified so they also work under Windows.
 
 """
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os
@@ -20,22 +21,22 @@ import subprocess
 def WARNING(strOutput):
    """Function that emphasises text in the terminal"""
    #Black background + bold white text
-   if sys.platform.find('win') < 0:
+   if sys.platform != 'win32':
       print('\033[40;37;1m'+strOutput+'\033[0m')
    # If on windows don't bother trying to change colours, it won't work
    else:
       print(strOutput)
-      
+
 def ERROR(strOutput,tostdouttoo=False):
    """Function that emphasises text in the sys.stderr stream"""
 
    try:
       callerid="%s : %s"%(inspect.stack()[1][1],inspect.stack()[1][3])
 
-   except:
+   except Exception:
       callerid=""
 
-   if sys.platform.find('win') < 0:
+   if sys.platform != 'win32':
       print('\033[41;33;1m'+"Error in "+callerid+": "+str(strOutput)+'\033[0m', file=sys.stderr)
       if tostdouttoo:
          print('\033[41;33;1m'+"Error in "+callerid+": "+str(strOutput)+'\033[0m', file=sys.stdout)
@@ -52,7 +53,6 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
    if command is None:
       raise TypeError("Command to be run must be specified")
 
-
    if isinstance(command,str):
       command_to_run=command.split(' ')
    elif isinstance(command,list):
@@ -66,14 +66,16 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
    redirecttext=[]
    try:
       process=subprocess.Popen(command_to_run,stderr=subprocess.PIPE,stdout=subprocess.PIPE)
-      while process.poll() is None:
-         if redirect==False and not quiet:
-            lines, _, _ =select.select([process.stdout,process.stderr],[],[],0.1)
-            if lines:#if there is data read a line of it
-               someline=lines[0].readline()
-               if someline:
-                  print(someline.rstrip())
-                  
+      # If on Windows don't try to run this, as it doesn't work
+      if sys.platform != 'win32':
+         while process.poll() is None:
+            if redirect==False and not quiet:
+               lines, _, _ =select.select([process.stdout,process.stderr],[],[],0.1)
+               if lines:#if there is data read a line of it
+                  someline=lines[0].readline()
+                  if someline:
+                     print(someline.rstrip())
+
       #Get anything left over in buffer
       stdout,stderr=process.communicate()
       if redirect==True:
@@ -85,9 +87,9 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
 
       #still output error if quiet but not if redirecting
       #elif stderr and redirect==False: ERROR(stderr)
-      elif stderr and redirect==False: 
+      elif stderr and redirect==False:
          raise StandardError(stderr)
-      
+
    except StandardError as e:
       raise
 
@@ -96,12 +98,34 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
    else:
       return True
 
+def FileListInDirectory(path):
+   """Function to return a list of files in the given directory"""
+   if not os.path.exists(path):
+      ERROR("Directory does not exist: %s"%path)
+      return False
+
+   try:
+      listing=os.listdir(path)
+   except Exception as e:
+      ERROR("Error getting file listing of directory: %s\n%s"%(path,str(e)))
+      return []
+
+   files=[]
+   for item in listing:
+      fullitem=os.path.join(path,item)
+      if os.path.isdir(fullitem):
+         pass
+      elif os.path.isfile(fullitem):
+         files.append(item)
+   return files
+
+
 def PrintTermWidth(text, padding_char=' '):
    """
-   Prints a string padding with a character so the string is in the centre of the 
+   Prints a string padding with a character so the string is in the centre of the
    terminal.
 
-   Function modified from one in https://bitbucket.org/chchrsc/envmaster by 
+   Function modified from one in https://bitbucket.org/chchrsc/envmaster by
    Sam Gillingham and make available under GPLv2 License
 
    """
@@ -120,7 +144,7 @@ def PrintTermWidth(text, padding_char=' '):
       if text != '':
          paddedtext = ' {} '.format(text)
       # If an empty string is passed in don't want to print a message
-      # just a line of 'padding_chars', in this case don't want a 
+      # just a line of 'padding_chars', in this case don't want a
       # space (as this will look silly).
       else:
          paddedtext = text
@@ -133,6 +157,5 @@ def PrintTermWidth(text, padding_char=' '):
    # Default is to place a single character each side with spaces.
    except Exception:
       paddedtext = ' {0} {1} {0} '.format(padding_char,text)
-   
-   print(paddedtext)
 
+   print(paddedtext)

@@ -2,7 +2,10 @@
 #
 # Author: Dan Clewley (dac)
 # Created on: 05 November 2014
-# License restrictions: Uses GRASS GIS Python scripting library, subject to GNU GPL.
+
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 """
 Utilities for working with DEMs and navigation data, mostly for creating DEMs suitible for use in APL for processing hyperspectral data.
@@ -24,20 +27,12 @@ Functions to get a bounding box from navigation data can produce a bounding box 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os, sys
 import glob
-import tempfile
 import math
-import numpy
 
 # Import arsf_dem files
 from . import dem_common
 from . import dem_utilities
-from . import common_functions
-
-# Import PML Utilities
-try:
-   import grass_library
-except ImportError as err:
-   from . import grass_library
+from . import dem_common_functions
 
 # Check DEM library is available
 # this is only used on ARSF systems
@@ -51,134 +46,127 @@ except ImportError as err:
 HAVE_GDAL=True
 try:
    from osgeo import gdal
-   from osgeo import osr
 except ImportError:
    # If can't import don't complain until GDAL is actually needed
-   HAVE_GDAL=False 
+   HAVE_GDAL=False
 
 def create_apl_dem_from_mosaic(outdem,
                      dem_source=None,
                      dem_mosaic=None,
+                     separation_file=None,
                      project='.',
                      nav=None,
                      bil_navigation=None,
-                     fill_nulls=True, 
+                     fill_nulls=True,
                      remove_grassdb=True,
                      grassdb_path=None):
-      """
-      Create DEM subset for use in APL from standard or custom DEM
-      
-      Used by script 'create_apl_dem.py'
+   """
+   Create DEM subset for use in APL from standard or custom DEM
 
-      dem_source options are:
+   Used by script 'create_apl_dem.py'
 
-      * 'ASTER'
-      * 'NEXTMAP'
-      * 'SRTM'
+   dem_source options are:
 
-      Arguments:
+   * 'ASTER'
+   * 'NEXTMAP'
+   * 'SRTM'
 
-      * outdem - Output DEM file.
-      * dem_source - Source of DEM.
-      * dem_mosaic - Path to DEM if not using standard DEM.
-      * project - Base name of project (used to get navigation data).
-      * nav - Path to sbet / sol navigation file.
-      * bil_navigation - Directoy containing APL processed BIL format navigation files
-      * fill_nulls - fill NULL values (needed for use in APL)
-      * remove_grassdb - Remove GRASS database after processing is complete
-        
-      """
+   Arguments:
 
-      # If no DEM output is required (left in GRASS database) make temp file
-      temp_dem = False
-      temp_file_list = []
-      if outdem is None:
-         temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)[1]
-         temp_mosaic_dem_header = os.path.splitext(temp_mosaic_dem)[0] + '.hdr' 
-         temp_file_list.extend([temp_mosaic_dem,temp_mosaic_dem_header])
-         temp_dem = True
-         outdem = temp_mosaic_dem
+   * outdem - Output DEM file.
+   * dem_source - Source of DEM.
+   * dem_mosaic - Path to DEM if not using standard DEM.
+   * separation_file - Path to separation file to use for non-standard DEM.
+   * project - Base name of project (used to get navigation data).
+   * nav - Path to sbet / sol navigation file.
+   * bil_navigation - Directoy containing APL processed BIL format navigation files.
+   * fill_nulls - fill NULL values (needed for use in APL).
+   * remove_grassdb - Remove GRASS database after processing is complete.
 
-      in_dem_mosaic = None
+   """
+   # ASTER DEM
+   if (dem_source is not None) and (dem_source.upper() == 'ASTER'):
+      in_dem_mosaic = dem_common.ASTER_MOSAIC_FILE
+      in_dem_projection = dem_common.WGS84_PROJ4_STRING
+      separation_file = dem_common.WWGSG_FILE
+      ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
+      out_res = dem_common.ASTER_RES_DEGREES
 
-      # ASTER DEM
-      if dem_source.upper() == 'ASTER':
-         in_dem_mosaic = dem_common.ASTER_MOSAIC_FILE
-         in_dem_projection = dem_common.WGS84_PROJ4_STRING
-         separation_file = dem_common.WWGSG_FILE
-         ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
-         out_res = dem_common.ASTER_RES_DEGREES
-      
-      # NEXTMap DEM
-      elif dem_source.upper() == 'NEXTMAP':
-         in_dem_mosaic = dem_common.NEXTMAP_MOSAIC_FILE
-         in_dem_projection = dem_common.OSTN02_PROJ4_STRING
-         separation_file = dem_common.UKBNG_SEP_FILE_WGS84
-         ascii_separation_file = dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII
-         out_res = dem_common.NEXTMAP_RES_DEGREES
-         if not os.path.isfile(dem_common.OSTN02_NTV2_BIN_FILE):
-            common_functions.ERROR("Could not find OSTN02 transform file.\nChecked {}".format(dem_common.OSTN02_NTV2_BIN_FILE))
-            sys.exit(1) 
+   # NEXTMap DEM
+   elif (dem_source is not None) and (dem_source.upper() == 'NEXTMAP'):
+      in_dem_mosaic = dem_common.NEXTMAP_MOSAIC_FILE
+      in_dem_projection = dem_common.OSTN02_PROJ4_STRING
+      separation_file = dem_common.UKBNG_SEP_FILE_WGS84
+      ascii_separation_file = dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII
+      out_res = dem_common.NEXTMAP_RES_DEGREES
+      if not os.path.isfile(dem_common.OSTN02_NTV2_BIN_FILE):
+         dem_common_functions.ERROR("Could not find OSTN02 transform file.\nChecked {}".format(dem_common.OSTN02_NTV2_BIN_FILE))
+         sys.exit(1)
 
-      # SRTM DEM
-      elif dem_source.upper() == 'SRTM':
-         in_dem_mosaic = dem_common.SRTM_MOSAIC_FILE
-         in_dem_projection = dem_common.WGS84_PROJ4_STRING
-         separation_file = dem_common.WWGSG_FILE
-         ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
-         out_res = dem_common.SRTM_RES_DEGREES
+   # SRTM DEM
+   elif (dem_source is not None) and (dem_source.upper() == 'SRTM'):
+      in_dem_mosaic = dem_common.SRTM_MOSAIC_FILE
+      in_dem_projection = dem_common.WGS84_PROJ4_STRING
+      separation_file = dem_common.WWGSG_FILE
+      ascii_separation_file = dem_common.WWGSG_FILE_IS_ASCII
+      out_res = dem_common.SRTM_RES_DEGREES
 
-      # Custom DEM
-      elif dem_mosaic is not None:
-         in_dem_mosaic = dem_mosaic
-         in_dem_projection = None
-         separation_file = args.separation_file
-         if separation_file is not None and \
-         (os.path.splitext(separation_file)[-1] == '.dem' or os.path.splitext(separation_file)[-1] == '.bil'):
-            ascii_separation_file = False
-         else:
-            ascii_separation_file = True
-         out_res = None
-
+   # Custom DEM
+   elif dem_mosaic is not None:
+      in_dem_mosaic = dem_mosaic
+      in_dem_projection = None
+      if separation_file is not None and \
+      (os.path.splitext(separation_file)[-1] == '.dem' or os.path.splitext(separation_file)[-1] == '.bil'):
+         ascii_separation_file = False
       else:
-         raise Exception('DEM Source not recognised and no custom DEM supplied.')
+         ascii_separation_file = True
+      out_res = None
+      if dem_source is None:
+         dem_source = 'DEM'
 
-      if bil_navigation is not None:
-         common_functions.PrintTermWidth('Using post processed navigation data from {}'.format(bil_navigation))
-         out_demfile, grassdb_path = subset_dem_to_apl_nav_files(in_dem_mosaic, 
-                                        outdem,
-                                        bil_navigation,
-                                        separation_file=separation_file,
-                                        ascii_separation_file=ascii_separation_file,
-                                        in_dem_projection=in_dem_projection,
-                                        out_res=out_res,
-                                        nodata=-9999,
-                                        remove_grassdb=remove_grassdb,
-                                        grassdb_path=grassdb_path,
-                                        fill_nulls=fill_nulls)
+   else:
+      raise Exception('DEM Source not recognised and no custom DEM supplied.')
 
+   # If a name for the output DEM is not provided try to figure out standard name
+   if outdem is None:
+      if not HAVE_DEM_LIBRARY:
+         raise Exception('A name for the output DEM was not supplied and' +
+                     ' the dem_library could not be imported to determine the standard' +
+                     ' ARSF DEM name and path from the project.\nPlease supply a name for the DEM')
       else:
-         common_functions.PrintTermWidth('Using navigation data for project {}'.format(project))
-         # Set nodata to -9999 so an offset is also applied to pixels with a value of 0
-         out_demfile, grassdb_path = subset_dem_to_nav(in_dem_mosaic, 
-                              outdem,
-                              nav, project,
-                              separation_file=separation_file,
-                              ascii_separation_file=ascii_separation_file,
-                              in_dem_projection=in_dem_projection,
-                              out_res=out_res,
-                              nodata=-9999,
-                              remove_grassdb=remove_grassdb,
-                              grassdb_path=grassdb_path,
-                              fill_nulls=fill_nulls)
-         
-      if temp_dem:
-         # Remove temp files created
-         for temp_file in temp_file_list:
-            if os.path.isfile(temp_file):
-               os.remove(temp_file)
+         outdem = dem_library.getAplDemName(project, dem_source)
+         print('Saving DEM to: {}'.format(outdem))
 
-      return out_demfile, grassdb_path
+   if bil_navigation is not None:
+      dem_common_functions.PrintTermWidth('Using post processed navigation data from {}'.format(bil_navigation))
+      out_demfile, grassdb_path = subset_dem_to_apl_nav_files(in_dem_mosaic,
+                                     outdem,
+                                     bil_navigation,
+                                     separation_file=separation_file,
+                                     ascii_separation_file=ascii_separation_file,
+                                     in_dem_projection=in_dem_projection,
+                                     out_res=out_res,
+                                     nodata=-9999,
+                                     remove_grassdb=remove_grassdb,
+                                     grassdb_path=grassdb_path,
+                                     fill_nulls=fill_nulls)
+
+   else:
+      dem_common_functions.PrintTermWidth('Using navigation data for project {}'.format(project))
+      # Set nodata to -9999 so an offset is also applied to pixels with a value of 0
+      out_demfile, grassdb_path = subset_dem_to_nav(in_dem_mosaic,
+                           outdem,
+                           nav, project,
+                           separation_file=separation_file,
+                           ascii_separation_file=ascii_separation_file,
+                           in_dem_projection=in_dem_projection,
+                           out_res=out_res,
+                           nodata=-9999,
+                           remove_grassdb=remove_grassdb,
+                           grassdb_path=grassdb_path,
+                           fill_nulls=fill_nulls)
+
+   return out_demfile, grassdb_path
 
 
 def subset_dem_to_nav(in_dem_mosaic, out_demfile,
@@ -191,7 +179,7 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
                      out_projection=None,
                      out_res=None,
                      nodata=dem_common.NODATA_VALUE,
-                     remove_grassdb=True, 
+                     remove_grassdb=True,
                      grassdb_path=None,
                      fill_nulls=True):
    """
@@ -199,15 +187,15 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
    to produce a DEM for use in aplcorr by calling:
 
    dem_utilities.subset_dem_to_bounding_box
-   
-   Can also supply output projection for patching with another DEM (e.g., from LiDAR). 
+
+   Can also supply output projection for patching with another DEM (e.g., from LiDAR).
    Note, supplying an output projection will make the resulting DEM incompatible with
    APL.
 
    If projections are supplied must use Proj4 format, can convert
    between GRASS style (e.g., UKBNG) using::
 
-      grass_library.grass_projection_to_proj4('UKBNG')
+      grass_library.grass_location_to_proj4('UKBNG')
 
    The navigation data to use is determined from the project directory, and the maximum
    bounding box over all lines is taken.
@@ -225,7 +213,7 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
    * separation_file - Datum offset fill to add to heights.
    * ascii_separation_file - Bool to specify is separation file is ASCII format.
    * in_dem_projection - Input projection of DEM mosaic (Proj4 format)
-   * out_projection - Output projection if not WGS84LL. Warning setting this will make the DEM incompatible with APL. 
+   * out_projection - Output projection if not WGS84LL. Warning setting this will make the DEM incompatible with APL.
    * out_res - Out resolution e.g., (0.002,0.002) if not supplied gdalwarp will determine based on input resolution.
    * nodata - No data value.
    * remove_grassdb - Remove GRASS database after processing is complete.
@@ -240,7 +228,7 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
    """
    if not HAVE_DEM_LIBRARY:
       raise ImportError('Could not import dem_library. If this is an ARSF computer check "PYTHONPATH".\n' +
-                        'If not try using "subset_dem_to_apl_nav_files" as this uses bil files with processed navigation data ' + 
+                        'If not try using "subset_dem_to_apl_nav_files" as this uses bil files with processed navigation data ' +
                         ' and does not require the dem_library')
 
    # Get bounding box from navigation data
@@ -249,16 +237,16 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
    nav_bb, project_info_used = dem_library.getAplCal(project_dir,nav_file, max_view_angle=max_view_angle, sensor=sensor)
 
    if not project_info_used:
-      common_functions.WARNING('Could not find project from directory "{}".'.format(os.path.abspath(project_dir)))
+      dem_common_functions.WARNING('Could not find project from directory "{}".'.format(os.path.abspath(project_dir)))
       if nav_file is None:
          raise Exception('Could not find project and no navigiation data supplied')
       else:
-         common_functions.WARNING('Will subset DEM to bounds of "{}"'.format(nav_file))
-         common_functions.WARNING('This could result in a DEM which is much larger than required.'.format(nav_file))
-   
+         dem_common_functions.WARNING('Will subset DEM to bounds of "{}"'.format(nav_file))
+         dem_common_functions.WARNING('This could result in a DEM which is much larger than required.'.format(nav_file))
+
    out_demfile, grassdb_path = dem_utilities.subset_dem_to_bounding_box(
-                                          in_dem_mosaic, 
-                                          out_demfile, 
+                                          in_dem_mosaic,
+                                          out_demfile,
                                           nav_bb,
                                           separation_file=separation_file,
                                           ascii_separation_file=ascii_separation_file,
@@ -266,14 +254,14 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
                                           out_projection=out_projection,
                                           out_res=out_res,
                                           nodata=nodata,
-                                          remove_grassdb=remove_grassdb, 
+                                          remove_grassdb=remove_grassdb,
                                           grassdb_path=grassdb_path,
                                           fill_nulls=fill_nulls)
-  
+
    return out_demfile, grassdb_path
 
-def subset_dem_to_apl_nav_files(in_dem_mosaic, 
-                     out_demfile, 
+def subset_dem_to_apl_nav_files(in_dem_mosaic,
+                     out_demfile,
                      nav_files,
                      separation_file=None,
                      ascii_separation_file=False,
@@ -281,7 +269,7 @@ def subset_dem_to_apl_nav_files(in_dem_mosaic,
                      out_projection=None,
                      out_res=None,
                      nodata=dem_common.NODATA_VALUE,
-                     remove_grassdb=True, 
+                     remove_grassdb=True,
                      grassdb_path=None,
                      fill_nulls=True):
    """
@@ -289,13 +277,13 @@ def subset_dem_to_apl_nav_files(in_dem_mosaic,
    to produce a DEM for use in aplcorr by calling:
 
    dem_utilities.subset_dem_to_bounding_box
-   
+
    If projections are supplied must use Proj4 format, can convert
-   between GRASS style (e.g., UKBNG) using::
+   between GRASS location style (e.g., UKBNG) using::
 
-      grass_library.grass_projection_to_proj4('UKBNG')
+      grass_library.grass_location_to_proj4('UKBNG')
 
-   For ARSF internal processing subset_dem_to_nav should generally be used as 
+   For ARSF internal processing subset_dem_to_nav should generally be used as
    a) the DEM needs to be created before any APL commands are run
    b) raw navigation data is available
 
@@ -310,7 +298,7 @@ def subset_dem_to_apl_nav_files(in_dem_mosaic,
    * separation_file - Datum offset fill to add to heights.
    * ascii_separation_file - Bool to specify is separation file is ASCII format.
    * in_dem_projection - Input projection of DEM mosaic (Proj4 format)
-   * out_projection - Output projection if not WGS84LL. Warning setting this will make the DEM incompatible with APL. 
+   * out_projection - Output projection if not WGS84LL. Warning setting this will make the DEM incompatible with APL.
    * out_res - Out resolution e.g., (0.002,0.002) if not supplied gdalwarp will determine based on input resolution.
    * nodata - No data value.
    * remove_grassdb - Remove GRASS database after processing is complete.
@@ -330,8 +318,8 @@ def subset_dem_to_apl_nav_files(in_dem_mosaic,
    nav_bb = get_bb_from_bil_nav_files(nav_files)
 
    out_demfile, grassdb_path = dem_utilities.subset_dem_to_bounding_box(
-                                          in_dem_mosaic, 
-                                          out_demfile, 
+                                          in_dem_mosaic,
+                                          out_demfile,
                                           nav_bb,
                                           separation_file=separation_file,
                                           ascii_separation_file=ascii_separation_file,
@@ -339,15 +327,15 @@ def subset_dem_to_apl_nav_files(in_dem_mosaic,
                                           out_projection=out_projection,
                                           out_res=out_res,
                                           nodata=nodata,
-                                          remove_grassdb=remove_grassdb, 
+                                          remove_grassdb=remove_grassdb,
                                           grassdb_path=grassdb_path,
                                           fill_nulls=fill_nulls)
-  
-   return out_demfile, grassdb_path 
+
+   return out_demfile, grassdb_path
 
 def get_bb_from_bil_nav_files(nav_files):
    """
-   Gets bounding box from bil format navigation files 
+   Gets bounding box from bil format navigation files
 
    Arguments:
 
@@ -356,7 +344,7 @@ def get_bb_from_bil_nav_files(nav_files):
    Returns:
 
    * bounding box - [minY, maxY, minX, maxX]
-   
+
    """
 
    nav_stats = get_min_max_from_bil_nav_files(nav_files)
@@ -366,7 +354,7 @@ def get_bb_from_bil_nav_files(nav_files):
                         math.tan(math.radians(nav_stats['roll']['max'] + dem_common.HYPERSPECTRAL_VIEW_ANGLE_MAX))
    neg_swath_buffer = nav_stats['altitude']['max'] * \
                         math.tan(math.radians(nav_stats['roll']['min'] + dem_common.HYPERSPECTRAL_VIEW_ANGLE_MAX))
-    
+
    swath_buffer = pos_swath_buffer + neg_swath_buffer
 
    # Get latitude to use for metres to degrees conversion
@@ -378,7 +366,7 @@ def get_bb_from_bil_nav_files(nav_files):
    buffered_bb.append(nav_stats['latitude']['min'] - swath_buffer_degrees[1] - dem_common.DEFAULT_APL_DEM_BUFFER['S'])
    buffered_bb.append(nav_stats['latitude']['max'] + swath_buffer_degrees[1] + dem_common.DEFAULT_APL_DEM_BUFFER['N'])
    buffered_bb.append(nav_stats['longitude']['min'] - swath_buffer_degrees[0] - dem_common.DEFAULT_APL_DEM_BUFFER['W'])
-   buffered_bb.append(nav_stats['longitude']['max'] + swath_buffer_degrees[0] + dem_common.DEFAULT_APL_DEM_BUFFER['E']) 
+   buffered_bb.append(nav_stats['longitude']['max'] + swath_buffer_degrees[0] + dem_common.DEFAULT_APL_DEM_BUFFER['E'])
 
    return buffered_bb
 
@@ -392,13 +380,13 @@ def get_min_max_from_bil_nav_files(nav_files):
    * nav_files - input navigation file / list of files / directory
 
    Returns:
-   
+
    * dictionary with min / max for each parameter.
 
-   """ 
+   """
 
-   # GDAL is used for this function rather than the 'aplnavfiles' library as 
-   # it is expected this function will be largely used by ARSF users, as for internal use 
+   # GDAL is used for this function rather than the 'aplnavfiles' library as
+   # it is expected this function will be largely used by ARSF users, as for internal use
    # the raw navigation data will be available.
    # Using GDAL reduces the ARSF specific dependencies required for the library.
    if not HAVE_GDAL:
@@ -447,7 +435,7 @@ def get_min_max_from_bil_nav_files(nav_files):
          pitch_band = dataset.GetRasterBand(dem_common.APL_POST_PROCESSED_NAV_BANDS['Pitch'])
          heading_band = dataset.GetRasterBand(dem_common.APL_POST_PROCESSED_NAV_BANDS['Heading'])
 
-         # Read to NumPy arrays, only dealing with small datasets 
+         # Read to NumPy arrays, only dealing with small datasets
          # so loading all the bands to memory at once shouldn't cause any problems
          time = time_band.ReadAsArray()
          latitude = latitude_band.ReadAsArray()
@@ -466,7 +454,7 @@ def get_min_max_from_bil_nav_files(nav_files):
                      'roll' : roll,
                      'pitch' : pitch,
                      'heading' : heading}
-         
+
          for key in nav_stats.keys():
             if nav_stats[key]['min'] is None:
                nav_stats[key]['min'] = nav_data[key].min()
@@ -476,11 +464,10 @@ def get_min_max_from_bil_nav_files(nav_files):
                nav_stats[key]['max'] = nav_data[key].max()
             elif nav_data[key].max() > nav_stats[key]['max']:
                nav_stats[key]['max'] = nav_data[key].max()
-            
+
          dataset = None
 
       except Exception as err:
-         common_functions.WARNING('Could not get bounds for {}'.format(in_las_file))
+         dem_common_functions.WARNING('Could not get bounds for {}\n{}'.format(nav_bil,err))
 
    return nav_stats
-   

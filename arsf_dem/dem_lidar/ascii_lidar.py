@@ -5,6 +5,10 @@
 #
 # remove_ascii_class from grass_library by Stephen Gould
 
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
+
 """
 Functions for working with lidar data in ASCII format.
 
@@ -15,17 +19,9 @@ Available functions:
 """
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os
-import shutil
-import tempfile
 import csv
 # Import common files
 from .. import dem_common
-
-# Import PML Utilities
-try:
-   import common_functions
-except ImportError:
-   from .. import common_functions
 
 def get_ascii_bounds(in_ascii):
    """
@@ -56,7 +52,7 @@ def get_ascii_bounds(in_ascii):
    max_y = -100000000
    min_z = 9999999
    max_z = 0
-  
+
    in_ascii_handler = open(in_ascii, 'rU')
    in_ascii_csv = csv.reader(in_ascii_handler, delimiter=' ')
 
@@ -65,26 +61,25 @@ def get_ascii_bounds(in_ascii):
       line_x = float(line[dem_common.LIDAR_ASCII_ORDER['x']-1])
       line_y = float(line[dem_common.LIDAR_ASCII_ORDER['y']-1])
       line_z = float(line[dem_common.LIDAR_ASCII_ORDER['z']-1])
-   
+
       if line_x < min_x:
          min_x = line_x
       elif line_x > max_x:
          max_x = line_x
-         
+
       if line_y < min_y:
          min_y = line_y
       elif line_y > max_y:
          max_y = line_y
-         
+
       if line_z < min_z:
          min_z = line_z
       elif line_z > max_z:
          max_z = line_z
-  
-   # Close file 
+
+   # Close file
    in_ascii_handler.close()
 
    return [[min_x,max_x],
            [min_y,max_y],
            [min_z,max_z]]
-

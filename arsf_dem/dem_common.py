@@ -4,7 +4,10 @@
 #
 # Author: Dan Clewley (dac@pml.ac.uk)
 # Created on: 05 November 2014
-# Licensing: 
+
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 """
 A set of common variables (default parameters, paths etc.,) for the arsf_dem module.
@@ -15,16 +18,17 @@ Reads parameter from a config file checks:
 2. Home folder for .arsf_dem or .arsf_dem.cfg
 3. Library path for arsf_dem.cfg
 
-These files can be changed as required to override default settings at the project, user or 
+These files can be changed as required to override default settings at the project, user or
 system level.
 
 """
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os, sys
-import math
-try:
+import glob
+import tempfile
+if sys.version_info[0] < 3:
    import ConfigParser
-except ImportError:
+else:
    import configparser as ConfigParser
 
 def get_config_fallback(config, section, option, fallback=None):
@@ -53,39 +57,79 @@ def get_config_int_fallback(config, section, option, fallback=None):
    except:
       return fallback
 
-# Define functions to check environmental variables (to overwrite ARSF defaults).
-def get_grass_python_lib_path():
-   """Get path for GRASS python library.
-      Checks for environmental variable 'GRASS_PYTHON_LIB_PATH'
-      if not found uses /usr/lib64/grass/etc/python/
-   """
-   FEDORA_GRASS_PYTHON_LIB_PATH="/usr/lib64/grass/etc/python/"
-   GRASS_PYTHON_LIB_PATH = ""
-   try:
-      GRASS_PYTHON_LIB_PATH = os.environ['GRASS_PYTHON_LIB_PATH']
-   except KeyError:
-      GRASS_PYTHON_LIB_PATH = FEDORA_GRASS_PYTHON_LIB_PATH
-   except Exception as err:
-      print(err, file=sys.stderr)
-      GRASS_LIB_PATH = FEDORA_GRASS_PYTHON_LIB_PATH
-   return GRASS_PYTHON_LIB_PATH
 
-# Define functions to check environmental variables (to overwrite ARSF defaults).
+# Functions to try and get paths for files
 def get_grass_lib_path():
-   """Get path for GRASS python library.
-      Checks for environmental variable 'GRASS_LIB_PATH'
-      if not found uses /usr/lib64/grass/
    """
-   FEDORA_GRASS_LIB_PATH="/usr/lib64/grass/"
-   GRASS_LIB_PATH = ""
-   try:
-      GRASS_LIB_PATH = os.environ['GRASS_LIB_PATH']
-   except KeyError:
-      GRASS_LIB_PATH = FEDORA_GRASS_LIB_PATH
-   except Exception as err:
-      print(err, file=sys.stderr)
-      GRASS_LIB_PATH = FEDORA_GRASS_LIB_PATH
-   return GRASS_LIB_PATH
+   Try to get GRASS path by trying common locations for Linux, OS X and
+   Windows.
+
+   For Windows assumes installed through OSGeo4W
+
+   Exits if path does not exist
+   """
+   LINUX64_GRASS_LIB_PATH = '/usr/lib64/grass'
+   LINUX32_GRASS_LIB_PATH = '/usr/lib/grass'
+   OSX_GRASS_LIB_PATH = '/Applications/GRASS-*.app/Contents/MacOS/'
+   WIN_GRASS_LIB_PATH = 'C:/OSGeo4W/apps/grass/grass'
+
+   if sys.platform == 'darwin':
+      grass_version_path = glob.glob(OSX_GRASS_LIB_PATH)
+      if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
+         return grass_version_path[-1]
+      else:
+         print('Could not find GRASS library. Tried default location of {}.Set in Config file using "GRASS_LIB_PATH"'.format(OSX_GRASS_LIB_PATH),file=sys.stderr)
+         sys.exit(1)
+   elif sys.platform == 'win32':
+      # As under Windows OSGeo4W stores with version name, run Glob to try
+      # and find path from root
+      grass_version_path = glob.glob(WIN_GRASS_LIB_PATH + '*')
+      if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
+         return grass_version_path[-1]
+      else:
+         print('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(WIN_GRASS_LIB_PATH),file=sys.stderr)
+         sys.exit(1)
+    # If its not Windows or OS X, assume Linux or something UNIX-like
+   else:
+      if os.path.isdir(LINUX64_GRASS_LIB_PATH):
+         return LINUX64_GRASS_LIB_PATH
+      elif os.path.isdir(LINUX32_GRASS_LIB_PATH):
+         return LINUX32_GRASS_LIB_PATH
+      else:
+         print('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(LINUX64_GRASS_LIB_PATH),file=sys.stderr)
+         sys.exit(1)
+
+def get_grass_python_lib_path(GRASS_LIB_PATH=None):
+   """
+   Try to find GRASS Python library path.
+   If GRASS_LIB_PATH is passed in will use this, otherwise will try default
+   locations.
+   """
+   if GRASS_LIB_PATH is None:
+      GRASS_LIB_PATH = get_grass_lib_path()
+
+   GRASS_PYTHON_LIB_PATH = os.path.join(GRASS_LIB_PATH,'etc','python')
+
+   if os.path.isdir(GRASS_PYTHON_LIB_PATH):
+      return GRASS_PYTHON_LIB_PATH
+   else:
+      print('Could not find GRASS Python library. Was not where expected relative to "GRASS_LIB_PATH".',file=sys.stderr)
+      print('You need to define in config file using "GRASS_PYTHON_LIB_PATH".',file=sys.stderr)
+      sys.exit(1)
+
+def get_grass_db_template_path():
+   """
+   Gets path to grass_db_template.
+   Installed to PREFIX/share.
+   """
+   install_prefix = __file__[:__file__.find('lib')]
+   grass_db_template_path = os.path.join(install_prefix,'share','grass_db_template')
+
+   if os.path.isdir(grass_db_template_path):
+      return grass_db_template_path
+   else:
+     print('Could not find grass_db_template with arsf_dem library.',file=sys.stderr)
+     return None
 
 def get_temp_path():
    """Function to get temp path by trying
@@ -94,6 +138,7 @@ def get_temp_path():
    Defaults to /tmp/
    """
    TEMP_PATH = None
+
    temp_env_vars = ['TMPDIR','TEMP']
 
    for temp_var in temp_env_vars:
@@ -103,10 +148,87 @@ def get_temp_path():
       except KeyError:
          pass
 
-   if TEMP_PATH is None:
+   if TEMP_PATH is None and sys.platform.find('win') != 0:
       TEMP_PATH = '/tmp'
+   else:
+      TEMP_PATH = tempfile.gettempdir()
 
    return TEMP_PATH
+
+def get_lastools_path():
+   """
+   Function to get path to LAStools
+
+   Under Linux / OS X assumes they are added to $PATH so
+   don't need to pass in full path and returns empty string.
+
+   Under Windows assume LAStools has been installed to
+   'C:\LAStools'
+   """
+
+   if sys.platform == 'win32':
+      win_lastools_path = os.path.join('C:/LAStools','bin')
+      if os.path.isdir(win_lastools_path):
+         return win_lastools_path
+      else:
+         print('Could not find LAStools bin directory.\nChecked {}\n'.format(win_lastools_path),file=sys.stderr)
+         print('If you want to use LAS format files you need to define the path in the config file using "LASTOOLS_FREE_BIN_PATH" and "LASTOOLS_NONFREE_BIN_PATH"',file=sys.stderr)
+   else:
+      return ''
+
+def get_spdlib_path():
+   """
+   Function to get path to SPDLib
+
+   Under Windows assume SPDLib has been installed to
+   'C:\spdlib'
+
+   Under other platforms try to see if they have been installed through
+   conda (which is the recommended way to install SPDLib) to a standard location.
+   """
+
+   anaconda_install_names = ['miniconda','miniconda3'
+                             'anaconda', 'anaconda3']
+   if sys.platform == 'win32':
+      win_spd_path = 'C:/spdlib'
+      if os.path.isdir(win_spd_path):
+         return win_spd_path
+      else:
+         # Don't complain if SPDLib isn't found, will raise exception once a
+         # tool which requires SPDLib is installed.
+         return ''
+   else:
+      user_dir = os.path.expanduser('~')
+      for anaconda_dir in anaconda_install_names:
+         if os.path.isfile(os.path.join(user_dir, anaconda_dir,'bin','spdtranslate')):
+            return os.path.join(user_dir, anaconda_dir, 'bin')
+      return ''
+
+def get_fusion_bin_path():
+   """
+   Function to get path to FUSION
+
+   Under Windows assume FUSION has been installed to
+   'C:\FUSION'
+
+   Under Linux assume installed to wine install folder
+   """
+
+   if sys.platform == 'win32':
+      win_fusion_path = 'C:/FUSION'
+      if os.path.isdir(win_fusion_path):
+         return win_fusion_path
+      else:
+         # Don't complain if FUSION isn't found, will raise exception once a
+         # tool which requires FUSION is installed.
+         return ''
+   else:
+      user_dir = os.path.expanduser('~')
+      wine_fusion_path = os.path.join(user_dir,'.wine','drive_c','FUSION')
+      if os.path.isdir(wine_fusion_path):
+         return wine_fusion_path
+      else:
+         return ''
 
 # Read in config parser file
 config_current_dir = os.path.join(os.path.abspath('.'),'arsf_dem.cfg')
@@ -120,7 +242,7 @@ config_file_locations = [config_current_dir, config_home_dir, config_home_dir_ex
 config = ConfigParser.ConfigParser()
 read_config = False
 
-# Itterate through config file locations until one is found 
+# Itterate through config file locations until one is found
 # which can be read.
 for config_file in config_file_locations:
    if os.path.isfile(config_file):
@@ -137,15 +259,33 @@ if not read_config:
 #: Temporary path
 TEMP_PATH = get_config_fallback(config,'system','TEMP_PATH',fallback=get_temp_path())
 
+#: Path for GRASS Library
+GRASS_LIB_PATH = get_config_fallback(config,'grass','GRASS_LIB_PATH',fallback=None)
+
+if GRASS_LIB_PATH is None:
+   GRASS_LIB_PATH = get_grass_lib_path()
+
 #: Path for GRASS Python library
 GRASS_PYTHON_LIB_PATH = get_config_fallback(config,'grass','GRASS_PYTHON_LIB_PATH',
-                           fallback=get_grass_python_lib_path())
-#: Path for GRASS Library
-GRASS_LIB_PATH = get_config_fallback(config,'grass','GRASS_LIB_PATH',fallback=get_grass_lib_path())
+                           fallback=None)
+
+if GRASS_PYTHON_LIB_PATH is None:
+   GRASS_PYTHON_LIB_PATH = get_grass_python_lib_path(GRASS_LIB_PATH=GRASS_LIB_PATH)
+
+# Set environmental variable for GRASS lib
+os.environ['GISBASE'] = GRASS_LIB_PATH
 
 #: Path for GRASS database template
 GRASS_DATABASE_TEMPLATE = get_config_fallback(config,'grass','GRASS_DATABASE_TEMPLATE',
-                           fallback='/users/rsg/arsf/usr/share/grass_db_template/')
+                           fallback=None)
+
+if GRASS_DATABASE_TEMPLATE is None:
+   GRASS_DATABASE_TEMPLATE = get_grass_db_template_path()
+
+if not os.path.isdir(GRASS_DATABASE_TEMPLATE):
+   print('''Could not find GRASS database template. 
+Try downloading from http://arsf-dan.nerc.ac.uk/trac/raw-attachment/wiki/Help/DEM_scripts/grass_db_template.zip
+and setting path in config file using "GRASS_DATABASE_TEMPLATE"'''.format(GRASS_DATABASE_TEMPLATE),file=sys.stderr)
 
 # Set some common options for raster creation
 
@@ -172,7 +312,7 @@ DEFAULT_LIDAR_DEM_BUFFER = {'N' : 2000,
                             'S' : 2000,
                             'W' : 2000}
 
-#: Order of columns in ASCII format lidar data 
+#: Order of columns in ASCII format lidar data
 LIDAR_ASCII_ORDER = {'time':1,
                      'x':2,'y':3,'z':4,
                      'intensity':5,
@@ -191,15 +331,15 @@ DEFAULT_APL_DEM_BUFFER = {'N' : 0.05,
 
 #: Default location of ASTER DEM mosaic
 ASTER_MOSAIC_FILE = get_config_fallback(config,'dems','ASTER_MOSAIC_FILE',
-            fallback='/users/rsg/arsf/aster/aster_15m_dem_mosaic.vrt')
+            fallback=None)
 #: Resolution of ASTER DEM (in degrees)
 ASTER_RES_DEGREES = (0.000277777777778,-0.000277777777778)
 #: Resolution of ASTER DEM (in metres)
-ASTER_RES_METRES = (15,-15)
+ASTER_RES_METRES = (30,-30)
 
-#: Default location of NextMap DEM mosaic 
+#: Default location of NextMap DEM mosaic
 NEXTMAP_MOSAIC_FILE = get_config_fallback(config,'dems','NEXTMAP_MOSAIC_FILE',
-            fallback='/users/rsg/arsf/nextmap/neodc/nextmap_dsm_mosaic_bng.vrt')
+            fallback=None)
 #: Resolution of NextMap DEM (in degrees)
 NEXTMAP_RES_DEGREES = (0.0000554040,-0.0000554040)
 #: Resolution of NextMap DEM (in metres)
@@ -207,50 +347,54 @@ NEXTMAP_RES_METRES = (5,-5)
 
 #: Default location of SRTM Mosaic
 SRTM_MOSAIC_FILE = get_config_fallback(config,'dems','SRTM_MOSAIC_FILE',
-            fallback='/users/rsg/arsf/scratch_space/SRTM/srtm_global_mosaic_90m.tif')
+            fallback=None)
 #: Resolution of SRTM DEM (in degrees)
-SRTM_RES_DEGREES = (0.000833333333333,-0.000833333333333)
+SRTM_RES_DEGREES = (0.000277777777778,-0.000277777777778)
 #: Resolution of SRTM DEM (in metres)
-SRTM_RES_METRES = (90,-90)
+SRTM_RES_METRES = (30,-30)
 
-                     
 # Set locations of separation files
 #: Default location of vertical separation file between Newlyn and WGS-84 datum (WGS84LL projection)
 UKBNG_SEP_FILE_WGS84  = get_config_fallback(config,'separationfiles','UKBNG_SEP_FILE_WGS84',
-                  fallback='/users/rsg/arsf/dems/aster/separation_files/uk_separation_file_WGS84LL.dem')
+                  fallback=None)
 #: If UKBNG_SEP_FILE_WGS84 is ASCII format
 UKBNG_SEP_FILE_WGS84_IS_ASCII = False
-                     
+
 #: Default location of vertical separation file between Newlyn and WGS-84 datum (UKBNG projection)
 UKBNG_SEP_FILE_UKBNG = get_config_fallback(config,'separationfiles','UKBNG_SEP_FILE_UKBNG',
-                  fallback='/users/rsg/arsf/dems/aster/separation_files/uk_separation_file_UKBNG.dem')
+                  fallback=None)
 #: If UKBNG_SEP_FILE_UKBNG is ASCII format
 UKBNG_SEP_FILE_UKBNG_IS_ASCII = False
 
 #: Default location of vertical separation file between geoid and WGS-84 datum.
 WWGSG_FILE = get_config_fallback(config,'separationfiles','WWGSG_FILE',
-                  fallback='/users/rsg/arsf/dems/geoid-spheroid/ww15mgh.grd')
+                  fallback=None)
 #: If WWGSG_FILE is ASCII
 WWGSG_FILE_IS_ASCII = True
 
-#: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection). 
+#: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection).
 EGM96_UKBNG_SEP_FILE_WGS84 = get_config_fallback(config,'separationfiles','EGM96_UKBNG_SEP_FILE_WGS84',
-                  fallback='/users/rsg/arsf/dems/aster/separation_files/ww15mgh_minus_uk_separation_file_WGS84LL.dem')
+                  fallback=None)
 #: If EMG96_UKBNG_SEP_FILE_UKBNG is ASCII format
 EGM96_UKBNG_SEP_FILE_WGS84_IS_ASCII = False
 
-#: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection). 
+#: Default location of vertical separation file between EGM96 and Newlyn vertical datum (UKBNG projection).
 EGM96_UKBNG_SEP_FILE_UKBNG = get_config_fallback(config,'separationfiles','EGM96_UKBNG_SEP_FILE_UKBNG',
-                  fallback='/users/rsg/arsf/dems/aster/separation_files/ww15mgh_minus_uk_separation_file_UKBNG.dem')
+                  fallback=None)
 #: If EMG96_UKBNG_SEP_FILE_UKBNG is ASCII format
 EGM96_UKBNG_SEP_FILE_UKBNG_IS_ASCII = False
 
 #: Location of OSTN02 transform file
 OSTN02_NTV2_BIN_FILE = get_config_fallback(config,'projection','OSTN02_NTV2_BIN_FILE',
-                  fallback='/users/rsg/arsf/dems/ostn02/OSTN02_NTv2.gsb')
+                  fallback=None)
 
 #: Default Proj4 string for UKBNG
-OSTN02_PROJ4_STRING = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy +units=m +no_defs +nadgrids={}'.format(OSTN02_NTV2_BIN_FILE)
+if OSTN02_NTV2_BIN_FILE is not None:
+   OSTN02_PROJ4_STRING = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy +units=m +no_defs +nadgrids={}'.format(OSTN02_NTV2_BIN_FILE)
+else:
+   print('WARNING: OSTN02_NTV2_BIN_FILE was not set, any transforms to/from UKBNG will be inaccurate!')
+   OSTN02_PROJ4_STRING = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy +units=m +no_defs'
+
 #: Default Proj4 string for WGS84LL
 WGS84_PROJ4_STRING = '+proj=longlat +datum=WGS84 +no_defs'
 
@@ -275,12 +419,18 @@ HYPERSPECTRAL_VIEW_ANGLE_MAX = float(get_config_fallback(config, 'hyperspectral'
 
 # Set paths for other libraries
 #: Path to SPDLib binaries
-SPDLIB_BIN_PATH = get_config_fallback(config,'spdlib','SPDLIB_BIN_PATH',fallback='')
+SPDLIB_BIN_PATH = get_config_fallback(config,'spdlib','SPDLIB_BIN_PATH',fallback=get_spdlib_path())
 #: Default interpolation used by SPDLib
 SPD_DEFAULT_INTERPOLATION = get_config_fallback(config,'spdlib','SPD_DEFAULT_INTERPOLATION',
                      fallback='NATURAL_NEIGHBOR')
 
 #: Path to open source LAStools binaries
-LASTOOLS_FREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_FREE_BIN_PATH',fallback='')
+LASTOOLS_FREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_FREE_BIN_PATH',fallback=get_lastools_path())
 #: Path to commercial LAStools binaries
-LASTOOLS_PAID_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_PAID_BIN_PATH',fallback='')
+LASTOOLS_NONFREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_NONFREE_BIN_PATH',fallback=get_lastools_path())
+
+#: Path to FUSION
+FUSION_BIN_PATH = get_config_fallback(config,'fusion','FUSION_BIN_PATH',fallback=get_fusion_bin_path())
+
+#: Path to points2dem
+POINTS2GRID_BIN_PATH = get_config_fallback(config,'points2grid','POINTS2GRID_BIN_PATH',fallback='')

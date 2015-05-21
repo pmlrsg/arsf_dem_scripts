@@ -4,7 +4,10 @@
 #
 # Author: Dan Clewley (dac@pml.ac.uk)
 # Created on: 05 November 2014
-# Licensing: Uses GRASS GIS Python scripting library, subject to GNU GPL.
+
+# This file has been created by ARSF Data Analysis Node and
+# is licensed under the GPL v3 Licence. A copy of this
+# licence is available to download with this file.
 
 """
 General DEM utility scripts. Most are built on GRASS but are designed to be used with an existing GRASS database (if data has already been imported) or independently and will import data as required.
@@ -40,21 +43,17 @@ import numpy
 
 # Import common files
 from . import dem_common
-from . import common_functions
+from . import dem_common_functions
+from . import grass_library
+
 # Import GRASS
 sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
 try:
    import grass.script as grass
-   import grass.script.setup as gsetup
 except ImportError as err:
    print("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
    print(err, file=sys.stderr)
    sys.exit(1)
-# Import PML Utilities
-try:
-   import grass_library
-except ImportError:
-   from . import grass_library
 
 # Try to import GDAL
 HAVE_GDAL=True
@@ -63,9 +62,9 @@ try:
    from osgeo import osr
 except ImportError:
    # If can't import don't complain until GDAL is actually needed
-   HAVE_GDAL=False 
+   HAVE_GDAL=False
 
-def offset_null_fill_dem(in_demfile, out_demfile=None, 
+def offset_null_fill_dem(in_demfile, out_demfile=None,
                          import_to_grass=True,
                          separation_file=None,
                          ascii_separation_file=False,
@@ -81,7 +80,7 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
    Applies elevation offset to DEM and/or fills null values
    using GRASS.
 
-   Seperation file ('separation_file') is supplied as a GDAL 
+   Seperation file ('separation_file') is supplied as a GDAL
    or GRASS ASCII file in the same projection is 'in_demfile'.
    If the separation file is ASCII set 'ascii_separation_file'
    to True.
@@ -103,7 +102,7 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
    * grassdb_path - Input path to GRASS database, if not supplied will create one.
 
    Returns:
-   
+
    * out_demfile path / out_demfile name in GRASS database
    * path to GRASS database / None
 
@@ -113,25 +112,25 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
 
    from arsf_dem import dem_common
    from arsf_dem import dem_utilities
-   
+
    in_dem = 'srtm_plymouth.dem'
    out_dem = 'srtm_plymouth_wgs84.dem'
-   
-   dem_utilities.offset_null_fill_dem(in_dem, out_dem, 
+
+   dem_utilities.offset_null_fill_dem(in_dem, out_dem,
                            separation_file=dem_common.WWGSG_FILE,
                            ascii_separation_file=dem_common.WWGSG_FILE_IS_ASCII)
-   
+
    2) Change vertical datum from OSGB Newlyn to WGS84 for DEM in WGS84LL horizontal projection::
 
    from arsf_dem import dem_common
    from arsf_dem import dem_utilities
-   
+
    in_dem = 'nextmap_plymouth_wgs84_newlyn.dem'
    out_dem = 'nextmap_plymouth_wgs84.dem'
 
-   dem_utilities.offset_null_fill_dem(in_dem, out_dem, 
+   dem_utilities.offset_null_fill_dem(in_dem, out_dem,
                            separation_file=dem_common.UKBNG_SEP_FILE_WGS84)
-   
+
    Note if the DEM needs horizontal and vertical reprojection can use the function reproject_bng_to_wgs84
    and set 'vertical_reproject=True'
 
@@ -145,8 +144,8 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
       if import_to_grass:
          in_proj = grass_library.getGRASSProjFromGDAL(in_demfile)
       if in_proj is None:
-         common_functions.WARNING('No projection supplied and could not determine projection from any input files.')
-         common_functions.WARNING('Assuming "WGS84LL".')
+         dem_common_functions.WARNING('No projection supplied and could not determine projection from any input files.')
+         dem_common_functions.WARNING('Assuming "WGS84LL".')
          in_proj = 'WGS84LL'
    else:
       in_proj = projection
@@ -162,20 +161,20 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
       location = projection
       mapset   = 'PERMANENT'
       grass.setup.init(dem_common.GRASS_LIB_PATH,
-                  grassdb_path, 
-                  location, 
-                  mapset) 
+                  grassdb_path,
+                  location,
+                  mapset)
 
-   grass_location = grass_library.setLocation(in_proj)
+   grass_library.setLocation(in_proj)
 
    # Import DEM into GRASS
    demname = os.path.basename(in_demfile).replace("-","_")
 
    print('Importing DEM')
    if import_to_grass:
-      grass.run_command('r.external', 
-                  input = in_demfile, 
-                  output=demname, 
+      grass.run_command('r.external',
+                  input = in_demfile,
+                  output=demname,
                   flags='e',
                   overwrite=True)
 
@@ -188,37 +187,43 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
 
    # Set region
    grass_library.SetRegion(rast=demname)
-   
+
    # Import separation file
    if separation_file is not None:
       print('Importing separation file')
       separation_name = os.path.split(separation_file)[-1]
       print('Using separation file: {}'.format(separation_file))
       if ascii_separation_file:
-         grass.run_command('r.in.ascii', 
-                     input=separation_file, 
-                     output=separation_name, 
+         grass.run_command('r.in.ascii',
+                     input=separation_file,
+                     output=separation_name,
                      overwrite=True)
       else:
-         grass.run_command('r.external', 
-               input=separation_file, 
-               output=separation_name, 
+         grass.run_command('r.external',
+               input=separation_file,
+               output=separation_name,
                overwrite=True)
-         
+
       if not grass_library.checkFileExists(separation_name):
          raise Exception('Could not import {}'.format(separation_file))
 
       # Add offset
-      print('Adding offset')
       elevated_name = 'patched_elevated'
-      grass.mapcalc('{0}=if({2} != {3},{1}+{2},0)'.format(elevated_name,separation_name,demname, nodata), 
-                           overwrite=True)
+      if subtract_seperation:
+         print('Subtracting offset')
+         grass.mapcalc('{0}=if({1} != {3},{1}-{2},0)'.format(elevated_name,demname,separation_name,nodata),
+                              overwrite=True)
+
+      else:
+         print('Adding offset')
+         grass.mapcalc('{0}=if({1} != {3},{1}+{2},0)'.format(elevated_name,demname,separation_name, nodata),
+                              overwrite=True)
 
       if not grass_library.checkFileExists(elevated_name):
          raise Exception('Could not apply offset to DEM')
-   else: 
+   else:
       elevated_name = demname
-   
+
    if fill_nulls:
       # Fill Null values
       print('Filling Null values')
@@ -229,10 +234,10 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
                         tension=40,
                         smooth=0.1,
                         overwrite=True)
-      
+
       # Check file exists (to confirm command has run correctly
       if not grass_library.checkFileExists(null_filled_name):
-         common_functions.WARNING('Could not NULL fill DEM, possibly there are no NULL values to fill')
+         dem_common_functions.WARNING('Could not NULL fill DEM, possibly there are no NULL values to fill')
          null_filled_name = elevated_name
 
       # Smooth
@@ -258,7 +263,7 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
                         nodata=nodata,
                         overwrite=True)
       remove_gdal_aux_file(out_demfile)
-   
+
   # Remove GRASS database created
    if remove_grassdb:
       shutil.rmtree(grassdb_path)
@@ -267,7 +272,7 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
       return smoothed_name, grassdb_path
 
 
-def patch_files(in_file_list, 
+def patch_files(in_file_list,
                 out_file=None,
                 import_to_grass=True,
                 nodata=dem_common.NODATA_VALUE,
@@ -277,7 +282,7 @@ def patch_files(in_file_list,
                 grassdb_path=None,
                 remove_grassdb=True):
 
-   """ 
+   """
    Patches files together.
 
    Can be used to create a mosaic from adjacent tiles
@@ -297,7 +302,7 @@ def patch_files(in_file_list,
    If no projection is supplied, tries to get the projection from input files.
 
    Arguments:
-  
+
    * in_file_list - List of input files
    * out_file - Output mosaic, if None will leave in GRASS database
    * import_to_grass - Should files be imported to GRASS, if False assumes in_file_list is a list of names within existing GRASS database.
@@ -309,7 +314,7 @@ def patch_files(in_file_list,
    * grassdb_path - Input path to GRASS database, if not supplied will create one. Required if import_to_grass=False
 
    Returns:
-   
+
    * out_file path / out_file name in GRASS database
    * path to GRASS database / None
 
@@ -324,8 +329,8 @@ def patch_files(in_file_list,
             while in_proj is not None:
                in_proj = grass_library.getGRASSProjFromGDAL(in_file)
       if in_proj is None:
-         common_functions.WARNING('No projection supplied and could not determine projection from any input files.')
-         common_functions.WARNING('Assuming "WGS84LL".')
+         dem_common_functions.WARNING('No projection supplied and could not determine projection from any input files.')
+         dem_common_functions.WARNING('Assuming "WGS84LL".')
          in_proj = 'WGS84LL'
    else:
       in_proj = projection
@@ -341,11 +346,11 @@ def patch_files(in_file_list,
       location = in_proj
       mapset   = 'PERMANENT'
       grass.setup.init(dem_common.GRASS_LIB_PATH,
-                  grassdb_path, 
-                  location, 
-                  mapset) 
+                  grassdb_path,
+                  location,
+                  mapset)
 
-   grass_location = grass_library.setLocation(in_proj)
+   grass_library.setLocation(in_proj)
 
    # Import files (if needed)
    file_names_list = []
@@ -353,40 +358,40 @@ def patch_files(in_file_list,
       for in_file in in_file_list:
          file_name=os.path.basename(in_file)
          # Externally link files rather than importing
-         grass.run_command('r.external', 
+         grass.run_command('r.external',
                            input=in_file,
-                           output=file_name, 
-                           overwrite=True, 
+                           output=file_name,
+                           overwrite=True,
                            flags='e',
                            quiet=False)
 
          if grass_library.checkFileExists(file_name):
             file_names_list.append(file_name)
-         else: 
-            common_functions.ERROR('The file "{}" could not be imported'.format(in_file))
+         else:
+            dem_common_functions.ERROR('The file "{}" could not be imported'.format(in_file))
 
-   # Otherwise check they exist 
+   # Otherwise check they exist
    else:
       for file_name in in_file_list:
          if grass_library.checkFileExists(file_name):
             file_names_list.append(file_name)
-         else: 
-            common_functions.ERROR('The file "{}" does not exist in the supplied GRASS database'.format(file_name))
+         else:
+            dem_common_functions.ERROR('The file "{}" does not exist in the supplied GRASS database'.format(file_name))
 
    # Check if at lest one file was imported / exists
    if len(file_names_list) == 0:
       raise Exception('None of the files in the list provided could be imported')
-   
+
    # Set region to extent of input files
-   grass_library.SetRegion(rast=file_names_list) 
+   grass_library.SetRegion(rast=file_names_list)
 
    # Patch files together
    patched_name = 'patched_tiles'
-   grass.run_command("r.patch", 
+   grass.run_command("r.patch",
                      input=file_names_list,
-                     output=patched_name, 
-                     overwrite=True, 
-                     flags="z") 
+                     output=patched_name,
+                     overwrite=True,
+                     flags="z")
 
    # Export file
    if out_file is not None:
@@ -408,8 +413,8 @@ def patch_files(in_file_list,
    else:
       return patched_name, grassdb_path
 
-def subset_dem_to_bounding_box(in_dem_mosaic, 
-                     out_demfile, 
+def subset_dem_to_bounding_box(in_dem_mosaic,
+                     out_demfile,
                      bounding_box,
                      separation_file=None,
                      ascii_separation_file=False,
@@ -417,19 +422,19 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
                      out_projection=None,
                      out_res=None,
                      nodata=dem_common.NODATA_VALUE,
-                     remove_grassdb=True, 
+                     remove_grassdb=True,
                      grassdb_path=None,
                      fill_nulls=True):
    """
    Subsets DEM to bounding box to produce a DEM for use in APL. Can also supply output projection
-   for patching with another DEM (e.g., from LiDAR). Note, supplying 
+   for patching with another DEM (e.g., from LiDAR). Note, supplying
    an output projection will make the resulting DEM incompatible with
    APL.
 
    If projections are supplied must use Proj4 format, can convert
    between GRASS style (e.g., UKBNG) using::
 
-      grass_library.grass_projection_to_proj4('UKBNG')
+      grass_library.grass_location_to_proj4('UKBNG')
 
 
    Arguments:
@@ -440,7 +445,7 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
    * separation_file - Datum offset fill to add to heights.
    * ascii_separation_file - Bool to specify is separation file is ASCII format.
    * in_dem_projection - Input projection of DEM mosaic (Proj4 format)
-   * out_projection - Output projection if not WGS84LL. Warning setting this will make the DEM incompatible with APL. 
+   * out_projection - Output projection if not WGS84LL. Warning setting this will make the DEM incompatible with APL.
    * out_res - Out resolution e.g., (0.002,0.002) if not supplied gdalwarp will determine based on input resolution.
    * remove_grassdb - Remove GRASS database after processing is complete.
    * grassdb_path - Input path to GRASS database, if not supplied will create one.
@@ -455,35 +460,35 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
    out_dem_name = None
 
    # Subset DEM to navigation bounding box
-   common_functions.PrintTermWidth('Subsetting DEM to bounding box')
+   dem_common_functions.PrintTermWidth('Subsetting DEM to bounding box')
    # When subsetting perform horizontal reprojection
    # If output projection is not WGS84LL need to reproject bounding box
    if out_projection is not None and out_projection != 'WGS84LL':
-      temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)[1]
+      tm_fh, temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)
       temp_mosaic_dem_header = os.path.splitext(temp_mosaic_dem)[0] + '.hdr'
 
-      bounding_box_reproj = reproject_bounding_box(bounding_box, 
+      bounding_box_reproj = reproject_bounding_box(bounding_box,
                                              dem_common.WGS84_PROJ4_STRING,
                                              out_projection)
 
-      # If DEM is WGS84LL, could be larger than bounds of output coordinate system (e.g., UKBNG) which 
+      # If DEM is WGS84LL, could be larger than bounds of output coordinate system (e.g., UKBNG) which
       # will cause problems.
       # Therefore, need to subset first (using a buffered bounding box) and then reproject.
       # A buffered bounding box is used on the initial subset to ensure full coverage.
-      if grass_library.proj4_to_grass_projection(in_dem_projection) == 'WGS84LL':
-         subset_to_bb(in_dem_mosaic, temp_mosaic_dem, 
+      if grass_library.proj4_to_grass_location(in_dem_projection) == 'WGS84LL':
+         subset_to_bb(in_dem_mosaic, temp_mosaic_dem,
                                     buffer_bounding_box_proportion(bounding_box),
                                     in_projection=in_dem_projection,
                                     out_projection=in_dem_projection)
-         
+
          if separation_file is not None or fill_nulls:
             out_dem_name, grassdb_path = offset_null_fill_dem(
-                                            temp_mosaic_dem, 
-                                            temp_mosaic_dem, 
+                                            temp_mosaic_dem,
+                                            temp_mosaic_dem,
                                             separation_file=separation_file,
                                             ascii_separation_file=ascii_separation_file,
                                             nodata=-9999,
-                                            remove_grassdb=remove_grassdb, 
+                                            remove_grassdb=remove_grassdb,
                                             grassdb_path=grassdb_path,
                                             fill_nulls=fill_nulls)
 
@@ -492,6 +497,7 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
                                         out_projection=out_projection,
                                         out_res=out_res)
 
+         os.close(tm_fh)
          if os.path.isfile(temp_mosaic_dem):
             os.remove(temp_mosaic_dem)
          if os.path.isfile(temp_mosaic_dem_header):
@@ -510,17 +516,17 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
 
       # Apply datum height offset and fill null values.
       if separation_file is not None or fill_nulls:
-         out_dem_name, grassdb_path = offset_null_fill_dem(out_demfile, 
-                                        out_demfile, 
+         out_dem_name, grassdb_path = offset_null_fill_dem(out_demfile,
+                                        out_demfile,
                                         separation_file=separation_file,
                                         ascii_separation_file=ascii_separation_file,
                                         nodata=nodata,
-                                        remove_grassdb=remove_grassdb, 
+                                        remove_grassdb=remove_grassdb,
                                         grassdb_path=grassdb_path,
                                         fill_nulls=fill_nulls)
-   
+
    if not remove_grassdb:
-      return out_dem_name, grassdb_path 
+      return out_dem_name, grassdb_path
    else:
       return out_demfile, None
 
@@ -537,7 +543,7 @@ def get_screenshot_path(in_file,out_screenshots_dir):
 
    * file path for screenshot in the form:
                         screenshot_dir + in_file_base + '.jpg'
-      
+
    """
    out_file_base = os.path.split(in_file)[-1]
    out_file_base = os.path.splitext(out_file_base)[0]
@@ -553,25 +559,25 @@ def export_screenshot(in_file, out_file,
                      remove_grassdb=True):
    """
    Export a screenshot in JPEG format with pixel values rescaled using
-   histogram equalisation.
+   histogram equalisation or as a shaded relief (hillshade) image.
 
    Arguments:
 
    * in_file - Input file in any GDAL format.
    * out_file - Output screenshot file (.jpg)
-   * import_to_grass - Should file be imported to GRASS, if False assumes 'in_file' is the name of a raster within an existing GRASS database.  
+   * import_to_grass - Should file be imported to GRASS, if False assumes 'in_file' is the name of a raster within an existing GRASS database.
    * hillshade - Export shaded relief image instead of rescaled image (for DEMs).
    * projection - Projection to use (e.g., UKBNG) if not supplied will get from 'in_file'.
    * remove_grassdb - Remove GRASS database after processing is complete.
    * grassdb_path - Input path to GRASS database, if not supplied will create one. Required if import_to_grass=False
 
      Returns:
-   
+
    * out_file path / rescaled file name in GRASS database
    * path to GRASS database / None
 
     """
-   
+
    # Set projection based on input file
    in_proj = None
    if projection is None:
@@ -594,9 +600,9 @@ def export_screenshot(in_file, out_file,
       location = projection
       mapset   = 'PERMANENT'
       grass.setup.init(dem_common.GRASS_LIB_PATH,
-                  grassdb_path, 
-                  location, 
-                  mapset) 
+                  grassdb_path,
+                  location,
+                  mapset)
 
    grass_location = grass_library.setLocation(in_proj)
 
@@ -604,9 +610,9 @@ def export_screenshot(in_file, out_file,
       print('Importing file to GRASS')
       # Import File into GRASS
       file_name = os.path.basename(in_file).replace("-","_")
-      grass.run_command('r.external', 
-                  input=in_file, 
-                  output=file_name, 
+      grass.run_command('r.external',
+                  input=in_file,
+                  output=file_name,
                   flags='e',
                   overwrite=True)
    else:
@@ -643,15 +649,15 @@ def export_screenshot(in_file, out_file,
    if not grass_library.checkFileExists(rescaled_name):
       raise Exception('Could not rescale image')
 
-   # Export as JPEG 
-   grass.run_command('r.out.gdal',
-                format='JPEG',
-                type='Byte',
-                input=rescaled_name,
-                flags='f',
-                nodata=dem_common.NODATA_VALUE,
-                output=out_file,
-                overwrite=True)
+   # Export as JPEG
+   # Use function in grass_library which will ensure
+   # image is not larger than maximum number of pixels.
+   grass_library.outputToGDAL(rescaled_name,out_file,
+                              imtype='JPEG',
+                              nodata=0,
+                              datatype='Byte',
+                              setregiontoimage=True,
+                              resolution=None,tidyup=False)
    remove_gdal_aux_file(out_file)
 
    # Remove GRASS database created
@@ -666,7 +672,8 @@ def subset_to_bb(in_dem_mosaic, out_demfile, bounding_box,
                      out_projection=dem_common.WGS84_PROJ4_STRING,
                      out_res=None):
    """
-   Subset a raster to a bounding box using gdalwarp.
+   Subset a raster to a bounding box using gdalwarp, if reprojection is also required or gdal_translate
+   if bounding_box and input DEM have the same projection.
 
    Takes and exports raster in any projection, can supply WKT file or Proj4 string using
    'in_projection' and 'out_projection'.
@@ -681,7 +688,7 @@ def subset_to_bb(in_dem_mosaic, out_demfile, bounding_box,
    * out_res - Out resolution e.g., (10,-10)
 
    Returns:
-   
+
    * None
 
    """
@@ -689,10 +696,23 @@ def subset_to_bb(in_dem_mosaic, out_demfile, bounding_box,
    if len(bounding_box) != 4:
       raise Exception('Expected four values for bounding box')
 
-   call_gdalwarp(in_dem_mosaic, out_demfile, 
+   # If input and output projections are the same then calling gdalwarp will regrid
+   # to align with bounding box. Can use gdaltranslate with 'projwin' instead.
+   if in_projection == out_projection:
+      gdal_translate_cmd = ['gdal_translate', '-projwin',str(bounding_box[2]),
+                                              str(bounding_box[1]),
+                                              str(bounding_box[3]),
+                                              str(bounding_box[0])]
+      gdal_translate_cmd.extend(['-of',dem_common.GDAL_OUTFILE_FORMAT])
+      gdal_translate_cmd.extend(['-ot',dem_common.GDAL_OUTFILE_DATATYPE])
+      gdal_translate_cmd.extend(['-co',dem_common.GDAL_CREATION_OPTIONS])
+      gdal_translate_cmd.extend([in_dem_mosaic, out_demfile])
+      dem_common_functions.CallSubprocessOn(gdal_translate_cmd)
+   else:
+      call_gdalwarp(in_dem_mosaic, out_demfile,
                      s_srs=in_projection,
                      t_srs=out_projection,
-                     of=dem_common.GDAL_OUTFILE_FORMAT, 
+                     of=dem_common.GDAL_OUTFILE_FORMAT,
                      ot=dem_common.GDAL_OUTFILE_DATATYPE,
                      co=dem_common.GDAL_CREATION_OPTIONS,
                      r=dem_common.RESAMPLE_METHOD,
@@ -706,7 +726,7 @@ def reproject_bng_to_wgs84(in_file, out_file, vertical_reproject=False):
    lat-long.
 
    Uses Ordnance Survey OSTN02 transform file
-   
+
    Arguments:
 
    * in_file (UKBNG projection)
@@ -714,7 +734,7 @@ def reproject_bng_to_wgs84(in_file, out_file, vertical_reproject=False):
    * vertical_reproject - apply vertical offset to heights so they are relative to WGS-84 elipsoid rather then Newlyn datum
 
    Returns:
-   
+
    * out_file
 
    Example::
@@ -729,59 +749,60 @@ def reproject_bng_to_wgs84(in_file, out_file, vertical_reproject=False):
 
    if vertical_reproject:
       if not os.path.isfile(dem_common.UKBNG_SEP_FILE_WGS84):
-            raise Exception('Could not find UKBNG seperation file in speficied location:'
+         raise Exception('Could not find UKBNG seperation file in speficied location:'
                            ' "{}"'.format(dem_common.UKBNG_SEP_FILE_WGS84))
 
-      temp_reproject_dem = tempfile.mkstemp(prefix='reproject_dem',suffix='.dem', dir=dem_common.TEMP_PATH)[1]
+      tr_fh, temp_reproject_dem = tempfile.mkstemp(prefix='reproject_dem',suffix='.dem', dir=dem_common.TEMP_PATH)
       temp_reproject_dem_header = os.path.splitext(temp_reproject_dem)[0] + '.hdr'
       temp_file_list = [temp_reproject_dem, temp_reproject_dem_header]
 
-      gdalout = call_gdalwarp(in_file, temp_reproject_dem, 
-                     s_srs=dem_common.OSTN02_PROJ4_STRING, 
+      gdalout = call_gdalwarp(in_file, temp_reproject_dem,
+                     s_srs=dem_common.OSTN02_PROJ4_STRING,
                      t_srs=dem_common.WGS84_PROJ4_STRING)
 
       if gdalout != 0:
          raise Exception('Problem running gdalwarp command')
-      
+
       try:
-         offset_null_fill_dem(temp_reproject_dem, out_file, 
+         offset_null_fill_dem(temp_reproject_dem, out_file,
                             separation_file=dem_common.UKBNG_SEP_FILE_WGS84,
                             ascii_separation_file=dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII)
 
       except Exception as err:
-         common_functions.ERROR('Error adding seperation file:\n{}'.format(err))
+         dem_common_functions.ERROR('Error adding seperation file:\n{}'.format(err))
          for temp_file in temp_file_list:
             if os.path.isfile(temp_file):
-               os.remove(temp_file) 
+               os.remove(temp_file)
          return None
 
+      os.close(tr_fh)
       for temp_file in temp_file_list:
          if os.path.isfile(temp_file):
-            os.remove(temp_file) 
+            os.remove(temp_file)
 
    else:
-      gdalout = call_gdalwarp(in_file, out_file, 
-                     s_srs=dem_common.OSTN02_PROJ4_STRING, 
+      gdalout = call_gdalwarp(in_file, out_file,
+                     s_srs=dem_common.OSTN02_PROJ4_STRING,
                      t_srs=dem_common.WGS84_PROJ4_STRING)
       if gdalout != 0:
          return None
-      
+
    return out_file
- 
+
 def reproject_wgs84_to_bng(in_file, out_file, vertical_reproject=False):
    """
    Re-project WGS-84 lat-long to British
    National Grid.
 
    Uses Ordnance Survey OSTN02 transform file
-   
+
    Arguments:
 
    * in_file (WGS84LL projection)
    * out_file (UKBNG projection)
 
    Returns:
-   
+
    * None
 
    Example::
@@ -797,8 +818,8 @@ def reproject_wgs84_to_bng(in_file, out_file, vertical_reproject=False):
       temp_reproject_dem = tempfile.mkstemp(prefix='reproject_dem',suffix='.dem', dir=dem_common.TEMP_PATH)[1]
       temp_reproject_dem_header = os.path.splitext(temp_reproject_dem)[0] + '.hdr'
       temp_file_list = [temp_reproject_dem, temp_reproject_dem_header]
-      
-      gdalout = call_gdalwarp(in_file, temp_reproject_dem, 
+
+      gdalout = call_gdalwarp(in_file, temp_reproject_dem,
                         s_srs=dem_common.WGS84_PROJ4_STRING,
                         t_srs=dem_common.OSTN02_PROJ4_STRING)
       if gdalout != 0:
@@ -809,32 +830,32 @@ def reproject_wgs84_to_bng(in_file, out_file, vertical_reproject=False):
             raise Exception('Could not find UKBNG seperation file in speficied location:'
                            ' "{}"'.format(dem_common.UKBNG_SEP_FILE_UKBNG))
          try:
-            offset_null_fill_dem(temp_reproject_dem, out_file, 
+            offset_null_fill_dem(temp_reproject_dem, out_file,
                                separation_file=dem_common.UKBNG_SEP_FILE_UKBNG,
                                ascii_separation_file=dem_common.UKBNG_SEP_FILE_UKBNG_IS_ASCII,
                                subtract_seperation=True)
 
          except Exception as err:
-            common_functions.ERROR('Error subtract_subtracting seperation file:\n{}'.format(err))
+            dem_common_functions.ERROR('Error subtracting seperation file:\n{}'.format(err))
             for temp_file in temp_file_list:
                if os.path.isfile(temp_file):
-                  os.remove(temp_file) 
+                  os.remove(temp_file)
             return None
 
       for temp_file in temp_file_list:
          if os.path.isfile(temp_file):
-            os.remove(temp_file) 
+            os.remove(temp_file)
    else:
-      gdalout = call_gdalwarp(in_file, out_file, 
+      gdalout = call_gdalwarp(in_file, out_file,
                      s_srs=dem_common.WGS84_PROJ4_STRING,
                      t_srs=dem_common.OSTN02_PROJ4_STRING)
       if gdalout != 0:
          return None
-      
+
    return out_file
 
-def call_gdalwarp(in_file, out_file, s_srs=None, t_srs=dem_common.WGS84_PROJ4_STRING, 
-                     of=dem_common.GDAL_OUTFILE_FORMAT, 
+def call_gdalwarp(in_file, out_file, s_srs=None, t_srs=dem_common.WGS84_PROJ4_STRING,
+                     of=dem_common.GDAL_OUTFILE_FORMAT,
                      ot=dem_common.GDAL_OUTFILE_DATATYPE,
                      co=dem_common.GDAL_CREATION_OPTIONS,
                      r=dem_common.RESAMPLE_METHOD,
@@ -855,7 +876,7 @@ def call_gdalwarp(in_file, out_file, s_srs=None, t_srs=dem_common.WGS84_PROJ4_ST
    Note to get correct projection to/from BNG need to use
    OSTN02 transform file. This is passed in as part of Proj4 string.
 
-   TODO: Update to use Python functions. 
+   TODO: Update to use Python functions.
    Needs some work as there isn't a Python equivalent of gdalwarp.
    Currently has to call subprocess using shell=True so creation options are
    passed in correctly.
@@ -886,37 +907,37 @@ def call_gdalwarp(in_file, out_file, s_srs=None, t_srs=dem_common.WGS84_PROJ4_ST
    gdalwarp_cmd = ['gdalwarp']
 
    if overwrite:
-      gdalwarp_cmd = gdalwarp_cmd + ['-overwrite']
+      gdalwarp_cmd.extend(['-overwrite'])
 
    # Add output extent if provided
    if out_extent is not None:
       if len(out_extent) != 4:
          raise Exception('Expected four values for extent')
-      gdalwarp_cmd = gdalwarp_cmd + ['-te',str(out_extent[2]),
-                                           str(out_extent[0]),
-                                           str(out_extent[3]),
-                                           str(out_extent[1])]
+      gdalwarp_cmd.extend(['-te',str(out_extent[2]),
+                                 str(out_extent[0]),
+                                 str(out_extent[3]),
+                                 str(out_extent[1])])
 
    if target_res is not None:
       if len(target_res) != 2:
          raise Exception('Expected two values for target resolution')
-      gdalwarp_cmd = gdalwarp_cmd + ['-tr',str(target_res[0]),
-                                           str(target_res[1])]
+      gdalwarp_cmd.extend(['-tr',str(target_res[0]),
+                                           str(target_res[1])])
 
    if s_srs is not None:
-      gdalwarp_cmd = gdalwarp_cmd + ['-s_srs','"{}"'.format(s_srs)]
+      gdalwarp_cmd.extend(['-s_srs','"{}"'.format(s_srs)])
 
    if srcnodata is not None:
-      gdalwarp_cmd = gdalwarp_cmd + ['-srcnodata',str(srcnodata)]
+      gdalwarp_cmd.extend(['-srcnodata',str(srcnodata)])
 
    if dstnodata is not None:
-      gdalwarp_cmd = gdalwarp_cmd + ['-dstnodata',str(dstnodata)]
+      gdalwarp_cmd.extend(['-dstnodata',str(dstnodata)])
 
-   gdalwarp_cmd = gdalwarp_cmd + ['-t_srs','"{}"'.format(t_srs)]
-   gdalwarp_cmd = gdalwarp_cmd + ['-of',of,'-ot',ot,
-                        '-co',co]
-   gdalwarp_cmd = gdalwarp_cmd + ['-r',r]
-   gdalwarp_cmd = gdalwarp_cmd + [in_file, out_file]
+   gdalwarp_cmd.extend(['-t_srs','"{}"'.format(t_srs)])
+   gdalwarp_cmd.extend(['-of',of,'-ot',ot,
+                        '-co','"{}"'.format(co)])
+   gdalwarp_cmd.extend(['-r',r])
+   gdalwarp_cmd.extend([in_file, out_file])
 
    cmd_str = ""
 
@@ -930,7 +951,7 @@ def call_gdalwarp(in_file, out_file, s_srs=None, t_srs=dem_common.WGS84_PROJ4_ST
    return cmdOut
 
 
-def call_gdaldem(in_file, out_file, dem_product='hillshade', 
+def call_gdaldem(in_file, out_file, dem_product='hillshade',
                               of=dem_common.GDAL_OUTFILE_FORMAT):
    """
    Calls gdaldem command to produce derived products from DEM.
@@ -950,12 +971,12 @@ def call_gdaldem(in_file, out_file, dem_product='hillshade',
    gdaldem_cmd = ['gdaldem',dem_product,
                   '-of',of,
                   in_file, out_file]
-   common_functions.CallSubprocessOn(gdaldem_cmd) 
+   dem_common_functions.CallSubprocessOn(gdaldem_cmd)
    remove_gdal_aux_file(out_file)
 
 def get_gdal_dataset_bb(in_file, output_ll=False):
-   """ 
-   Get bounding box from GDAL dataset by reading 
+   """
+   Get bounding box from GDAL dataset by reading
    extent from header.
 
    Arguments:
@@ -967,7 +988,7 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
 
    * bounding box as [min_y,max_y, min_x,max_x]
 
-   """ 
+   """
 
    if not HAVE_GDAL:
       raise ImportError('Could not import GDAL')
@@ -978,7 +999,7 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
    geotransform = dataset.GetGeoTransform()
    x_size = dataset.RasterXSize
    y_size = dataset.RasterYSize
-   
+
    # Get bounding box
    min_x = geotransform[0]
    max_y = geotransform[3]
@@ -999,7 +1020,7 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
                                           image_proj,
                                           out_proj)
       bounding_box = reprojected_bb
-   
+
    # Close dataset
    dataset = None
 
@@ -1023,7 +1044,7 @@ def remove_gdal_aux_file(in_file):
    if os.path.isfile(aux_file):
       os.remove(aux_file)
 
-def reproject_bounding_box(in_bounding_box, 
+def reproject_bounding_box(in_bounding_box,
                            in_projection,
                            out_projection):
    """
@@ -1057,9 +1078,6 @@ def reproject_bounding_box(in_bounding_box,
    in_srs.ImportFromProj4(in_projection)
    out_srs.ImportFromProj4(out_projection)
 
-   in_wkt = in_srs.ExportToPrettyWkt()
-   out_wkt = out_srs.ExportToPrettyWkt()
-
    minX = in_bounding_box[2]
    maxX = in_bounding_box[3]
    minY = in_bounding_box[0]
@@ -1092,7 +1110,7 @@ def buffer_bounding_box_proportion(in_bounding_box, buffer_proportion=0.1):
    """
 
    out_bounding_box = in_bounding_box
-   height = in_bounding_box[1] - in_bounding_box[0] 
+   height = in_bounding_box[1] - in_bounding_box[0]
    width = in_bounding_box[3] - in_bounding_box[2]
 
    out_bounding_box[0] = in_bounding_box[0] - height*(buffer_proportion/2.0)
@@ -1103,81 +1121,81 @@ def buffer_bounding_box_proportion(in_bounding_box, buffer_proportion=0.1):
    return out_bounding_box
 
 def deg_to_m(lat, lonsize, latsize):
-    """ 
-    Get the pixel size (in m) based on latitude and
-    pixel size in degrees.
+   """
+   Get the pixel size (in m) based on latitude and
+   pixel size in degrees.
 
-    Function taken from:
-    https://github.com/MiXIL/calcSlopeDegrees/
-    MIT license
+   Function taken from:
+   https://github.com/MiXIL/calcSlopeDegrees/
+   MIT license
 
-    Arguments:
+   Arguments:
 
-    * lat - latitude
-    * lonsize - numpy array of x pixel sizes (degrees)
-    * latsize - numpy array of y pixel sizes (degrees)
+   * lat - latitude
+   * lonsize - numpy array of x pixel sizes (degrees)
+   * latsize - numpy array of y pixel sizes (degrees)
 
-    Returns:
+   Returns:
 
-    * xsize - numpy array of x pixel sizes (m)
-    * ysize - numpy array of y pixel sizes (m)
-    
-    """
+   * xsize - numpy array of x pixel sizes (m)
+   * ysize - numpy array of y pixel sizes (m)
 
-    # Set up parameters for ellipse
-    # Semi-major and semi-minor for WGS-84 ellipse
-    ellipse = [6378137.0, 6356752.314245]
-    
-    radlat = numpy.deg2rad(lat)
-    
-    Rsq = (ellipse[0]*numpy.cos(radlat))**2+(ellipse[1]*numpy.sin(radlat))**2
-    Mlat = (ellipse[0]*ellipse[1])**2/(Rsq**1.5)
-    Nlon = ellipse[0]**2/numpy.sqrt(Rsq)
-    xsize = numpy.pi/180*numpy.cos(radlat)*Nlon*lonsize
-    ysize = numpy.pi/180*Mlat*latsize
+   """
 
-    return xsize, ysize
+   # Set up parameters for ellipse
+   # Semi-major and semi-minor for WGS-84 ellipse
+   ellipse = [6378137.0, 6356752.314245]
+
+   radlat = numpy.deg2rad(lat)
+
+   Rsq = (ellipse[0]*numpy.cos(radlat))**2+(ellipse[1]*numpy.sin(radlat))**2
+   Mlat = (ellipse[0]*ellipse[1])**2/(Rsq**1.5)
+   Nlon = ellipse[0]**2/numpy.sqrt(Rsq)
+   xsize = numpy.pi/180*numpy.cos(radlat)*Nlon*lonsize
+   ysize = numpy.pi/180*Mlat*latsize
+
+   return xsize, ysize
 
 def m_to_deg(lat, xsize, ysize):
-    """ 
-    Get the pixel size (in degrees) based on latitude and
-    pixel size in metres.
+   """
+   Get the pixel size (in degrees) based on latitude and
+   pixel size in metres.
 
-    Function modified from:
-    https://github.com/MiXIL/calcSlopeDegrees/
-    MIT license
+   Function modified from:
+   https://github.com/MiXIL/calcSlopeDegrees/
+   MIT license
 
-    Arguments:
+   Arguments:
 
-    * lat - latitude
-    * xsize - numpy array of x pixel sizes (m)
-    * ysize - numpy array of y pixel sizes (m)
+   * lat - latitude
+   * xsize - numpy array of x pixel sizes (m)
+   * ysize - numpy array of y pixel sizes (m)
 
-    Returns:
+   Returns:
 
-    * lonsize - numpy array of x pixel sizes (degrees)
-    * latsize - numpy array of y pixel sizes (degrees)
+   * lonsize - numpy array of x pixel sizes (degrees)
+   * latsize - numpy array of y pixel sizes (degrees)
 
-    """
+   """
 
-    # Set up parameters for ellipse
-    # Semi-major and semi-minor for WGS-84 ellipse
-    ellipse = [6378137.0, 6356752.314245]
-    
-    radlat = numpy.deg2rad(lat)
-    
-    Rsq = (ellipse[0]*numpy.cos(radlat))**2+(ellipse[1]*numpy.sin(radlat))**2
-    Mlat = (ellipse[0]*ellipse[1])**2/(Rsq**1.5)
-    Nlon = ellipse[0]**2/numpy.sqrt(Rsq)
-    lonsize = xsize / (numpy.pi/180*numpy.cos(radlat)*Nlon)
-    latsize = ysize / (numpy.pi/180*Mlat)
+   # Set up parameters for ellipse
+   # Semi-major and semi-minor for WGS-84 ellipse
+   ellipse = [6378137.0, 6356752.314245]
 
-    return lonsize, latsize
+   radlat = numpy.deg2rad(lat)
+
+   Rsq = (ellipse[0]*numpy.cos(radlat))**2+(ellipse[1]*numpy.sin(radlat))**2
+   Mlat = (ellipse[0]*ellipse[1])**2/(Rsq**1.5)
+   Nlon = ellipse[0]**2/numpy.sqrt(Rsq)
+   lonsize = xsize / (numpy.pi/180*numpy.cos(radlat)*Nlon)
+   latsize = ysize / (numpy.pi/180*Mlat)
+
+   return lonsize, latsize
 
 def get_gdal_type_from_path(file_name):
    """
    Get GDAL format, based on filename
-   
+
    Arguments:
 
    * file_name - name of output file (can be full path)
@@ -1194,17 +1212,17 @@ def get_gdal_type_from_path(file_name):
    gdalStr = ''
    extension = os.path.splitext(file_name)[-1].lower()
    if extension == '.kea':
-       gdalStr = 'KEA'
+      gdalStr = 'KEA'
    elif extension == '.tif':
-       gdalStr = 'GTiff'
+      gdalStr = 'GTiff'
    elif extension == '.jpg':
-       gdalStr = 'JPEG'
+      gdalStr = 'JPEG'
    elif extension == '.img':
-       gdalStr = 'HFA'
+      gdalStr = 'HFA'
    elif extension == '.pix':
-       gdalStr = 'PCIDSK'
+      gdalStr = 'PCIDSK'
    elif extension == '.asc' or extension == '.txt':
-       gdalStr = 'GRASSASCIIGrid'
+      gdalStr = 'GRASSASCIIGrid'
    else:
-       gdalStr = 'ENVI' 
+      gdalStr = 'ENVI'
    return gdalStr
