@@ -2,8 +2,13 @@ LiDAR DEM Tutorial
 ===================
 
 This tutorial introduces some of the tools available in arsf_dem for creating a Digital Elevation Model (DEM) from lidar point clouds.
-It can be run using ARSF provided tutorial data available to download (lidardata_; 1.8 GB zipped) or on your own LAS format
-lidar data.
+
+The data used for the tutorial are from an ARSF flight over Svalbard in 2011.
+To access these data you need need to register for an account at NEODC_ and apply for access to the ARSF archive (`direct link <https://services.ceda.ac.uk/cedasite/resreg/application?attributeid=arsf>`_).
+
+Once you have access to the ARSF Archive at NEODC you can access the flight `here <http://browse.ceda.ac.uk/browse/neodc/arsf/2011/EUFAR11_02/EUFAR11_02-2011_187_SVALBD_PGLACIAL/LiDAR>`_.
+
+You can also follow the tutorial with data from another flight, remembering to set the file names and projection accordingly.
 
 This tutorial assumes Windows is being used and all pre-requisites and scripts have already been installed.
 However, usage is the same when running under Linux / OS X apart from you need to add '.py' to the end of all command line tools.
@@ -189,7 +194,7 @@ In these cases it is recommended you access the programs directly, as this will 
 .. [1] It is possible to run LAStools without a license but it will add diagonal black lines to the output file and add small amounts of noise. For details of licensing LAStools see the LAStools_ website.
 .. [2] Note these programs are not affiliated with ARSF and have their own support systems (normally mailing lists). See their respective websites for more details on getting help.
 
-.. _lidardata: http://arsf-dan.nerc.ac.uk/files/lidar_dem_data.zip
+.. _NEODC: http://neodc.nerc.ac.uk/
 .. _gdalbuildvrt: http://www.gdal.org/gdalbuildvrt.html
 .. _las2txt: http://www.cs.unc.edu/~isenburg/lastools/download/las2txt_README.txt
 .. _GRASS: http://grass.osgeo.org/grass64/manuals/r.in.xyz.html
