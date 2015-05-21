@@ -29,5 +29,10 @@ Following installation of these packages, install ARSF DEM scripts using:
    python setup.py install --prefix=~/install/path
 
 More advanced functionality (e.g., coordinate transforms) requires additional files and packages.
-For more details see 'installation' in documentation.
 
+For more details on installation see [installation](doc/source/installation.rst).
+
+Usage
+------
+
+See the [tutorial](doc/source/tutorial_lidar.rst) for more details on creating DEMs from LiDAR data.
