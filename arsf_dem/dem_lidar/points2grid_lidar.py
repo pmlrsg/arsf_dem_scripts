@@ -48,7 +48,7 @@ def export_ascii_raster(points2dem_outfile, out_raster,
    in_raster = points2dem_outfile + '.{}.asc'.format(output_type)
 
    # If ASCII output is wanted just copy file
-   if os.path.splitext(out_raster) == '.asc':
+   if os.path.splitext(out_raster)[-1] == '.asc':
       shutil.copy(in_raster, out_raster)
    # Otherwise use gdal_translate
    else:
