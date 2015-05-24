@@ -23,7 +23,8 @@ system level.
 
 """
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
-import os, sys
+import os
+import sys
 import glob
 import tempfile
 if sys.version_info[0] < 3:
@@ -279,13 +280,14 @@ os.environ['GISBASE'] = GRASS_LIB_PATH
 GRASS_DATABASE_TEMPLATE = get_config_fallback(config,'grass','GRASS_DATABASE_TEMPLATE',
                            fallback=None)
 
-if GRASS_DATABASE_TEMPLATE is None:
+if GRASS_DATABASE_TEMPLATE is None or os.path.isdir(GRASS_DATABASE_TEMPLATE) == False:
    GRASS_DATABASE_TEMPLATE = get_grass_db_template_path()
 
-if not os.path.isdir(GRASS_DATABASE_TEMPLATE):
+if GRASS_DATABASE_TEMPLATE is None or os.path.isdir(GRASS_DATABASE_TEMPLATE) == False:
    print('''Could not find GRASS database template. 
 Try downloading from http://arsf-dan.nerc.ac.uk/trac/raw-attachment/wiki/Help/DEM_scripts/grass_db_template.zip
 and setting path in config file using "GRASS_DATABASE_TEMPLATE"'''.format(GRASS_DATABASE_TEMPLATE),file=sys.stderr)
+   sys.exit()
 
 # Set some common options for raster creation
 
@@ -420,6 +422,10 @@ HYPERSPECTRAL_VIEW_ANGLE_MAX = float(get_config_fallback(config, 'hyperspectral'
 # Set paths for other libraries
 #: Path to SPDLib binaries
 SPDLIB_BIN_PATH = get_config_fallback(config,'spdlib','SPDLIB_BIN_PATH',fallback=get_spdlib_path())
+
+if SPDLIB_BIN_PATH != '' and os.path.isdir(SPDLIB_BIN_PATH) == False:
+    SPDLIB_BIN_PATH = get_spdlib_path()
+
 #: Default interpolation used by SPDLib
 SPD_DEFAULT_INTERPOLATION = get_config_fallback(config,'spdlib','SPD_DEFAULT_INTERPOLATION',
                      fallback='NATURAL_NEIGHBOR')
@@ -429,8 +435,19 @@ LASTOOLS_FREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_FREE_BI
 #: Path to commercial LAStools binaries
 LASTOOLS_NONFREE_BIN_PATH = get_config_fallback(config,'lastools','LASTOOLS_NONFREE_BIN_PATH',fallback=get_lastools_path())
 
+if LASTOOLS_FREE_BIN_PATH != '' and os.path.isdir(LASTOOLS_FREE_BIN_PATH) == False:
+    LASTOOLS_FREE_BIN_PATH = get_lastools_path()
+
+if LASTOOLS_NONFREE_BIN_PATH != '' and os.path.isdir(LASTOOLS_NONFREE_BIN_PATH) == False:
+    LASTOOLS_NONFREE_BIN_PATH = get_lastools_path()
+
 #: Path to FUSION
 FUSION_BIN_PATH = get_config_fallback(config,'fusion','FUSION_BIN_PATH',fallback=get_fusion_bin_path())
 
+if FUSION_BIN_PATH != '' and os.path.isdir(FUSION_BIN_PATH) == False:
+    FUSION_BIN_PATH = get_fusion_bin_path()
+
 #: Path to points2dem
 POINTS2GRID_BIN_PATH = get_config_fallback(config,'points2grid','POINTS2GRID_BIN_PATH',fallback='')
+
+
