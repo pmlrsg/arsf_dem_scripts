@@ -459,6 +459,15 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
    """
    out_dem_name = None
 
+   if out_demfile is None:
+      # If an output isn't supplied this is OK, as long as it's being kept in GRASS
+      if remove_grassdb:
+         raise Exception('No out_demfile specified and remove_grassdb set to True. This would produce no output')
+      tmp_outdem_fh, tmp_out_dem_name = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)
+      tmp_out_dem_header = os.path.splitext(tmp_out_dem_name)[0] + '.hdr'
+   else:
+      tmp_out_dem_name = out_demfile
+
    # Subset DEM to navigation bounding box
    dem_common_functions.PrintTermWidth('Subsetting DEM to bounding box')
    # When subsetting perform horizontal reprojection
@@ -492,7 +501,7 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
                                             grassdb_path=grassdb_path,
                                             fill_nulls=fill_nulls)
 
-         subset_to_bb(temp_mosaic_dem, out_demfile, bounding_box_reproj,
+         subset_to_bb(temp_mosaic_dem, tmp_out_dem_name, bounding_box_reproj,
                                         in_projection=in_dem_projection,
                                         out_projection=out_projection,
                                         out_res=out_res)
@@ -504,26 +513,34 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
             os.remove(temp_mosaic_dem_header)
 
       else:
-         subset_to_bb(in_dem_mosaic, out_demfile, bounding_box_reproj,
+         subset_to_bb(in_dem_mosaic, tmp_out_dem_name, bounding_box_reproj,
                                      in_projection=in_dem_projection,
                                      out_projection=out_projection,
                                      out_res=out_res)
 
    else:
-      subset_to_bb(in_dem_mosaic, out_demfile, bounding_box,
+      subset_to_bb(in_dem_mosaic, tmp_out_dem_name, bounding_box,
                                   in_projection=in_dem_projection,
                                   out_res=out_res)
 
       # Apply datum height offset and fill null values.
       if separation_file is not None or fill_nulls:
-         out_dem_name, grassdb_path = offset_null_fill_dem(out_demfile,
-                                        out_demfile,
+         out_dem_name, grassdb_path = offset_null_fill_dem(tmp_out_dem_name,
+                                        tmp_out_dem_name,
                                         separation_file=separation_file,
                                         ascii_separation_file=ascii_separation_file,
                                         nodata=nodata,
                                         remove_grassdb=remove_grassdb,
                                         grassdb_path=grassdb_path,
                                         fill_nulls=fill_nulls)
+
+   # If a temporary output file was created remove it
+   if out_demfile is None:
+      os.close(tmp_outdem_fh)
+      if os.path.isfile(tmp_out_dem_name):
+         os.remove(tmp_out_dem_name)
+      if os.path.isfile(tmp_out_dem_header):
+         os.remove(tmp_out_dem_header)
 
    if not remove_grassdb:
       return out_dem_name, grassdb_path
