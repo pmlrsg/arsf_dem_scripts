@@ -41,6 +41,8 @@ scripts_text = '''
 ARSF DEM Scripts
 ================
 
+The following command line tools are provided by ARSF DEM.
+
 Note under Windows, there is no need to type the '.py' at the end of the scripts. Batch files have been created to run the Python scripts, which don't need an extension to be provided.
 
 create_apl_dem

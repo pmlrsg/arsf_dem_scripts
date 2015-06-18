@@ -35,4 +35,5 @@ For more details on installation see [installation](doc/source/installation.rst)
 Usage
 ------
 
-See the [tutorial](doc/source/tutorial_lidar.rst) for more details on creating DEMs from LiDAR data.
+See the [tutorial](doc/source/tutorial_lidar.rst) for more details on creating DEMs from LiDAR data and
+the [scripts](doc/source/scripts.rst) page for details on available scripts.
