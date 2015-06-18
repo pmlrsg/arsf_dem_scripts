@@ -34,11 +34,14 @@ create_apl_dem_out = get_command_out(['create_apl_dem.py','-h'])
 create_dem_from_lidar_out = get_command_out(['create_dem_from_lidar.py','-h'])
 las_to_dsm_out = get_command_out(['las_to_dsm.py','-h'])
 las_to_dtm_out = get_command_out(['las_to_dtm.py','-h'])
+mosaic_dem_tiles_out = get_command_out(['mosaic_dem_tiles.py','-h'])
 
 scripts_text = '''
 
 ARSF DEM Scripts
 ================
+
+The following command line tools are provided by ARSF DEM.
 
 Note under Windows, there is no need to type the '.py' at the end of the scripts. Batch files have been created to run the Python scripts, which don't need an extension to be provided.
 
@@ -70,10 +73,18 @@ las_to_dtm
 
 {}
 
+mosaic_dem_tiles
+------------------
+
+.. code-block:: bash
+
+{}
+
 '''.format(create_apl_dem_out,
            create_dem_from_lidar_out,
            las_to_dsm_out,
-           las_to_dtm_out)
+           las_to_dtm_out,
+           mosaic_dem_tiles_out)
 
 f = open(outfile,'w')
 f.write(scripts_text)

@@ -5,7 +5,8 @@ Functions for working with LiDAR data using points2grid:
 
 https://github.com/CRREL/points2grid
 
-Requires points2grid to be installed.
+Requires the development version of points2grid to be installed which
+has filters for LAS points.
 
 """
 
@@ -48,7 +49,7 @@ def export_ascii_raster(points2dem_outfile, out_raster,
    in_raster = points2dem_outfile + '.{}.asc'.format(output_type)
 
    # If ASCII output is wanted just copy file
-   if os.path.splitext(out_raster) == '.asc':
+   if os.path.splitext(out_raster)[-1] == '.asc':
       shutil.copy(in_raster, out_raster)
    # Otherwise use gdal_translate
    else:
@@ -61,39 +62,112 @@ def export_ascii_raster(points2dem_outfile, out_raster,
       gdal_translate_cmd.extend([in_raster, out_raster])
       dem_common_functions.CallSubprocessOn(gdal_translate_cmd)
 
+def _las_to_dem(in_las, out_dem,
+               resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
+               projection=None,
+               demtype='DSM',
+               grid_method='mean'):
+   """
+   Create Digital Elevation Model (DEM) from a LAS file using points2grid
+   Called by las_to_dtm or las_to_dem
+
+   Arguments:
+
+   * in_las - Input LAS File
+   * out_dem - Output DTM file
+   * resolution - output resolution
+   * demtype - DSM / DTM
+   * grid_method - points2grid output type (min, max, mean, idw or std)
+
+   """
+   if not _checkPoints2Grid():
+      raise Exception('Could not find points2grid, checked {}'.format(dem_common.POINTS2GRID_BIN_PATH))
+
+   outdem_handler, dem_tmp = tempfile.mkstemp(suffix='', dir=dem_common.TEMP_PATH)
+
+   print('Creating surface')
+   surfaceCMD = [os.path.join(dem_common.POINTS2GRID_BIN_PATH,'points2grid'),
+                 '--exclude_class', '7',
+                 '--output_file_name',dem_tmp,
+                 '--output_format','arc',
+                 '--resolution',str(resolution)]
+
+   if grid_method.lower() == 'min':
+      surfaceCMD.extend(['--min'])
+   elif grid_method.lower() == 'max':
+      surfaceCMD.extend(['--max'])
+   elif grid_method.lower() == 'mean':
+      surfaceCMD.extend(['--mean'])
+   elif grid_method.lower() == 'idw':
+      surfaceCMD.extend(['--idw'])
+   elif grid_method.lower() == 'std':
+      surfaceCMD.extend(['--std'])
+
+   if demtype.upper() == 'DSM':
+      surfaceCMD.extend(['--first_return_only'])
+   elif demtype.upper() == 'DTM':
+      surfaceCMD.extend(['--last_return_only'])
+   else:
+      raise Exception('DEM Type must be "DSM" or "DTM"')
+
+   surfaceCMD.extend(['-i',in_las])
+   dem_common_functions.CallSubprocessOn(surfaceCMD)
+
+   print('Exporting')
+   export_ascii_raster(dem_tmp, out_dem, projection=projection,
+                                          output_type=grid_method.lower())
+
+   os.close(outdem_handler)
+   os.remove(dem_tmp + '.{}.asc'.format(grid_method.lower()))
+
+   return None
+
 def las_to_dsm(in_las, out_dsm,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
-               projection=None):
+               projection=None,
+               grid_method='mean'):
    """
    Create Digital Surface Model (DSM) from a LAS file using points2grid
-
-   TODO: Currently doesn't drop noisy points
 
    Arguments:
 
    * in_las - Input LAS File
    * out_dsm - Output DTM file
    * resolution - output resolution
+   * grid_method - points2grid output type (min, max, mean, idw or std)
 
    """
-   if not _checkPoints2Grid():
-      raise Exception('Could not find points2grid, checked {}'.format(dem_common.POINTS2GRID_BIN_PATH))
+   _las_to_dem(in_las, out_dsm,
+               resolution=resolution,
+               projection=projection,
+               demtype='DSM',
+               grid_method=grid_method)
 
-   outdsm_handler, dsm_tmp = tempfile.mkstemp(suffix='', dir=dem_common.TEMP_PATH)
+   return None
 
-   print('Creating surface')
-   surfaceCMD = [os.path.join(dem_common.POINTS2GRID_BIN_PATH,'points2grid'),
-                 '--mean','--output_file_name',dsm_tmp,
-                 '--output_format','arc',
-                 '--resolution',str(resolution),
-                 '-i',in_las]
-   dem_common_functions.CallSubprocessOn(surfaceCMD)
+def las_to_dtm(in_las, out_dtm,
+               resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
+               projection=None,
+               grid_method='mean'):
+   """
+   Create Digital Terrain Model (DSM) from a LAS file using points2grid
 
-   print('Exporting')
-   export_ascii_raster(dsm_tmp, out_dsm, projection=projection)
+   The DTM is created using only last returns, therefore is not a true DTM as
+   not all last returns will be from the ground.
 
-   os.close(outdsm_handler)
-   os.remove(dsm_tmp + '.mean.asc')
+   Arguments:
+
+   * in_las - Input LAS File
+   * out_dtm - Output DTM file
+   * resolution - output resolution
+   * grid_method - points2grid output type (min, max, mean, idw or std)
+
+   """
+   _las_to_dem(in_las, out_dtm,
+               resolution=resolution,
+               projection=projection,
+               demtype='DTM',
+               grid_method=grid_method)
 
    return None
 

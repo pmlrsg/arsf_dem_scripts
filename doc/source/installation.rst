@@ -20,7 +20,7 @@ Windows
 The recommended way to install GRASS is using the OSGeo4W installer:
 
 1. Download the OSGeo4W installer from: http://trac.osgeo.org/osgeo4w/
-2. Select Advanced install and select 'QGIS Full' and 'GRASS' from Desktop applications, choose the standard install location of C:\OSGeo4W
+2. Select Advanced install and select 'QGIS Full' and 'GRASS' from Desktop applications, choose the standard install location of C:\\OSGeo4W
 3. Download the arsf_dem library, open a command prompt and navigate to the directory the code was downloaded to. Then run:
 
 .. code-block:: bash
@@ -29,8 +29,9 @@ The recommended way to install GRASS is using the OSGeo4W installer:
    sudo python setup.py install
 
 For more information on installing Python modules see https://docs.python.org/2/install/.
+
 4. Download LAStools from http://lastools.org, unzip the folder and copy the folder 'LAStools' to the C drive.
-5. Download Windows binaries of SPDLib from https://bitbucket.org/petebunting/spdlib/downloads and copy the folder 'spdlib' to the C drive.
+5. (Optional) Download Windows binaries of SPDLib from https://bitbucket.org/petebunting/spdlib/downloads and copy the folder 'spdlib' to the C drive.
 
 Linux
 ~~~~~~

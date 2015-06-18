@@ -127,8 +127,11 @@ def create_apl_dem_from_mosaic(outdem,
    else:
       raise Exception('DEM Source not recognised and no custom DEM supplied.')
 
-   # If a name for the output DEM is not provided try to figure out standard name
-   if outdem is None:
+   # If a name for the output DEM is not provided and don't require the output to be
+   # kept in GRASS, try to figure out standard name
+   # The standard names only makes sense on ARSF systems and it depends on a
+   # module which isn't part of arsf_dem.
+   if outdem is None and remove_grassdb:
       if not HAVE_DEM_LIBRARY:
          raise Exception('A name for the output DEM was not supplied and' +
                      ' the dem_library could not be imported to determine the standard' +

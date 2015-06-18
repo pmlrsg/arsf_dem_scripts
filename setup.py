@@ -14,19 +14,10 @@ from distutils.core import setup
 # For windows also copy batch files, incase .py files
 # aren't associated with Python.
 if sys.platform == 'win32':
-   scripts_list = ['scripts\\create_apl_dem.py',
-                   'scripts\\create_apl_dem.bat',
-                   'scripts\\create_dem_from_lidar.py',
-                   'scripts\\create_dem_from_lidar.bat',
-                   'scripts\\las_to_dtm.py',
-                   'scripts\\las_to_dtm.bat',
-                   'scripts\\las_to_dsm.py',
-                   'scripts\\las_to_dsm.bat']
+   scripts_list = glob.glob('scripts\\*.py')
+   scripts_list.extend(glob.glob('scripts\\*.bat'))
 else:
-   scripts_list = ['scripts/create_apl_dem.py',
-                   'scripts/create_dem_from_lidar.py',
-                   'scripts/las_to_dsm.py',
-                   'scripts/las_to_dtm.py']
+   scripts_list = glob.glob('scripts/*.py')
 
 setup(
   name='arsf_dem',

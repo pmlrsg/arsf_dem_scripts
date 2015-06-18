@@ -177,12 +177,17 @@ def _las_to_dem(in_las,out_raster,
       else:
          wkt_tmp = None
 
+      # Create surface. Use IDW interpolation
       if demtype.upper() == 'DSM':
          points2grid_lidar.las_to_dsm(in_las, out_raster,
                               resolution=resolution,
-                              projection=wkt_tmp)
+                              projection=wkt_tmp,
+                              grid_method='idw')
       elif demtype.upper() == 'DTM':
-         raise Exception('DTM is not currently available with points2grid')
+         points2grid_lidar.las_to_dtm(in_las, out_raster,
+                              resolution=resolution,
+                              projection=wkt_tmp,
+                              grid_method='idw')
       else:
          raise Exception('DEM Type not recognised - options are DSM or DTM')
 
