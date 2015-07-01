@@ -643,9 +643,14 @@ def setLocation(projection):
    elif 'UTM' in projection:
       location = newLocation(projection)
    else:
-      dem_common_functions.ERROR("No recognisable projection given")
-      location = None
-   if location != None:
+      # If the projection is not the expected GRASS location format
+      # try as a proj4 string.
+      try:
+         location = newLocation(projection)
+      except Exception:
+         dem_common_functions.ERROR("No recognisable projection given")
+         location = None
+   if location is not None:
       print("changing location")
       grass.run_command('g.gisenv',
                   set="LOCATION_NAME=%s" % (location))
@@ -905,7 +910,13 @@ def proj4_to_grass_location(in_proj4):
             (spheroid.lower().find("airy") > -1):
       grass_proj = "UKBNG"
    else:
-      raise Exception('Could not determine GRASS location name from {}'.format(in_proj4))
+      dem_common_functions.WARNING('''Could not determine GRASS location name from:
+
+{}
+
+Setting to 'UNKNOWN'
+'''.format(in_proj4))
+      grass_proj = "UNKNOWN"
 
    return grass_proj
 
