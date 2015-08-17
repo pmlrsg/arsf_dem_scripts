@@ -309,10 +309,18 @@ DEFAULT_LIDAR_RES_METRES = get_config_int_fallback(config,'lidar','DEFAULT_LIDAR
 DEFAULT_LIDAR_PROJECTION_GRASS = get_config_fallback(config,'lidar','DEFAULT_LIDAR_PROJECTION_GRASS,',fallback='UKBNG')
 
 #: Default buffer, in metres, to be used when patching lidar with other data
-DEFAULT_LIDAR_DEM_BUFFER = {'N' : 2000,
-                            'E' : 2000,
-                            'S' : 2000,
-                            'W' : 2000}
+DEFAULT_LIDAR_DEM_BUFFER_DISTANCE = get_config_fallback(config,'lidar','DEFAULT_LIDAR_DEM_BUFFER_DISTANCE',fallback='2000')
+
+try:
+   DEFAULT_LIDAR_DEM_BUFFER_DISTANCE = float(DEFAULT_LIDAR_DEM_BUFFER_DISTANCE)
+except ValueError:
+   raise ValueError('Expected float for "DEFAULT_LIDAR_DEM_BUFFER_DISTANCE", got {}'.format(DEFAULT_LIDAR_DEM_BUFFER_DISTANCE))
+
+#: Dictionary containing default LiDAR buffer, in metres.
+DEFAULT_LIDAR_DEM_BUFFER = {'N' : DEFAULT_LIDAR_DEM_BUFFER_DISTANCE,
+                            'E' : DEFAULT_LIDAR_DEM_BUFFER_DISTANCE,
+                            'S' : DEFAULT_LIDAR_DEM_BUFFER_DISTANCE,
+                            'W' : DEFAULT_LIDAR_DEM_BUFFER_DISTANCE}
 
 #: Order of columns in ASCII format lidar data
 LIDAR_ASCII_ORDER = {'time':1,
@@ -323,11 +331,19 @@ LIDAR_ASCII_ORDER = {'time':1,
                      'numberofreturns':8,
                      'scanangle':9}
 
-#: Default buffer for APL DEM (in degrees)
-DEFAULT_APL_DEM_BUFFER = {'N' : 0.05,
-                          'E' : 0.05,
-                          'S' : 0.05,
-                          'W' : 0.05}
+#: Default buffer, in degrees, for APL DEM around hyperspectral extent
+DEFAULT_APL_DEM_BUFFER_DISTANCE = get_config_fallback(config,'hyperspectral','DEFAULT_APL_DEM_BUFFER_DISTANCE',fallback='0.05')
+
+try:
+   DEFAULT_APL_DEM_BUFFER_DISTANCE = float(DEFAULT_APL_DEM_BUFFER_DISTANCE)
+except ValueError:
+   raise ValueError('Expected float for "DEFAULT_APL_DEM_BUFFER_DISTANCE", got {}'.format(DEFAULT_APL_DEM_BUFFER_DISTANCE))
+
+#: Dictionary containing default buffer for APL DEM (in degrees)
+DEFAULT_APL_DEM_BUFFER = {'N' : DEFAULT_APL_DEM_BUFFER_DISTANCE,
+                          'E' : DEFAULT_APL_DEM_BUFFER_DISTANCE,
+                          'S' : DEFAULT_APL_DEM_BUFFER_DISTANCE,
+                          'W' : DEFAULT_APL_DEM_BUFFER_DISTANCE}
 
 # Set locations and resolution of standard DEM mosaics
 
