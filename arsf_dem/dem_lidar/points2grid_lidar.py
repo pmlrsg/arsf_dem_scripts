@@ -66,7 +66,8 @@ def _las_to_dem(in_las, out_dem,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
                projection=None,
                demtype='DSM',
-               grid_method='mean'):
+               grid_method='mean',
+               quiet=True):
    """
    Create Digital Elevation Model (DEM) from a LAS file using points2grid
    Called by las_to_dtm or las_to_dem
@@ -78,6 +79,7 @@ def _las_to_dem(in_las, out_dem,
    * resolution - output resolution
    * demtype - DSM / DTM
    * grid_method - points2grid output type (min, max, mean, idw or std)
+   * quiet - don't print output from points2grid command
 
    """
    if not _checkPoints2Grid():
@@ -111,7 +113,7 @@ def _las_to_dem(in_las, out_dem,
       raise Exception('DEM Type must be "DSM" or "DTM"')
 
    surfaceCMD.extend(['-i',in_las])
-   dem_common_functions.CallSubprocessOn(surfaceCMD)
+   dem_common_functions.CallSubprocessOn(surfaceCMD, redirect=quiet)
 
    print('Exporting')
    export_ascii_raster(dem_tmp, out_dem, projection=projection,
@@ -125,7 +127,8 @@ def _las_to_dem(in_las, out_dem,
 def las_to_dsm(in_las, out_dsm,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
                projection=None,
-               grid_method='mean'):
+               grid_method='mean',
+               quiet=True):
    """
    Create Digital Surface Model (DSM) from a LAS file using points2grid
 
@@ -135,20 +138,23 @@ def las_to_dsm(in_las, out_dsm,
    * out_dsm - Output DTM file
    * resolution - output resolution
    * grid_method - points2grid output type (min, max, mean, idw or std)
+   * quiet - don't print output from points2grid command
 
    """
    _las_to_dem(in_las, out_dsm,
                resolution=resolution,
                projection=projection,
                demtype='DSM',
-               grid_method=grid_method)
+               grid_method=grid_method,
+               quiet=quiet)
 
    return None
 
 def las_to_dtm(in_las, out_dtm,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
                projection=None,
-               grid_method='mean'):
+               grid_method='mean',
+               quiet=True):
    """
    Create Digital Terrain Model (DSM) from a LAS file using points2grid
 
@@ -161,13 +167,15 @@ def las_to_dtm(in_las, out_dtm,
    * out_dtm - Output DTM file
    * resolution - output resolution
    * grid_method - points2grid output type (min, max, mean, idw or std)
+   * quiet - don't print output from points2grid command
 
    """
    _las_to_dem(in_las, out_dtm,
                resolution=resolution,
                projection=projection,
                demtype='DTM',
-               grid_method=grid_method)
+               grid_method=grid_method,
+               quiet=quiet)
 
    return None
 
