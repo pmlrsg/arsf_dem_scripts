@@ -191,6 +191,10 @@ and is made available under the terms of the GPLv3 license.
       else:
          use_lidar_bounds = False
 
+      if args.lidar_bounds and args.hyperspectral_bounds:
+         dem_common_functions.ERROR("Can't use '--lidar_bounds' and '--hyperspectral_bounds' together.")
+         sys.exit(1)
+
       in_lidar_projection = args.in_projection.upper()
 
       dem_lidar.lidar_utilities.create_patched_lidar_mosaic(args.lidarfiles,
