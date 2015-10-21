@@ -31,6 +31,7 @@ Available functions:
 * get_screenshot_path - creates filename for screenshot.
 * remove_gdal_aux_file - removes '.aux.xml' file created by GDAL.
 * get_gdal_type_from_path - gets GDAL format string from file name.
+* add_dem_metadata - adds metadata to DEM.
 
 """
 
@@ -1244,7 +1245,8 @@ def get_gdal_type_from_path(file_name):
       gdalStr = 'ENVI'
    return gdalStr
 
-def add_dem_metadata(dem_name, dem_source=None, dem_filename=None):
+def add_dem_metadata(dem_name, dem_source=None, dem_filename=None,
+                               other_items=None):
    """
    Adds metadata to DEM with original DEM source
 
@@ -1254,7 +1256,9 @@ def add_dem_metadata(dem_name, dem_source=None, dem_filename=None):
    * dem_source (e.g., ASTER)
    * dem_filename (name of mosaic DEM was derived from)
    """
-   
+   if not HAVE_GDAL:
+      raise ImportError('Could not import GDAL')
+
    # If ENVI dataset, write key to header file
    if get_gdal_type_from_path(dem_name) == 'ENVI':
       # Get ENVI header (using GDAL filelist function)
@@ -1268,6 +1272,11 @@ def add_dem_metadata(dem_name, dem_source=None, dem_filename=None):
             f.write(';DEM Source={}\n'.format(dem_source))
          if dem_filename is not None:
             f.write(';Original DEM filename={}\n'.format(dem_filename))
+         if other_items is not None:
+            if type(other_items) is not dict:
+               raise TypeError('"other_items" must be a dictionary')
+            for key in other_items.keys():
+               f.write(';{}={}\n'.format(key, other_items[key]))
 
    # If not try to write using GDAL metadata function.
    else:
@@ -1281,6 +1290,10 @@ def add_dem_metadata(dem_name, dem_source=None, dem_filename=None):
          metadata['DEM Source'] = dem_source
       if dem_filename is not None:
          metadata['Original DEM filename'] = dem_filename
+      if other_items is not None:
+         if type(other_items) is not dict:
+            raise TypeError('"other_items" must be a dictionary')
+         metadata.update(other_items)
 
       # Save updated metadata dictionary
       dem_dataset.SetMetadata(metadata)

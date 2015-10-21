@@ -284,6 +284,15 @@ def create_patched_lidar_mosaic(in_lidar,
          except TypeError:
             pass
 
+      # Add metadata to DEM header
+      patched_dem_source = 'LiDAR'
+
+      if patch_with_dem:
+         patched_dem_source = 'LiDAR/{}'.format(dem_source)
+
+      dem_utilities.add_dem_metadata(outdem, dem_source=patched_dem_source,
+                                     other_items={'Type' : out_raster_type})
+
       # Remove temp files created
       for temp_handler in temp_file_handler_list:
          os.close(temp_handler)
