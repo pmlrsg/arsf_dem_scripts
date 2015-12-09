@@ -8,7 +8,8 @@
 # licence is available to download with this file.
 
 """
-Utilities for working with DEMs and navigation data, mostly for creating DEMs suitible for use in APL for processing hyperspectral data.
+Utilities for working with DEMs and navigation data, mostly for creating DEMs
+suitible for use in APL for processing hyperspectral data.
 
 Available Functions:
 
@@ -20,7 +21,9 @@ Available Functions:
 
 Known issues
 
-Functions to get a bounding box from navigation data can produce a bounding box which is much larger than required. These functions are currently being improved.
+Functions to get a bounding box from navigation data can produce a bounding box
+which is much larger than required if .sol file isn't found from project.
+If this happens a warning will be printed.
 
 """
 
@@ -50,16 +53,20 @@ except ImportError:
    # If can't import don't complain until GDAL is actually needed
    HAVE_GDAL=False
 
+# Additional buffer to apply to post processed DEM files as the extent is
+# smaller than the one produced by APL.
+POST_PROCESSED_DEM_BUFFER = 0.03
+
 def create_apl_dem_from_mosaic(outdem,
-                     dem_source=None,
-                     dem_mosaic=None,
-                     separation_file=None,
-                     project='.',
-                     nav=None,
-                     bil_navigation=None,
-                     fill_nulls=True,
-                     remove_grassdb=True,
-                     grassdb_path=None):
+                               dem_source=None,
+                               dem_mosaic=None,
+                               separation_file=None,
+                               project='.',
+                               nav=None,
+                               bil_navigation=None,
+                               fill_nulls=True,
+                               remove_grassdb=True,
+                               grassdb_path=None):
    """
    Create DEM subset for use in APL from standard or custom DEM
 
@@ -169,22 +176,26 @@ def create_apl_dem_from_mosaic(outdem,
                            grassdb_path=grassdb_path,
                            fill_nulls=fill_nulls)
 
+   # Add metadata to DEM header
+   dem_utilities.add_dem_metadata(out_demfile, dem_source=dem_source,
+                                   dem_filename=os.path.basename(in_dem_mosaic))
+
    return out_demfile, grassdb_path
 
 
 def subset_dem_to_nav(in_dem_mosaic, out_demfile,
-                     nav_file, project_dir,
-                     max_view_angle=dem_common.HYPERSPECTRAL_VIEW_ANGLE_MAX,
-                     sensor=None,
-                     separation_file=None,
-                     ascii_separation_file=False,
-                     in_dem_projection=None,
-                     out_projection=None,
-                     out_res=None,
-                     nodata=dem_common.NODATA_VALUE,
-                     remove_grassdb=True,
-                     grassdb_path=None,
-                     fill_nulls=True):
+                      nav_file, project_dir,
+                      max_view_angle=dem_common.HYPERSPECTRAL_VIEW_ANGLE_MAX,
+                      sensor=None,
+                      separation_file=None,
+                      ascii_separation_file=False,
+                      in_dem_projection=None,
+                      out_projection=None,
+                      out_res=None,
+                      nodata=dem_common.NODATA_VALUE,
+                      remove_grassdb=True,
+                      grassdb_path=None,
+                      fill_nulls=True):
    """
    Subsets DEM to bounding box obtained from navigation data
    to produce a DEM for use in aplcorr by calling:
@@ -237,7 +248,9 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
    # Get bounding box from navigation data
    print('Getting bounding box from navigation data')
 
-   nav_bb, project_info_used = dem_library.getAplCal(project_dir,nav_file, max_view_angle=max_view_angle, sensor=sensor)
+   nav_bb, project_info_used = dem_library.getAplCal(project_dir, nav_file,
+                                                     max_view_angle=max_view_angle,
+                                                     sensor=sensor)
 
    if not project_info_used:
       dem_common_functions.WARNING('Could not find project from directory "{}".'.format(os.path.abspath(project_dir)))
@@ -245,7 +258,7 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
          raise Exception('Could not find project and no navigiation data supplied')
       else:
          dem_common_functions.WARNING('Will subset DEM to bounds of "{}"'.format(nav_file))
-         dem_common_functions.WARNING('This could result in a DEM which is much larger than required.'.format(nav_file))
+         dem_common_functions.WARNING('This could result in a DEM which is much larger than required.')
 
    out_demfile, grassdb_path = dem_utilities.subset_dem_to_bounding_box(
                                           in_dem_mosaic,
@@ -264,17 +277,17 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
    return out_demfile, grassdb_path
 
 def subset_dem_to_apl_nav_files(in_dem_mosaic,
-                     out_demfile,
-                     nav_files,
-                     separation_file=None,
-                     ascii_separation_file=False,
-                     in_dem_projection=None,
-                     out_projection=None,
-                     out_res=None,
-                     nodata=dem_common.NODATA_VALUE,
-                     remove_grassdb=True,
-                     grassdb_path=None,
-                     fill_nulls=True):
+                                out_demfile,
+                                nav_files,
+                                separation_file=None,
+                                ascii_separation_file=False,
+                                in_dem_projection=None,
+                                out_projection=None,
+                                out_res=None,
+                                nodata=dem_common.NODATA_VALUE,
+                                remove_grassdb=True,
+                                grassdb_path=None,
+                                fill_nulls=True):
    """
    Subsets DEM to bounding box obtained from navigation files produced by aplnav
    to produce a DEM for use in aplcorr by calling:
@@ -366,10 +379,18 @@ def get_bb_from_bil_nav_files(nav_files):
    swath_buffer_degrees = dem_utilities.m_to_deg(latitude, swath_buffer, swath_buffer)
 
    buffered_bb = []
-   buffered_bb.append(nav_stats['latitude']['min'] - swath_buffer_degrees[1] - dem_common.DEFAULT_APL_DEM_BUFFER['S'])
-   buffered_bb.append(nav_stats['latitude']['max'] + swath_buffer_degrees[1] + dem_common.DEFAULT_APL_DEM_BUFFER['N'])
-   buffered_bb.append(nav_stats['longitude']['min'] - swath_buffer_degrees[0] - dem_common.DEFAULT_APL_DEM_BUFFER['W'])
-   buffered_bb.append(nav_stats['longitude']['max'] + swath_buffer_degrees[0] + dem_common.DEFAULT_APL_DEM_BUFFER['E'])
+   buffered_bb.append(nav_stats['latitude']['min'] - swath_buffer_degrees[1] \
+                      - dem_common.DEFAULT_APL_DEM_BUFFER['S'] \
+                      - POST_PROCESSED_DEM_BUFFER)
+   buffered_bb.append(nav_stats['latitude']['max'] + swath_buffer_degrees[1] \
+                      + dem_common.DEFAULT_APL_DEM_BUFFER['N'] \
+                      + POST_PROCESSED_DEM_BUFFER)
+   buffered_bb.append(nav_stats['longitude']['min'] - swath_buffer_degrees[0] \
+                      - dem_common.DEFAULT_APL_DEM_BUFFER['W'] \
+                      - POST_PROCESSED_DEM_BUFFER)
+   buffered_bb.append(nav_stats['longitude']['max'] + swath_buffer_degrees[0] \
+                      + dem_common.DEFAULT_APL_DEM_BUFFER['E'] \
+                      + POST_PROCESSED_DEM_BUFFER)
 
    return buffered_bb
 

@@ -433,7 +433,7 @@ APL_POST_PROCESSED_NAV_BANDS = {'Time' : 1,
 DEFAULT_SENSOR_VIEW_VECTORS = get_config_fallback(config, 'hyperspectral','DEFAULT_SENSOR_VIEW_VECTORS',fallback='eagle')
 
 #: Maximum view vector (in degrees) for hyperspectral data. Value from Eagle (2013).
-HYPERSPECTRAL_VIEW_ANGLE_MAX = float(get_config_fallback(config, 'hyperspectral', 'HYPERSPECTRAL_VIEW_ANGLE_MAX',fallback=18.6))
+HYPERSPECTRAL_VIEW_ANGLE_MAX = float(get_config_fallback(config, 'hyperspectral', 'HYPERSPECTRAL_VIEW_ANGLE_MAX',fallback=18.76))
 
 # Set paths for other libraries
 #: Path to SPDLib binaries
