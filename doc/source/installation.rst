@@ -26,7 +26,7 @@ The recommended way to install GRASS is using the OSGeo4W installer:
 .. code-block:: bash
 
    python setup.py
-   sudo python setup.py install
+   python setup.py install
 
 For more information on installing Python modules see https://docs.python.org/2/install/.
 
