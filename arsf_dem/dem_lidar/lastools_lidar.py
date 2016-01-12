@@ -327,8 +327,46 @@ def las_to_dtm(in_las, out_dtm, keep_las=False, flags=None):
       os.remove(lasfile_grd_tmp)
       return None
 
-def grass_proj_to_lastools_flag(in_grass_proj):
+def las_to_intensity(in_las, out_intensity, flags=None):
+   """
+   Create an Intensity image from a
+   from LAS file using the las2dem tool.
 
+   http://www.cs.unc.edu/~isenburg/lastools/download/las2dem_README.txt
+
+   Note: this tool requires a license.
+
+   Arguments:
+
+   * in_las - Input LAS file
+   * out_intensity - Output intensity image, format depends on extension.
+   * flags - List of additional flags for las2dem
+
+   Returns:
+
+   * None
+
+   """
+
+   if not _checkPaidLAStools():
+      raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
+
+   print('Creating Intensity image')
+   las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,
+                               'las2dem.exe')]
+   # Check for flags
+   if flags is not None:
+      las2dem_cmd += _check_flags(flags)
+
+   las2dem_cmd.extend(['-i',in_las, '-o',out_intensity, '-intensity'])
+
+   # Run directly through subprocess, as CallSubprocessOn
+   # raises exception under windows for unlicensed LAStools
+   print('Attempting to run command: ' + ' '.join(las2dem_cmd))
+   subprocess.check_output(las2dem_cmd)
+
+
+def grass_proj_to_lastools_flag(in_grass_proj):
    """
    Converts GRASS projection (e.g., UTM30N)
    into projection flags for LAStools
