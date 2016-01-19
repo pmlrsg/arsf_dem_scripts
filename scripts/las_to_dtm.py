@@ -31,7 +31,7 @@ DEBUG = False
 if __name__ == '__main__':
    description_str = '''Create a Digital Terrain Model (DTM) from a LAS file.
 
-'las_to_dtm' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+'las_to_dtm' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
 and is made available under the terms of the GPLv3 license.
 
 The programs used by las_to_dtm are available under a range of licenses, please

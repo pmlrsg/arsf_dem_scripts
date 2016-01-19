@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#Description: A script to create a DEM suitible for use in APL from ASTER, NextMap or another DEM mosaic. Uses arsf_dem library
+#Description: A script to create a DEM suitable for use in APL from ASTER, NextMap or another DEM mosaic. Uses arsf_dem library
 """
 Author: Dan Clewley (dac)
 
@@ -83,7 +83,7 @@ If the correct project path is not found or passed in, or for another reason
 there is a problem finding hyperspectral navigation files the script will
 print a warning but continue and produce a DEM much larger than required.
 
-'create_apl_dem' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+'create_apl_dem' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
 and is made available under the terms of the GPLv3 license.
 
    '''.format(dem_common.WWGSG_FILE)
