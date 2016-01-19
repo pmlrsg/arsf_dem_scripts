@@ -71,7 +71,7 @@ create_apl_dem
    there is a problem finding hyperspectral navigation files the script will
    print a warning but continue and produce a DEM much larger than required.
    
-   'create_apl_dem' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+   'create_apl_dem' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
    and is made available under the terms of the GPLv3 license.
    
       
@@ -155,9 +155,9 @@ create_dem_from_lidar
    finding hyperspectral navigation files will print warning but continue and produce
    a DEM much larger than is required. If the DEM is not required for APL you can use
    the flag '--lidar_bounds', which only uses the bounds of the lidar data, not navigation files
-   plus a buffer of 2000 m.
+   plus a buffer of 2000.0 m.
    
-   'create_dem_from_lidar' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+   'create_dem_from_lidar' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
    and is made available under the terms of the GPLv3 license.
    
    positional arguments:
@@ -202,7 +202,7 @@ create_dem_from_lidar
                            to be used with APL and navigation data are available.
                            This is the default behaviour
      --lidar_bounds        If patching with another DEM, get extent from lidar
-                           data plus default buffer of 2000 m. If DEM is not
+                           data plus default buffer of 2000.0 m. If DEM is not
                            required to be used with APL this option is
                            recommended.
      --fill_lidar_nulls    Fill NULL values in LiDAR data using interpolation.
@@ -225,7 +225,7 @@ las_to_dsm
    
    Create a Digital Surface Model (DSM) from a LAS file.
    
-   'las_to_dsm' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+   'las_to_dsm' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
    and is made available under the terms of the GPLv3 license.
    
    The programs used by las_to_dsm are available under a range of licenses, please
@@ -261,7 +261,7 @@ las_to_dtm
    
    Create a Digital Terrain Model (DTM) from a LAS file.
    
-   'las_to_dtm' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+   'las_to_dtm' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
    and is made available under the terms of the GPLv3 license.
    
    The programs used by las_to_dtm are available under a range of licenses, please
@@ -282,6 +282,38 @@ las_to_dtm
                            Input projection (e.g., UTM30N)
      --method Method       Software package to use. Options are:
                            GRASS,SPDLib,LAStools,FUSION,points2grid
+   
+
+
+las_to_intensity
+------------------
+
+.. code-block:: bash
+
+   usage: las_to_intensity.py [-h] -o Out Intensity [-r Resolution]
+                              [--projection In Projection] [--method Method]
+                              lasfile
+   
+   Create an Intensity Raster from a LAS file.
+   
+   'las_to_intensity' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
+   and is made available under the terms of the GPLv3 license.
+   
+   The programs used by las_to_intensity are available under a range of licenses, please
+   consult their respective documentation for more details.
+   
+   positional arguments:
+     lasfile               Input LAS file
+   
+   optional arguments:
+     -h, --help            show this help message and exit
+     -o Out Intensity, --outintensity Out Intensity
+                           Output name for Intensity image
+     -r Resolution, --resolution Resolution
+                           Resolution for output image (default=2)
+     --projection In Projection
+                           Input projection (e.g., UTM30N)
+     --method Method       Software package to use. Options are: GRASS,LAStools
    
 
 
