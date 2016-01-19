@@ -57,6 +57,7 @@ from .. import dem_common_functions
 from .. import grass_library
 
 LAS_TO_DEM_METHODS = ['GRASS','SPDLib','LAStools','FUSION','points2grid']
+LAS_TO_INTENSITY_METHODS = ['GRASS', 'LAStools']
 
 def _las_to_dem(in_las,out_raster,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,

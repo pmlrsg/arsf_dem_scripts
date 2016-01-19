@@ -448,7 +448,7 @@ def las_to_intensity(in_las,out_raster=None,
                         las2txt_flags='-last_only',
                         projection=projection,
                         bin_size=bin_size,
-                        out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
-                        out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE)
+                        out_raster_format=out_raster_format,
+                        out_raster_type=out_raster_type)
 
    return out_raster_name, grassdb_path
