@@ -17,6 +17,7 @@ Available Functions:
 * las_to_dsm - Create DSM from LAS file.
 * las_to_dtm - Create last-returns DTM from LAS file.
 * las_to_intensity - Create intensity image from LAS file.
+* las_to_density - Create density image from LAS file
 * las_to_raster - Convert lidar data in LAS format to raster.
 * ascii_to_raster - Convert lidar data in ASCII format to raster.
 
@@ -52,14 +53,18 @@ def ascii_to_raster(in_ascii,out_raster=None,
                      drop_class=None,
                      keep_class=None,
                      returns='all',
+                     raster_statistic='mean',
                      projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
                      bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
-                     out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                      out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE):
    """
    Create raster from lidar data in ASCII format using GRASS.
 
-   The pixel values are the mean 'val_field' of all points within a pixel.
+   Uses r.in.xyz function in GRASS. For more details see:
+
+   https://grass.osgeo.org/grass64/manuals/r.in.xyz.html
+
+   By default the pixel values are the mean 'val_field' of all points within a pixel.
    Default is to use the elevation and create a DSM.
    To create a DTM classify ground returns in LAS file and only export these
    to the ASCII file.
@@ -81,9 +86,9 @@ def ascii_to_raster(in_ascii,out_raster=None,
    * drop_class - Class to drop from input lidar file (default = None, assume classes are dropped prior to input).
    * keep_class - Class to keep from input lidar file (default = None).
    * returns - Returns to keep from input lidar file. Options are 'all' (Default), 'first' and 'last'.
+   * raster_statistic - Statistic to use for points (default mean)
    * projection - Projection of lidar data (e.g., UKBNG).
    * bin_size - Resolution to use for output raster.
-   * out_raster_format - GDAL format name for output raster (e.g., ENVI).
    * out_raster_type - GDAL datatype for output raster (e.g., Float32).
 
    Returns:
@@ -100,9 +105,11 @@ def ascii_to_raster(in_ascii,out_raster=None,
 
    if out_raster is not None:
       out_raster_name = os.path.basename(out_raster).replace("-","_")
+      out_raster_format = dem_utilities.get_gdal_type_from_path(out_raster)
    else:
       out_raster_name = os.path.basename(in_ascii).replace("-","_")
       out_raster_name = os.path.splitext(out_raster_name)[0] + '.dem'
+      out_raster_format = dem_common.GDAL_OUTFILE_FORMAT,
 
    # Check if all returns are needed or only first / last
    first_only = False
@@ -151,7 +158,7 @@ def ascii_to_raster(in_ascii,out_raster=None,
    grass.run_command('r.in.xyz',
                       input=in_ascii_drop,
                       output=out_raster_name,
-                      method='mean',
+                      method=raster_statistic,
                       fs=' ',
                       x=dem_common.LIDAR_ASCII_ORDER['x'],
                       y=dem_common.LIDAR_ASCII_ORDER['y'],
@@ -192,9 +199,9 @@ def las_to_raster(in_las,out_raster=None,
                      drop_class=7,
                      keep_class=None,
                      las2txt_flags=None,
+                     raster_statistic='mean',
                      projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
                      bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
-                     out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                      out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE):
    """
    Create a raster from lidar data in LAS format using GRASS.
@@ -226,6 +233,7 @@ def las_to_raster(in_las,out_raster=None,
    * drop_class - Class / list of classes to drop when converting to ASCII (default = 7).
    * keep_class - Class / list of classes to keep when converting to ASCII.
    * las2txt_flags - Additional flags passed to las2txt when converting LAS to ASCII.
+   * raster_statistic - Statistic to use for points (default mean)
    * projection - Projection of lidar data (e.g., UKBNG).
    * bin_size - Resolution to use for output raster.
    * out_raster_format - GDAL format name for output raster (e.g., ENVI)
@@ -247,8 +255,9 @@ def las_to_raster(in_las,out_raster=None,
       out_raster_name = os.path.splitext(out_raster_name)[0] + '.dem'
 
    # Try to get bounds of LAS file if laspy library is available
+   # Don't check if input is LAZ.
    xyz_bounds = None
-   if laspy_lidar.HAVE_LASPY:
+   if laspy_lidar.HAVE_LASPY and os.path.splitext(in_las)[-1].lower() != '.laz':
       try:
          xyz_bounds = laspy_lidar.get_las_bounds(in_las,
                                                  from_header=True)
@@ -270,9 +279,9 @@ def las_to_raster(in_las,out_raster=None,
                                        grassdb_path=grassdb_path,
                                        xyz_bounds=xyz_bounds,
                                        val_field=val_field,
+                                       raster_statistic=raster_statistic,
                                        projection=projection,
                                        bin_size=bin_size,
-                                       out_raster_format=out_raster_format,
                                        out_raster_type=out_raster_type)
 
    except Exception as err:
@@ -291,7 +300,6 @@ def las_to_dsm(in_las,out_raster=None,
                      grassdb_path=None,
                      projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
                      bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
-                     out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                      out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE):
    """
    Helper function to generate a Digital Surface Model (DSM) from a LAS file using
@@ -307,7 +315,6 @@ def las_to_dsm(in_las,out_raster=None,
    * grassdb_path - Input path to GRASS database, if not supplied will create one.
    * projection - Projection of lidar data (e.g., UKBNG).
    * bin_size - Resolution to use for output raster.
-   * out_raster_format - GDAL format name for output raster (e.g., ENVI)
    * out_raster_type - GDAL datatype for output raster (e.g., Float32)
 
    Returns:
@@ -331,7 +338,6 @@ def las_to_dsm(in_las,out_raster=None,
                      las2txt_flags='-first_only',
                      projection=projection,
                      bin_size=bin_size,
-                     out_raster_format=out_raster_format,
                      out_raster_type=out_raster_type)
 
    return out_raster_name, grassdb_path
@@ -361,7 +367,6 @@ def las_to_dtm(in_las,out_raster=None,
    * grassdb_path - Input path to GRASS database, if not supplied will create one.
    * projection - Projection of lidar data (e.g., UKBNG).
    * bin_size - Resolution to use for output raster.
-   * out_raster_format - GDAL format name for output raster (e.g., ENVI)
    * out_raster_type - GDAL datatype for output raster (e.g., Float32)
 
    Returns:
@@ -384,7 +389,6 @@ def las_to_dtm(in_las,out_raster=None,
                      las2txt_flags='-last_only',
                      projection=projection,
                      bin_size=bin_size,
-                     out_raster_format=out_raster_format,
                      out_raster_type=out_raster_type)
 
    return out_raster_name, grassdb_path
@@ -394,7 +398,6 @@ def las_to_intensity(in_las,out_raster=None,
                      grassdb_path=None,
                      projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
                      bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
-                     out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                      out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE):
    """
    Helper function to generate an intensity image from a LAS file using
@@ -408,7 +411,6 @@ def las_to_intensity(in_las,out_raster=None,
    * grassdb_path - Input path to GRASS database, if not supplied will create one.
    * projection - Projection of lidar data (e.g., UKBNG).
    * bin_size - Resolution to use for output raster.
-   * out_raster_format - GDAL format name for output raster (e.g., ENVI)
    * out_raster_type - GDAL datatype for output raster (e.g., Float32)
 
    Returns:
@@ -416,10 +418,21 @@ def las_to_intensity(in_las,out_raster=None,
    * out_raster path / out_raster name in GRASS database
    * path to GRASS database / None"
 
+   Example::
+
+      from arsf_dem import dem_lidar
+      dem_lidar.grass_lidar.las_to_intensity('in_las_file.las','out_intensity.tif')
+
    """
 
+   # Get output raster format to check if it is JPEG
+   if out_raster is not None:
+      out_raster_format = dem_utilities.get_gdal_type_from_path(out_raster)
+   else:
+      out_raster_format = ''
+
    # If JPEG output call export screenshot after to scale image
-   if out_raster_format == 'JPEG' and out_raster is not None:
+   if out_raster is not None and out_raster_format == 'JPEG':
       out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=None,
                         remove_grassdb=False,
                         grassdb_path=grassdb_path,
@@ -428,7 +441,6 @@ def las_to_intensity(in_las,out_raster=None,
                         las2txt_flags='-last_only',
                         projection=projection,
                         bin_size=bin_size,
-                        out_raster_format=out_raster_format,
                         out_raster_type=out_raster_type)
 
 
@@ -448,7 +460,51 @@ def las_to_intensity(in_las,out_raster=None,
                         las2txt_flags='-last_only',
                         projection=projection,
                         bin_size=bin_size,
-                        out_raster_format=out_raster_format,
                         out_raster_type=out_raster_type)
 
    return out_raster_name, grassdb_path
+
+def las_to_density(in_las,out_raster=None,
+                   remove_grassdb=True,
+                   grassdb_path=None,
+                   projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
+                   bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
+                   out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE):
+   """
+   Helper function to generate a map of point density from a LAS file using
+   GRASS.
+
+   Arguments:
+
+   * in_las - Input LAS file.
+   * out_raster - Output raster (set to None to leave in GRASS database).
+   * remove_grassdb - Remove GRASS database after processing is complete.
+   * grassdb_path - Input path to GRASS database, if not supplied will create one.
+   * projection - Projection of lidar data (e.g., UKBNG).
+   * bin_size - Resolution to use for output raster.
+   * out_raster_type - GDAL datatype for output raster (e.g., Float32)
+
+   Returns:
+
+   * out_raster path / out_raster name in GRASS database
+   * path to GRASS database / None"
+
+   Example::
+
+      from arsf_dem import dem_lidar
+      dem_lidar.grass_lidar.las_to_density('in_las_file.las','out_density.tif')
+
+    """
+
+   out_raster_name, grassdb_path = las_to_raster(in_las,out_raster=out_raster,
+                                                 remove_grassdb=remove_grassdb,
+                                                 grassdb_path=grassdb_path,
+                                                 val_field='z',
+                                                 drop_class=7,
+                                                 raster_statistic='n',
+                                                 projection=projection,
+                                                 bin_size=bin_size,
+                                                 out_raster_type=out_raster_type)
+
+   return out_raster_name, grassdb_path
+

@@ -106,19 +106,16 @@ def _las_to_dem(in_las,out_raster,
 
       if demtype.upper() == 'DSM':
          grass_lidar.las_to_dsm(in_las, out_raster,
-                              bin_size=resolution,
-                              projection=grass_location,
-                              out_raster_format=out_raster_format)
+                                bin_size=resolution,
+                                projection=grass_location)
       elif demtype.upper() == 'DTM':
          grass_lidar.las_to_dtm(in_las, out_raster,
-                              bin_size=resolution,
-                              projection=grass_location,
-                              out_raster_format=out_raster_format)
+                                bin_size=resolution,
+                                projection=grass_location)
       elif demtype.upper() == 'INTENSITY':
          grass_lidar.las_to_intensity(in_las, out_raster,
                                       bin_size=resolution,
-                                      projection=grass_location,
-                                      out_raster_format=out_raster_format)
+                                      projection=grass_location)
       else:
          raise Exception('DEM Type not recognised - options are DSM, DTM or Intensity')
 
