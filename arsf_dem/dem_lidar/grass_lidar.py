@@ -468,7 +468,7 @@ def las_to_density(in_las,out_raster=None,
                    remove_grassdb=True,
                    grassdb_path=None,
                    projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
-                   bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
+                   bin_size=1,
                    out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE):
    """
    Helper function to generate a map of point density from a LAS file using
