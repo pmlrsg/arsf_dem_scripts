@@ -57,6 +57,7 @@ from .. import dem_common_functions
 from .. import grass_library
 
 LAS_TO_DEM_METHODS = ['GRASS','SPDLib','LAStools','FUSION','points2grid']
+LAS_TO_INTENSITY_METHODS = ['GRASS', 'LAStools']
 
 def _las_to_dem(in_las,out_raster,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
@@ -105,16 +106,18 @@ def _las_to_dem(in_las,out_raster,
 
       if demtype.upper() == 'DSM':
          grass_lidar.las_to_dsm(in_las, out_raster,
-                              bin_size=resolution,
-                              projection=grass_location,
-                              out_raster_format=out_raster_format)
+                                bin_size=resolution,
+                                projection=grass_location)
       elif demtype.upper() == 'DTM':
          grass_lidar.las_to_dtm(in_las, out_raster,
-                              bin_size=resolution,
-                              projection=grass_location,
-                              out_raster_format=out_raster_format)
+                                bin_size=resolution,
+                                projection=grass_location)
+      elif demtype.upper() == 'INTENSITY':
+         grass_lidar.las_to_intensity(in_las, out_raster,
+                                      bin_size=resolution,
+                                      projection=grass_location)
       else:
-         raise Exception('DEM Type not recognised - options are DSM or DTM')
+         raise Exception('DEM Type not recognised - options are DSM, DTM or Intensity')
 
    elif method.upper() == 'SPDLIB':
       # Create WKT file with projection
@@ -158,8 +161,10 @@ def _las_to_dem(in_las,out_raster,
          lastools_lidar.las_to_dsm(in_las, out_raster, flags=lastools_flags)
       elif demtype.upper() == 'DTM':
          lastools_lidar.las_to_dtm(in_las, out_raster, flags=lastools_flags)
+      elif demtype.upper() == 'INTENSITY':
+         lastools_lidar.las_to_intensity(in_las, out_raster, flags=lastools_flags)
       else:
-         raise Exception('DEM Type not recognised - options are DSM or DTM')
+         raise Exception('DEM Type not recognised - options are DSM, DTM or Intensity')
 
    elif method.upper() == 'FUSION':
       if demtype.upper() == 'DSM':
@@ -269,4 +274,38 @@ def las_to_dtm(in_las,out_raster,
                resolution=resolution,
                projection=projection,
                demtype='DTM',
+               method=method)
+
+def las_to_intensity(in_las,out_raster,
+                     resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
+                     projection=None,
+                     method='GRASS'):
+   """
+   Helper function to generate an Intensity image from a LAS file.
+
+   Utility function to call las_to_intensity from grass_lidar or lastools_lidar
+
+   Arguments:
+
+   * in_las - Input LAS file.
+   * out_raster - Output raster
+   * resolution - Resolution to use for output raster.
+   * projection - Projection of input LAS files (and output raster) as GRASS location format (e.g., UTM30N).
+   * method - GRASS or LAStools
+
+   Returns:
+
+   None
+
+   Example::
+
+      from arsf_dem import dem_lidar
+      dem_lidar.las_to_intensity('in_las_file.las','out_intensity.tif')
+
+   """
+
+   _las_to_dem(in_las, out_raster,
+               resolution=resolution,
+               projection=projection,
+               demtype='INTENSITY',
                method=method)

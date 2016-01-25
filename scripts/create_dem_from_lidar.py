@@ -58,7 +58,7 @@ a DEM much larger than is required. If the DEM is not required for APL you can u
 the flag '--lidar_bounds', which only uses the bounds of the lidar data, not navigation files
 plus a buffer of {1} m.
 
-'create_dem_from_lidar' was created by ARSF-DAN at Plymouth Marine Laboraty (PML)
+'create_dem_from_lidar' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
 and is made available under the terms of the GPLv3 license.
 
 '''.format(dem_common.DEFAULT_LIDAR_PROJECTION_GRASS, dem_common.DEFAULT_LIDAR_DEM_BUFFER['N'])

@@ -46,6 +46,7 @@ import numpy
 from . import dem_common
 from . import dem_common_functions
 from . import grass_library
+from . import get_gdal_drivers
 
 # Import GRASS
 sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
@@ -1227,23 +1228,12 @@ def get_gdal_type_from_path(file_name):
    if file_name is None:
       return dem_common.GDAL_OUTFILE_FORMAT
 
-   gdalStr = ''
+   gdal_str = ''
    extension = os.path.splitext(file_name)[-1].lower()
-   if extension == '.kea':
-      gdalStr = 'KEA'
-   elif extension == '.tif':
-      gdalStr = 'GTiff'
-   elif extension == '.jpg':
-      gdalStr = 'JPEG'
-   elif extension == '.img':
-      gdalStr = 'HFA'
-   elif extension == '.pix':
-      gdalStr = 'PCIDSK'
-   elif extension == '.asc' or extension == '.txt':
-      gdalStr = 'GRASSASCIIGrid'
-   else:
-      gdalStr = 'ENVI'
-   return gdalStr
+
+   gdal_str = get_gdal_drivers.GDALDrivers().get_driver_from_ext(extension)
+
+   return gdal_str
 
 def add_dem_metadata(dem_name, dem_source=None, dem_filename=None,
                                other_items=None):
