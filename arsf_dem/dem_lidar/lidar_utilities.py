@@ -404,7 +404,6 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
       raise Exception('raster_type "{}" was not recognised'.format(raster_type))
 
    # Set output type and data format for output rasters
-   out_raster_format = dem_utilities.get_gdal_type_from_path(out_mosaic)
    out_raster_type = dem_common.GDAL_OUTFILE_DATATYPE
 
    # Sort out input lidar files
@@ -485,7 +484,6 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                   las2txt_flags=las2txt_flags,
                   projection=in_projection,
                   bin_size=resolution,
-                  out_raster_format=out_raster_format,
                   out_raster_type=out_raster_type)
       elif lidar_format.upper() == 'ASCII':
          out_raster_name, grassdb_path = grass_lidar.ascii_to_raster(in_lidar_file,out_raster=out_single_raster,
@@ -497,7 +495,6 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                   returns=returns_to_keep,
                   projection=in_projection,
                   bin_size=resolution,
-                  out_raster_format=out_raster_format,
                   out_raster_type=out_raster_type)
 
       raster_names.append(out_raster_name)
@@ -525,7 +522,6 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                                      out_file=out_patched_file,
                                      import_to_grass=False,
                                      nodata=nodata,
-                                     out_raster_format=out_raster_format,
                                      out_raster_type=out_raster_type,
                                      projection=in_projection,
                                      grassdb_path=grassdb_path,
@@ -542,7 +538,6 @@ def create_lidar_mosaic(in_lidar_files, out_mosaic,
                                     ascii_separation_file=False,
                                     fill_nulls=fill_nulls,
                                     nodata=nodata,
-                                    out_raster_format=out_raster_format,
                                     out_raster_type=out_raster_type,
                                     projection=in_projection,
                                     grassdb_path=grassdb_path,
