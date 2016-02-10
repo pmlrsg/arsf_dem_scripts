@@ -122,12 +122,20 @@ def get_grass_db_template_path():
    """
    Gets path to grass_db_template.
    Installed to PREFIX/share.
+
+   If not installed (i.e., dev version) get path to checkout and
+   assume under data.
    """
    install_prefix = __file__[:__file__.find('lib')]
    grass_db_template_path = os.path.join(install_prefix,'share','grass_db_template')
-
+   dev_checkout = __file__.split(os.path.sep)[0:-2]
+   dev_checkout = '{}'.format(os.path.sep).join(dev_checkout)
+   grass_db_template_path_dev = os.path.join(dev_checkout, 'data',
+                                             'grass_db_template')
    if os.path.isdir(grass_db_template_path):
       return grass_db_template_path
+   elif os.path.isdir(grass_db_template_path_dev):
+      return grass_db_template_path_dev
    else:
      print('Could not find grass_db_template with arsf_dem library.',file=sys.stderr)
      return None
