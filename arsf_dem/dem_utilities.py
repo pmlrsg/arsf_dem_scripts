@@ -1228,10 +1228,14 @@ def get_gdal_type_from_path(file_name):
    if file_name is None:
       return dem_common.GDAL_OUTFILE_FORMAT
 
-   gdal_str = ''
+   gdal_str = None
    extension = os.path.splitext(file_name)[-1].lower()
 
-   gdal_str = get_gdal_drivers.GDALDrivers().get_driver_from_ext(extension)
+   try:
+      gdal_str = get_gdal_drivers.GDALDrivers().get_driver_from_ext(extension)
+   except KeyError:
+      # If the extension isn't recognised go with ENVI.
+      gdal_str = 'ENVI'
 
    return gdal_str
 
