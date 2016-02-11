@@ -11,6 +11,7 @@ Requires SPDLib to be installed.
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os
 import shutil
+import subprocess
 import tempfile
 # Import common files
 from .. import dem_common
@@ -68,18 +69,19 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
    if wkt is not None:
       spdCMD = spdCMD + ['--input_proj',wkt, '--output_proj', wkt]
 
-   dem_common_functions.CallSubprocessOn(spdCMD)
+   subprocess.check_call(spdCMD)
 
    # Remove temp files
    shutil.rmtree(temp_dir)
 
 def classify_ground_spd(in_spd,out_spd,
-               bin_size=dem_common.DEFAULT_LIDAR_RES_METRES):
+                        bin_size=dem_common.DEFAULT_LIDAR_RES_METRES):
    """
-   Classify ground returns in an SPD file using a
-   Progressive Morphology filter.
+   Classify ground returns in an SPD file using a progressive morphology
+   filter for the initial classification and a combination of two algorithms:
 
-   Calls the spdpmfgrd tool.
+   1. Progressive Morphology Filter (PMF; Zhang et al., 2003): spdpmfgrd.
+   2. Multi-Scale Curvature algorithm (MCC; Evans and Hudak, 2007): spdmccgrd
 
    Arguments:
 
@@ -98,14 +100,29 @@ def classify_ground_spd(in_spd,out_spd,
    if not os.path.isfile(in_spd):
       raise Exception('Input SPD file "{}" does not exist'.format(in_spd))
 
-   pmfCMD = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdpmfgrd'),
-            '-b',str(bin_size),
-            '-r','50',
-            '--overlap','10',
-            '--maxfilter','14',
-            '-i',in_spd,'-o',out_spd]
+   spdfile_handler, spdfile_grd_tmp = tempfile.mkstemp(suffix='.spd',
+                                                       dir=dem_common.TEMP_PATH)
 
-   dem_common_functions.CallSubprocessOn(pmfCMD)
+   # 1. PMF Filter
+   pmfCMD = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdpmfgrd'),
+             '-b',str(bin_size),
+             '--grd', '1',
+             '-i',in_spd,'-o',spdfile_grd_tmp]
+
+   subprocess.check_call(pmfCMD)
+
+   # 2. MCC applied to ground classified returns.
+   mccCMD = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdmccgrd'),
+             '-b',str(bin_size),
+             '--class', '3',
+             '--initcurvetol', '1',
+             '-i',spdfile_grd_tmp,'-o',out_spd]
+
+   subprocess.check_call(mccCMD)
+
+   os.close(spdfile_handler)
+   os.remove(spdfile_grd_tmp)
+
 
 def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
@@ -141,7 +158,7 @@ def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
        '-b',str(bin_size),
        '-i',in_spd,'-o',out_dsm]
 
-   dem_common_functions.CallSubprocessOn(dsmCMD)
+   subprocess.check_call(dsmCMD)
 
 def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
@@ -150,8 +167,9 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    """
    Create a Digital Surface Model (DTM) from an SPD file
 
-   First classifies ground returns using a Progressive Morphology
-   filter (spdpmfgrd) then calls the spdinterp tool.
+   First classifies ground returns using a combination of ia Progressive
+   Morphology filter and the Multi-scale Curvature algorithm
+   then calls the spdinterp tool.
 
    Arguments:
 
@@ -186,7 +204,7 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
        '-b',str(bin_size),
        '-i',spdfile_grd_tmp,'-o',out_dtm]
 
-   dem_common_functions.CallSubprocessOn(dtmCMD)
+   subprocess.check_call(dtmCMD)
 
    os.close(spdfile_handler)
    if keep_spd:
