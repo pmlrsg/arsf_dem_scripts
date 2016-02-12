@@ -20,6 +20,8 @@ Available Functions:
 * las_to_density - Create density image from LAS file
 * las_to_raster - Convert lidar data in LAS format to raster.
 * ascii_to_raster - Convert lidar data in ASCII format to raster.
+* las_to_vector - Import LAS file into GRASS as vector.
+* ascii_to_vector - Import ASCII file into GRASS as vector.
 
 """
 
@@ -294,6 +296,182 @@ def las_to_raster(in_las,out_raster=None,
    os.remove(ascii_file_tmp)
 
    return out_raster_name, grassdb_path
+
+def ascii_to_vector(in_ascii,
+                    grassdb_path=None,
+                    xyz_bounds=None,
+                    drop_class=None,
+                    keep_class=None,
+                    returns='all',
+                    projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS):
+   """
+   Imports ASCII to GRASS vector
+
+   Uses v.in.ascii function in GRASS. For more details see:
+
+   https://grass.osgeo.org/grass64/manuals/v.in.ascii.html
+
+   Default is to leave vector in GRASS database rather than exporting.
+
+   Arguments:
+
+   * in_ascii - Input ASCII file.
+   * grassdb_path - Input path to GRASS database, if not supplied will create one.
+   * drop_class - Class to drop from input lidar file (default = None, assume classes are dropped prior to input).
+   * keep_class - Class to keep from input lidar file (default = None).
+   * returns - Returns to keep from input lidar file. Options are 'all' (Default), 'first' and 'last'.
+   * projection - Projection of lidar data (e.g., UKBNG).
+
+   Returns:
+
+   * out_vector name in GRASS database.
+   * path to GRASS database
+
+   """
+
+   out_vector_name = os.path.basename(in_ascii).replace("-","_")
+   out_vector_name = out_vector_name.replace(".","_")
+   out_vector_name = os.path.splitext(out_vector_name)[0]
+
+   # Check if all returns are needed or only first / last
+   first_only = False
+   last_only = False
+
+   if returns.lower() == 'first':
+      first_only = True
+   elif returns.lower() == 'last':
+      last_only = True
+
+   # Create copy of ASCII file, if needed
+   if (drop_class is not None) or (keep_class is not None) or first_only or last_only:
+      tmp_ascii_fh, in_ascii_drop = tempfile.mkstemp(suffix='.txt', prefix='lidar_',dir=dem_common.TEMP_PATH)
+      grass_library.removeASCIIClass(in_ascii, in_ascii_drop,drop_class=drop_class, first_only=first_only, last_only=last_only)
+   else:
+      in_ascii_drop = in_ascii
+
+   # Get bounds from ASCII (if not passed in)
+   bounding_box = {}
+   if xyz_bounds is None or xyz_bounds[0][0] is None:
+      xyz_bounds = ascii_lidar.get_ascii_bounds(in_ascii_drop)
+
+   bounding_box['w'] = xyz_bounds[0][0]
+   bounding_box['e'] = xyz_bounds[0][1]
+   bounding_box['s'] = xyz_bounds[1][0]
+   bounding_box['n'] = xyz_bounds[1][1]
+
+   # If GRASS database has not been passed in
+   # need to create one and initialise
+   if grassdb_path is None:
+      grassdb_path = grass_library.grassDBsetup()
+      grass_library.setLocation(projection)
+   else:
+      location = projection
+      mapset = 'PERMANENT'
+      grass.setup.init(dem_common.GRASS_LIB_PATH,
+                       grassdb_path,
+                       location,
+                       mapset)
+
+   # Set extent
+   grass_library.SetRegion(bounds=bounding_box,res=dem_common.DEFAULT_LIDAR_RES_METRES)
+
+   # Import lidar into GRASS
+   print('Importing {} to GRASS'.format(in_ascii_drop))
+   grass.run_command('v.in.ascii',
+                     input=in_ascii_drop,
+                     output=out_vector_name,
+                     fs=' ',
+                     x=dem_common.LIDAR_ASCII_ORDER['x'],
+                     y=dem_common.LIDAR_ASCII_ORDER['y'],
+                     z=dem_common.LIDAR_ASCII_ORDER['z'],
+                     cat=dem_common.LIDAR_ASCII_ORDER['returnnumber'],
+                     flags='bt',
+                     overwrite = True)
+
+   if (drop_class is not None) or (keep_class is not None) or first_only or last_only:
+      os.close(tmp_ascii_fh)
+      os.remove(in_ascii_drop)
+
+   return out_vector_name, grassdb_path
+
+def las_to_vector(in_las,
+                  grassdb_path=None,
+                  drop_class=7,
+                  keep_class=None,
+                  las2txt_flags=None,
+                  projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS):
+   """
+   Import LAS points to GRASS as vector data
+
+   Currently a wrapper for ascii_to_vector which converts LAS to ASCII before
+   running.
+
+   In GRASS 7 native LAS support should be possible.
+
+   If an existing grass db is provided will add raster to this,
+   else will create one.
+
+   Default is to leave raster in GRASS database rather than exporting.
+
+   Arguments:
+
+   * in_las - Input LAS file.
+   * grassdb_path - Input path to GRASS database, if not supplied will create one.
+   * drop_class - Class / list of classes to drop when converting to ASCII (default = 7).
+   * keep_class - Class / list of classes to keep when converting to ASCII.
+   * las2txt_flags - Additional flags passed to las2txt when converting LAS to ASCII.
+   * projection - Projection of lidar data (e.g., UKBNG).
+
+   Returns:
+
+   * out_vector name in GRASS database
+   * path to GRASS database
+
+   """
+
+   tmp_ascii_fh, ascii_file_tmp = tempfile.mkstemp(suffix='.txt',
+                                                   prefix='lidar_',
+                                                   dir=dem_common.TEMP_PATH)
+
+   out_vector_name = os.path.basename(in_las).replace("-","_")
+   out_vector_name = os.path.splitext(out_vector_name)[0]
+   out_vector_name = out_vector_name.replace(".","_")
+
+   # Try to get bounds of LAS file if laspy library is available
+   # Don't check if input is LAZ.
+   xyz_bounds = None
+   if laspy_lidar.HAVE_LASPY and os.path.splitext(in_las)[-1].lower() != '.laz':
+      try:
+         xyz_bounds = laspy_lidar.get_las_bounds(in_las,
+                                                 from_header=True)
+      except Exception as err:
+         dem_common_functions.WARNING('Could not get bounds from LAS file ({}). Will try from ASCII'.format(err))
+
+   # Convert LAS to ASCII
+   print('Converting LAS file to ASCII')
+
+   lastools_lidar.convert_las_to_ascii(in_las,ascii_file_tmp,
+                                       drop_class=drop_class,
+                                       keep_class=keep_class,
+                                       flags=las2txt_flags)
+
+   # Import to GRASS
+   try:
+      out_vector_name, grassdb_path = ascii_to_vector(ascii_file_tmp,
+                                                      grassdb_path=grassdb_path,
+                                                      xyz_bounds=xyz_bounds,
+                                                      projection=projection)
+
+   except Exception as err:
+      os.close(tmp_ascii_fh)
+      os.remove(ascii_file_tmp)
+      raise
+
+   # Remove ASCII file created
+   os.close(tmp_ascii_fh)
+   os.remove(ascii_file_tmp)
+
+   return out_vector_name, grassdb_path
 
 def las_to_dsm(in_las,out_raster=None,
                      remove_grassdb=True,

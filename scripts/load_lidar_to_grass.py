@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #Description: A script to create a DSM from as LAS file.
 """
+Load LiDAR data in LAS or ASCII format to GRASS for further processing.
+
 Author: Dan Clewley (dac)
 
 Created on: 10 Febuary 2016
@@ -33,7 +35,8 @@ def load_files_to_grass(in_lidar_files,
                         resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
                         lidar_format='LAS',
                         raster_type='DSM',
-                        drop_noise=True):
+                        drop_noise=True,
+                        load_as_vector=False):
 
    drop_class = None
    keep_class = None
@@ -102,20 +105,19 @@ def load_files_to_grass(in_lidar_files,
 
    # Create variable for GRASS path
    grassdb_path = None
-   raster_names = []
+   grass_dataset_names = []
 
    # Create raster from point cloud files
    totlines = len(in_lidar_files_list)
 
    for linenum,in_lidar_file in enumerate(in_lidar_files_list):
-      dem_common_functions.PrintTermWidth('Loading "{1}" to GRASS ({2}/{3})'.format(raster_type,
-                         os.path.split(in_lidar_file)[-1],linenum+1, totlines))
+      dem_common_functions.PrintTermWidth('Loading "{0}" to GRASS ({1}/{2})'.format(os.path.split(in_lidar_file)[-1],linenum+1, totlines))
       # Check file exists
       if not os.path.isfile(in_lidar_file):
          raise Exception('Could not open "{}"'.format(in_lidar_file))
 
-      if lidar_format.upper() == 'LAS':
-         out_raster_name, grassdb_path = \
+      if lidar_format.upper() == 'LAS' and not load_as_vector:
+         out_grass_name, grassdb_path = \
            grass_lidar.las_to_raster(in_lidar_file,
                                      out_raster=None,
                                      remove_grassdb=False,
@@ -127,8 +129,16 @@ def load_files_to_grass(in_lidar_files,
                                      projection=in_projection,
                                      bin_size=resolution,
                                      out_raster_type=raster_type)
-      elif lidar_format.upper() == 'ASCII':
-         out_raster_name, grassdb_path = \
+      elif lidar_format.upper() == 'LAS' and load_as_vector:
+         out_grass_name, grassdb_path = \
+           grass_lidar.las_to_vector(in_lidar_file,
+                                     grassdb_path=grassdb_path,
+                                     drop_class=drop_class,
+                                     keep_class=keep_class,
+                                     las2txt_flags=las2txt_flags,
+                                     projection=in_projection)
+      elif lidar_format.upper() == 'ASCII' and not load_as_vector:
+         out_grass_name, grassdb_path = \
             grass_lidar.ascii_to_raster(in_lidar_file,
                                         out_raster=None,
                                         remove_grassdb=False,
@@ -140,12 +150,20 @@ def load_files_to_grass(in_lidar_files,
                                         projection=in_projection,
                                         bin_size=resolution,
                                         out_raster_type=raster_type)
+      elif lidar_format.upper() == 'ASCII' and load_as_vector:
+         out_grass_name, grassdb_path = \
+            grass_lidar.ascii_to_vector(in_lidar_file,
+                                        grassdb_path=grassdb_path,
+                                        drop_class=drop_class,
+                                        keep_class=keep_class,
+                                        returns=returns_to_keep,
+                                        projection=in_projection)
 
-      raster_names.append(out_raster_name)
+      grass_dataset_names.append(out_grass_name)
 
    print('Loaded the following files:')
-   for raster in raster_names:
-      print(' {}'.format(raster))
+   for grass_dataset in grass_dataset_names:
+      print(' {}'.format(grass_dataset))
    print('To GRASS database: {0}/{1}/PERMANENT'.format(grassdb_path,
                                                        in_projection))
 
@@ -179,22 +197,30 @@ and is made available under the terms of the GPLv3 license.
       parser.add_argument("lidarfiles", nargs='+',type=str,
                           help="List or directory containing input LiDAR files")
       parser.add_argument('-r', '--resolution',
-                          metavar ='Resolution',
-                          help ='Resolution for output DEM (default={})'.format(dem_common.DEFAULT_LIDAR_RES_METRES),
+                          metavar='Resolution',
+                          help='Resolution for output DEM (default={})'.format(dem_common.DEFAULT_LIDAR_RES_METRES),
                           default=dem_common.DEFAULT_LIDAR_RES_METRES,
                           required=False)
       parser.add_argument('--projection',
-                          metavar ='In Projection',
-                          help ='Input projection (e.g., UTM30N)',
+                          metavar='In Projection',
+                          help='Input projection (e.g., UTM30N)',
                           default=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
                           required=False)
       parser.add_argument('-t', '--rastertype',
-                          metavar ='Output raster type',
-                          help = 'Raster type - determines the lidar returns to'
-                                 ' load into GRASS. For all select DEM (default),'
-                                 ' for first only select DSM,'
-                                 ' for last only select DTM.',
+                          metavar='Output raster type',
+                          help='Raster type - determines the lidar returns to'
+                               ' load into GRASS. For all select DEM (default),'
+                               ' for first only select DSM,'
+                               ' for last only select DTM.',
                           default='DEM',
+                          required=False)
+      parser.add_argument('--vector',
+                          action='store_true',
+                          default=False,
+                          help='Load points as vector.'
+                               ' WARNING - this can require a lot of memory'
+                               ' ensure sufficient RAM is available before '
+                               ' using this options',
                           required=False)
       args=parser.parse_args()
 
@@ -203,6 +229,7 @@ and is made available under the terms of the GPLv3 license.
                           resolution=args.resolution,
                           lidar_format='LAS',
                           raster_type=args.rastertype,
+                          load_as_vector=args.vector,
                           drop_noise=True)
 
    except KeyboardInterrupt:
