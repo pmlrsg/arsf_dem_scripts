@@ -304,7 +304,7 @@ def readLasLidar(lasfolder,location=None,patch=True,datacolumn=dem_common.LIDAR_
       Returns: list of grass internal raster names
    """
    #Create a tmp folder for storing the ascii files
-   tempdir=tempfile.mkdtemp()
+   tempdir=tempfile.mkdtemp(dir=dem_common.TEMP_PATH)
 
    from .dem_lidar import lastools_lidar
    lastools_lidar.convert_las_to_ascii(lasfolder, tempdir)
