@@ -179,7 +179,7 @@ def ascii_to_raster(in_ascii,out_raster=None,
                      output=out_raster,
                      nodata=dem_common.NODATA_VALUE,
                      overwrite=True,
-                     flags='f')
+                     flags='fc')
 
       dem_utilities.remove_gdal_aux_file(out_raster)
 

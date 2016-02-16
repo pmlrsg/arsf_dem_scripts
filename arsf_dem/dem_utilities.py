@@ -73,7 +73,6 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
                          subtract_seperation=False,
                          fill_nulls=False,
                          nodata=dem_common.NODATA_VALUE,
-                         out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                          out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE,
                          projection=None,
                          remove_grassdb=True,
@@ -97,7 +96,6 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
    * subtract_seperation - subtract seperation file (default is to add).
    * fill_nulls - Null fill values
    * nodata - No data value
-   * out_raster_format - GDAL format name for output raster (e.g., ENVI)
    * out_raster_type - GDAL datatype for output raster (e.g., Float32)
    * projection - Projection to use (e.g., UKBNG) if not supplied will get from 'in_demfile'.
    * remove_grassdb - Remove GRASS database after processing is complete.
@@ -151,6 +149,12 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
          in_proj = 'WGS84LL'
    else:
       in_proj = projection
+
+   # Get output format from file extension
+   if out_demfile is not None:
+      out_raster_format = get_gdal_type_from_path(out_demfile)
+   else:
+      out_raster_format = dem_common.GDAL_OUTFILE_FORMAT,
 
    if grassdb_path is None and not import_to_grass:
       raise Exception('No "grassdb_path" supplied but "import_to_grass" set to False.' +
@@ -278,7 +282,6 @@ def patch_files(in_file_list,
                 out_file=None,
                 import_to_grass=True,
                 nodata=dem_common.NODATA_VALUE,
-                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
                 out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE,
                 projection=None,
                 grassdb_path=None,
@@ -309,7 +312,6 @@ def patch_files(in_file_list,
    * out_file - Output mosaic, if None will leave in GRASS database
    * import_to_grass - Should files be imported to GRASS, if False assumes in_file_list is a list of names within existing GRASS database.
    * nodata=No data value
-   * out_raster_format - GDAL format name for output raster (e.g., ENVI)
    * out_raster_type - GDAL datatype for output raster (e.g., Float32)
    * projection - Projection to use (e.g., UKBNG) if not supplied will get from first input file.
    * remove_grassdb - Remove GRASS database after processing is complete.
@@ -336,6 +338,12 @@ def patch_files(in_file_list,
          in_proj = 'WGS84LL'
    else:
       in_proj = projection
+
+   # Get output format from file extension
+   if out_file is not None:
+      out_raster_format = get_gdal_type_from_path(out_file)
+   else:
+      out_raster_format = dem_common.GDAL_OUTFILE_FORMAT,
 
    if grassdb_path is None and not import_to_grass:
       raise Exception('No "grassdb_path" supplied but "import_to_grass" set to False.' +
