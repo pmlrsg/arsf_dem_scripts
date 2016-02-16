@@ -70,6 +70,7 @@ def get_grass_lib_path():
    Exits if path does not exist
    """
    LINUX64_GRASS_LIB_PATH = '/usr/lib64/grass'
+   LINUX64_GRASS_LIB_PATH_ALTERNATIVE = '/usr/lib/grass64'
    LINUX32_GRASS_LIB_PATH = '/usr/lib/grass'
    OSX_GRASS_LIB_PATH = '/Applications/GRASS-*.app/Contents/MacOS/'
    WIN_GRASS_LIB_PATH = 'C:/OSGeo4W/apps/grass/grass'
@@ -96,6 +97,8 @@ def get_grass_lib_path():
          return LINUX64_GRASS_LIB_PATH
       elif os.path.isdir(LINUX32_GRASS_LIB_PATH):
          return LINUX32_GRASS_LIB_PATH
+      elif os.path.isdir(LINUX64_GRASS_LIB_PATH_ALTERNATIVE):
+         return LINUX64_GRASS_LIB_PATH_ALTERNATIVE
       else:
          print('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(LINUX64_GRASS_LIB_PATH),file=sys.stderr)
          sys.exit(1)
