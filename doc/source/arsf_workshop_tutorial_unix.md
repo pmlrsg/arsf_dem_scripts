@@ -31,8 +31,11 @@ For this tutorial LAS 1.2 file 2 will be used. The LAS 1.3 file will also be use
 ARSF deliver LiDAR data as point clouds. Before starting analysis open the point cloud using the online plas.io viewer.
 
 1) Open https://plas.io/ in your browser (Chrome is recommended).
+
 2) Click brows and navigate to one of the practical LAS files to display
+
 3) You can use the mouse to rotate and pan around the dataset.
+
 4) Zoom in close (scroll wheel) to see the individual points.
 
 ![image](figures/plasio_screenshot.png)
