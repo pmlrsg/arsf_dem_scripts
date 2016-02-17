@@ -362,6 +362,11 @@ def patch_files(in_file_list,
 
    grass_library.setLocation(in_proj)
 
+   r_external_flags = 'e'
+
+   if projection is not None:
+      r_external_flags += 'o'
+
    # Import files (if needed)
    file_names_list = []
    if import_to_grass:
@@ -372,7 +377,7 @@ def patch_files(in_file_list,
                            input=in_file,
                            output=file_name,
                            overwrite=True,
-                           flags='e',
+                           flags=r_external_flags,
                            quiet=False)
 
          if grass_library.checkFileExists(file_name):
