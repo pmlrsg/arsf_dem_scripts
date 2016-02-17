@@ -30,13 +30,12 @@ For this tutorial LAS 1.2 file 2 will be used. The LAS 1.3 file will also be use
 
 ARSF deliver LiDAR data as point clouds. Before starting analysis open the point cloud using the online plas.io viewer.
 
-1. Open https://plas.io/ in your browser (Chrome is recommended).
-2. Click brows and navigate to one of the practical LAS files to display
-3. You can use the mouse to rotate and pan around the dataset.
-4. Zoom in close (scroll wheel) to see the individual points.
+1) Open https://plas.io/ in your browser (Chrome is recommended).
+2) Click brows and navigate to one of the practical LAS files to display
+3) You can use the mouse to rotate and pan around the dataset.
+4) Zoom in close (scroll wheel) to see the individual points.
 
 ![image](figures/plasio_screenshot.png)
-
 
 ## Create a simple DSM using the command line utility ##
 
@@ -46,15 +45,15 @@ To create a simple DSM will use the `create_dem_from_lidar.py` tool.
 This tool only uses first-return points, which assumes if there are multiple returns received (common for vegetation) the first return represents the top. Points flagged as noise (class 7) are also removed as part of the process.
 As each flight comprises multiple lines after generating a DSM from each point cloud the lines are mosaiced together to create a single file.
 
-1. Open a terminal window (look for a black rectangular icon with a white frame, normally under the 'Applications' menu).
+1) Open a terminal window (look for a black rectangular icon with a white frame, normally under the 'Applications' menu).
 
-2. Navigate to the directory the data are stored using:
+2) Navigate to the directory the data are stored using:
 ```
 cd ~/arsf_workshop/lidar_practical/EUFAR11_02-187
 ```
 (note if you are using your own machine you will need to input a different location).
 
-3.  Run the following command to create a DSM using only LiDAR data:
+3)  Run the following command to create a DSM using only LiDAR data:
 
 ```bash
 create_dem_from_lidar --in_projection UTM33N \
@@ -92,8 +91,7 @@ tuiview EUFAR11_02-2011-187_dsm.dem
 ```
 or another packages such as QGIS or ArcMap.
 
-4.  To help visualise the data you can create a hillshade image using
-    the [gdaldem](http://www.gdal.org/gdaldem.html) command:
+4) To help visualise the data you can create a hillshade image using the [gdaldem](http://www.gdal.org/gdaldem.html) command:
 
 ```bash
 gdaldem hillshade \
@@ -101,8 +99,7 @@ gdaldem hillshade \
       EUFAR11_02-2011_187_dsm_hillshade.tif
 ```
 
-5.  You can also create contour lines using the
-    [gdalccontour](http://www.gdal.org/gdal_contour.html) command:
+5) You can also create contour lines using the [gdalccontour](http://www.gdal.org/gdal_contour.html) command:
 
 ```bash
 gdal_contour -i 20 -a elevation \
