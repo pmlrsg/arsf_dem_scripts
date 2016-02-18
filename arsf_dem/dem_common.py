@@ -199,7 +199,7 @@ def get_spdlib_path():
    conda (which is the recommended way to install SPDLib) to a standard location.
    """
 
-   anaconda_install_names = ['miniconda','miniconda3'
+   anaconda_install_names = ['miniconda','miniconda3',
                              'anaconda', 'anaconda3']
    if sys.platform == 'win32':
       win_spd_path = 'C:/spdlib'
@@ -214,6 +214,8 @@ def get_spdlib_path():
       for anaconda_dir in anaconda_install_names:
          if os.path.isfile(os.path.join(user_dir, anaconda_dir,'bin','spdtranslate')):
             return os.path.join(user_dir, anaconda_dir, 'bin')
+         elif os.path.isfile(os.path.join('/opt', anaconda_dir,'bin','spdtranslate')):
+            return os.path.join('/opt', anaconda_dir, 'bin')
       return ''
 
 def get_fusion_bin_path():
