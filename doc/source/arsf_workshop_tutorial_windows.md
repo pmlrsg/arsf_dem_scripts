@@ -46,7 +46,7 @@ ARSF deliver LiDAR data as point clouds. Before starting analysis open the point
 
 The fist task is to create a simple Digital Surface Model (DSM) from the point cloud. A DSM is a form of a Digital Elevation Model (DSM) which is a raster or gridded dataset (image) where the value of each pixel represents the elevation of that pixel. Specifically a DSM represents the 'surface' or 'top-of-canopy' elevation and includes the heights of buildings and vegetation.
 
-To create a simple DSM will use the `create_dem_from_lidar.py` tool.
+To create a simple DSM will use the `create_dem_from_lidar` tool.
 This tool only uses first-return points, which assumes if there are multiple returns received (common for vegetation) the first return represents the top. Points flagged as noise (class 7) are also removed as part of the process.
 As each flight comprises multiple lines after generating a DSM from each point cloud the lines are mosaiced together to create a single file.
 
@@ -154,7 +154,7 @@ consideration are needed:
 * Areas of no-data need to be filled (e.g., with a courser resolution DEM).
 * The format needs to be ENVI Band Interleaved by Line (BIL) or Band Sequential (BSQ).
 
-The same `create_dem_from_lidar.py` script can be used to generate a DSM
+The same `create_dem_from_lidar` script can be used to generate a DSM
 for use in APL, by setting some options:
 
 ```bash
