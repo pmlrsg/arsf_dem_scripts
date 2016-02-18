@@ -1,16 +1,15 @@
 ARSF Workshop - Discrete LiDAR Practical
 ==========================================
 
-This worksheet is for Linux, it is identical to the Windows version but scripts
-have the extension `.py` and lines are broken by `\\` rather than `^`.
+This worksheet is for Linux, it is identical to the Windows version but scripts have the extension `.py` and lines are broken by `\\` rather than `^`.
 
 ## Datasets and computing set up ##
 
-This tutorial uses the ARSF DEM Scripts, developed by ARSF-DAN and available
-to download from https://github.com/pmlrsg/arsf_dem_scripts. You will need to
-have these scripts installed before starting the tutorial.
+This tutorial uses the ARSF DEM Scripts, developed by ARSF-DAN and available to download from
+[https://github.com/pmlrsg/arsf_dem_scripts](https://github.com/pmlrsg/arsf_dem_scripts).
+You will need to have these scripts installed before starting the tutorial.
 
-Two datasets will be used for this tutorial. If you are using an ARSF computer these data are under:
+LiDAR data from two flights will be used for this tutorial. If you are using an ARSF computer or the Virtual Machine these data are under:
 
 ~/arsf_workshop/lidar_practical
 
@@ -28,17 +27,32 @@ For this tutorial LAS 1.2 file 2 will be used. The LAS 1.3 file will also be use
 
 ## View Point Cloud ##
 
-ARSF deliver LiDAR data as point clouds. Before starting analysis open the point cloud using the online plas.io viewer.
+ARSF deliver LiDAR data as point clouds. Before starting analysis open the point cloud using the online plas.io viewer or ARSF's Lidar Analysis GUI ([LAG](http://arsf.github.io/lag/)) viewer..
 
-1) Open https://plas.io/ in your browser (Chrome is recommended).
 
-2) Click brows and navigate to one of the practical LAS files to display
+### plas.io ###
+
+1) Open [https://plas.io/](https://plas.io/) in your browser (Chrome is recommended).
+
+2) Click browse and navigate to one of the practical LAS files to display
 
 3) You can use the mouse to rotate and pan around the dataset.
 
 4) Zoom in close (scroll wheel) to see the individual points.
 
-![image](figures/plasio_screenshot.png)
+![A point cloud displayed using plas.io](figures/plasio_screenshot.png)
+
+### LAG ###
+
+1) Open a terminal window (look for a black rectangular icon with a white frame, normally under the 'Applications' menu) and type `lag` to open LAG.
+
+2) Click the 'Open' button and select a LAS file.
+
+3) Using the 'Profile' tool draw a line along the dataset in the 'LAG Overview' window and press the spacebar to display a profile.
+
+4) Select 'Colour by' and 'Classification' in both windows to display points flagged as noise.
+
+![A point cloud displayed in LAS](figures/lag_profile.png)
 
 ## Create a simple DSM using the command line utility ##
 
@@ -59,10 +73,10 @@ cd ~/arsf_workshop/lidar_practical/EUFAR11_02-187
 3)  Run the following command to create a DSM using only LiDAR data:
 
 ```bash
-create_dem_from_lidar --in_projection UTM33N \
-                      --outdem EUFAR11_02-2011-187_dsm.dem \
-                      las1.0/LDR-EUFAR11_02-2011-187-01.LAS \
-                      las1.0/LDR-EUFAR11_02-2011-187-02.LAS
+create_dem_from_lidar.py --in_projection UTM33N \
+                         --outdem EUFAR11_02-2011-187_dsm.dem \
+                         las1.0/LDR-EUFAR11_02-2011-187-01.LAS \
+                         las1.0/LDR-EUFAR11_02-2011-187-02.LAS
 ```
 
 This will create a DSM from files 1 and 2.
@@ -82,13 +96,34 @@ It will take a couple of minutes to run, while it is running you will
 output to the terminal showing a temporary ASCII file being created from
 the LAS file using the
 [las2txt](http://www.cs.unc.edu/~isenburg/lastools/download/las2txt_README.txt)
-command, dropping class 7 and keeping only the first return. This ASCII
-file is then imported into GRASS using [r.in.xyz](http://grass.osgeo.org/grass64/manuals/r.in.xyz.html) and
+command, dropping class 7 and keeping only the first return.
+
+The command used for this is:
+```bash
+las2txt -parse txyzicrna -sep space
+        -drop_class 7 -first_only \
+        -i las1.0/LDR-EUFAR11_02-2011-187-01.LAS \
+        -o LDR-EUFAR11_02-2011-187-01.txt
+```
+Where `txyzicrna` specifies the attribute stored in each column:
+
+1. Time
+2. x coordinate
+3. y coordinate
+4. Elevation
+5. Intensity
+6. Classification
+7. Return number
+8. Number of returns
+10. Scan angle rank
+
+This ASCII file is then imported into [GRASS](https://grass.osgeo.org/) using
+[r.in.xyz](http://grass.osgeo.org/grass64/manuals/r.in.xyz.html) and
 gridded at the specified resolution taking the mean elevation of all
 points in each cell. Once all files have been imported into GRASS and
 gridded a mosaic is generated and exported.
 
-Once the command has run through the file can be opened in TuiView (if installed) using:
+Once the command has run through the file can be opened in [TuiView](http://tuiview.org/) (if installed) using:
 ```
 tuiview EUFAR11_02-2011-187_dsm.dem
 ```
@@ -117,9 +152,9 @@ tuiview -v EUFAR11_02-2011_187_dsm_20m_contours.shp \
            EUFAR11_02-2011_187_dsm.dem
 ```
 
-Will all lines this will look something like the figure below:
+Will all flight lines this will look like the map below:
 
-![image](figures/EUFAR11_02-2011_187_dsm_20m_contours.png)
+![Hillshade image created from LiDAR data over Svalbard with contour lines overlain.](figures/EUFAR11_02-2011_187_dsm_20m_contours.png)
 
 ## Create a LiDAR / ASTER DSM for use in APL ##
 
@@ -131,19 +166,19 @@ consideration are needed:
 * Areas of no-data need to be filled (e.g., with a courser resolution DEM).
 * The format needs to be ENVI Band Interleaved by Line (BIL) or Band Sequential (BSQ).
 
-The same create\_dem\_from\_lidar script can be used to generate a DSM
+The same `create_dem_from_lidar.py` script can be used to generate a DSM
 for use in APL, by setting some options:
 
 ```bash
 create_dem_from_lidar.py --in_projection UTM33N \
-                      --out_projection WGS84LL \
-                      --lidar_bounds \
-                      --demmosaic dem/EUFAR11_02-2011-187-ASTER.dem  \
-                      --outdem EUFAR11_02-2011-187-lidar_ASTER-wgs84_latlong.dem \
-                      las1.0/LDR-EUFAR11_02-2011-187-01.LAS \
-                      las1.0/LDR-EUFAR11_02-2011-187-02.LAS
+                         --out_projection WGS84LL \
+                         --lidar_bounds \
+                         --demmosaic dem/EUFAR11_02-2011-187-ASTER.dem  \
+                         --outdem EUFAR11_02-2011-187-lidar_ASTER-wgs84_latlong.dem \
+                         las1.0/LDR-EUFAR11_02-2011-187-01.LAS \
+                         las1.0/LDR-EUFAR11_02-2011-187-02.LAS
 ```
-As previously only two lines are specified to speed up runtime.
+As previously only two lines are specified to reduce processing time.
 
 This will create a DSM mosaic from the LAS files reproject to WGS84 Lat/Long and patch with 'EUFAR11\_02-2011-187-ASTER.dem' (as provided with ARSF hyperspectral delivery), cropped to the bounding box of all LiDAR data plus a buffer of 2 km. This assumes the vertical datum of the DEM mosaic is the same as that required for the output projection.
 
@@ -155,12 +190,15 @@ cd ~/arsf_workshop/lidar_practical/GB13_08-217
 ```
 (note if you are using your own machine you will need to input a different location).
 
-For the workshop we will use a subset, you can create this using:
+For the workshop we will use a subset, you can create this using the
+[las2las](http://www.cs.unc.edu/~isenburg/lastools/download/las2las_README.txt)
+command:
 ```bash
 las2las -keep_xy 374200 764500 375000 765500 \
         -i las1.2/LDR-GB13_08-2014-217-02.LAS \
         -o las1.2/LDR-GB13_08-2014-217-02_subset.LAS
 ```
+In addition to subsetting LAS files the `las2las` command can be used to apply other filters to LAS files.
 
 ### Digital Surface Model (DSM) ###
 
@@ -176,7 +214,7 @@ las_to_dsm.py -o LDR-GB13_08-2014-217-02_subset_dsm_grass.tif \
 The format of the output file is set using the extension, using '.tif' will create a GeoTIFF.
 
 Other programs such as [LAStools](http://rapidlasso.com/lastools/), [SPDLib](http://spdlib.org), [FUSION](http://forsys.cfr.washington.edu/fusion/fusion_overview.html) and [points2grid](https://github.com/CRREL/points2grid) can be used by
-if they have been installed by setting the --method flag. Note, unlike the other methods, the tools required to create a DEM in LAStools are not free and binaries are only provided for Windows (although work on Linux through Wine). It is possible to run without a license for non-profit and personal work but they will introduce noise and artifacts (such as black diagonal lines) in the data. For more details see [LAStool License](http://www.cs.unc.edu/~isenburg/lastools/LICENSE.txt).
+if they have been installed by setting the --method flag. Note, unlike the other methods, the tools required to create a DEM in LAStools are not free and binaries are only provided for Windows (although work on Linux through Wine). It is possible to run without a license for non-profit and personal work but they will introduce noise and artifacts (such as black diagonal lines) in the data. For more details see [LAStools License](http://www.cs.unc.edu/~isenburg/lastools/LICENSE.txt).
 
 If you have installed SPDLib or the non-free LAStools (running through wine on Linux) try running the same command but setting `--method SPDLib` or `--method LAStools`. For example:
 
@@ -205,7 +243,7 @@ las_to_dtm.py -o LDR-GB13_08-2014-217-02_subset_dtm_spdlib.tif \
 
 As shown earlier he `gdaldem` command can be used to produce hillshade images for visualisation as shown below.
 
-![image](figures/dtm_dsm.png)
+![Comparison of Digital Terrain Model (DTM) and Digital Surface Model (DSM)](figures/dtm_dsm.png)
 
 Note, depending on the cover the default classification and interpolation parameters used by las\_to\_dtm may not provide the best results. In these cases it is recommended you access the programs directly, as this will provide more control over the available options.
 
@@ -239,7 +277,7 @@ g.gui
 To open the GRASS interface. Within this use File -> Map Display -> Add Raster to display the file.
 Note there are gaps in the DSM where pixels do not have any points falling within them, as shown below.
 
-![image](figures/grass_dsm_with_holes.png)
+![Dataset imported into GRASS prior to interpolation](figures/grass_dsm_with_holes.png)
 
 ```
 r.surf.idw input=INPUTLAYER output=OUTPUTLAYERNAME
@@ -249,6 +287,6 @@ Changing 'INPUTLAYER' to the name of the file in GRASS and 'OUTPUTLAYERNAME' to 
 
 Load this file into GRASS and compare with the original.
 
-![image](figures/grass_dsm_idw.png)
+![Dataset in GRASS after Inverse Distance Weighted (IDW) interpolation.](figures/grass_dsm_idw.png)
 
 
