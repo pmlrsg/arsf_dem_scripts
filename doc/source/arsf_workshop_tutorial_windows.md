@@ -1,7 +1,7 @@
 ARSF Workshop - Discrete LiDAR Practical
 ==========================================
 
-This worksheet is for Linux, it is identical to the Windows version but scripts have the extension `.py` and lines are broken by `\` rather than `^`.
+This worksheet is for Windows, it is identical to the Linux version but scripts don't have the extension `.py` and lines are broken by `^` rather than `\`.
 
 ## Datasets and computing set up ##
 
@@ -9,10 +9,10 @@ This tutorial uses the ARSF DEM Scripts, developed by ARSF-DAN and available to 
 [https://github.com/pmlrsg/arsf_dem_scripts](https://github.com/pmlrsg/arsf_dem_scripts).
 You will need to have these scripts installed before starting the tutorial.
 
-LiDAR data from two flights will be used for this tutorial. If you are using an ARSF computer or the Virtual Machine these data are under:
-
-~/arsf_workshop/lidar_practical
-
+LiDAR data from two flights will be used for this tutorial. It is assumed these have been copied to:
+```
+C:\arsf_workshop\lidar_practical
+```
 If you are using your own machine you will need to download the data from [NEODC](http://neodc.nerc.ac.uk/).
 
 ### EUFAR11/02 187 ###
@@ -27,8 +27,7 @@ For this tutorial LAS 1.2 file 2 will be used. The LAS 1.3 file will also be use
 
 ## View Point Cloud ##
 
-ARSF deliver LiDAR data as point clouds. Before starting analysis open the point cloud using the online plas.io viewer or ARSF's Lidar Analysis GUI ([LAG](http://arsf.github.io/lag/)) viewer..
-
+ARSF deliver LiDAR data as point clouds. Before starting analysis open the point cloud using the online plas.io viewer.
 
 ### plas.io ###
 
@@ -42,17 +41,6 @@ ARSF deliver LiDAR data as point clouds. Before starting analysis open the point
 
 ![A point cloud displayed using plas.io](figures/plasio_screenshot.png)
 
-### LAG ###
-
-1) Open a terminal window (look for a black rectangular icon with a white frame, normally under the 'Applications' menu) and type `lag` to open LAG.
-
-2) Click the 'Open' button and select a LAS file.
-
-3) Using the 'Profile' tool draw a line along the dataset in the 'LAG Overview' window and press the spacebar to display a profile.
-
-4) Select 'Colour by' and 'Classification' in both windows to display points flagged as noise.
-
-![A point cloud displayed in LAS](figures/lag_profile.png)
 
 ## Create a simple DSM using the command line utility ##
 
@@ -66,17 +54,17 @@ As each flight comprises multiple lines after generating a DSM from each point c
 
 2) Navigate to the directory the data are stored using:
 ```
-cd ~/arsf_workshop/lidar_practical/EUFAR11_02-187
+cd C:\arsf_workshop\lidar_practical\EUFAR11_02-187
 ```
 (note if you are using your own machine you will need to input a different location).
 
 3)  Run the following command to create a DSM using only LiDAR data:
 
 ```bash
-create_dem_from_lidar.py --in_projection UTM33N \
-                         --outdem EUFAR11_02-2011-187_dsm.dem \
-                         las1.0/LDR-EUFAR11_02-2011-187-01.LAS \
-                         las1.0/LDR-EUFAR11_02-2011-187-02.LAS
+create_dem_from_lidar --in_projection UTM33N ^
+                      --outdem EUFAR11_02-2011-187_dsm.dem ^
+                      las1.0\LDR-EUFAR11_02-2011-187-01.LAS ^
+                      las1.0\LDR-EUFAR11_02-2011-187-02.LAS
 ```
 
 This will create a DSM from files 1 and 2.
@@ -100,9 +88,9 @@ command, dropping class 7 and keeping only the first return.
 
 The command used for this is:
 ```bash
-las2txt -parse txyzicrna -sep space \
-        -drop_class 7 -first_only \
-        -i las1.0/LDR-EUFAR11_02-2011-187-01.LAS \
+las2txt -parse txyzicrna -sep space ^
+        -drop_class 7 -first_only ^
+        -i las1.0\LDR-EUFAR11_02-2011-187-01.LAS ^
         -o LDR-EUFAR11_02-2011-187-01.txt
 ```
 Where `txyzicrna` specifies the attribute stored in each column:
@@ -132,23 +120,23 @@ or another packages such as QGIS or ArcMap.
 4) To help visualise the data you can create a hillshade image using the [gdaldem](http://www.gdal.org/gdaldem.html) command:
 
 ```bash
-gdaldem hillshade \
-      EUFAR11_02-2011_187_dsm.dem \
+gdaldem hillshade ^
+      EUFAR11_02-2011_187_dsm.dem ^
       EUFAR11_02-2011_187_dsm_hillshade.tif
 ```
 
 5) You can also create contour lines using the [gdalccontour](http://www.gdal.org/gdal_contour.html) command:
 
 ```bash
-gdal_contour -i 20 -a elevation \
-      EUFAR11_02-2011_187_dsm.dem \
+gdal_contour -i 20 -a elevation ^
+      EUFAR11_02-2011_187_dsm.dem ^
       EUFAR11_02-2011_187_dsm_20m_contours.shp
 ```
 
 To open the hillshade image with contour lines overlain in TuiView use:
 
 ```bash
-tuiview -v EUFAR11_02-2011_187_dsm_20m_contours.shp \
+tuiview -v EUFAR11_02-2011_187_dsm_20m_contours.shp ^
            EUFAR11_02-2011_187_dsm.dem
 ```
 
@@ -170,13 +158,13 @@ The same `create_dem_from_lidar.py` script can be used to generate a DSM
 for use in APL, by setting some options:
 
 ```bash
-create_dem_from_lidar.py --in_projection UTM33N \
-                         --out_projection WGS84LL \
-                         --lidar_bounds \
-                         --demmosaic dem/EUFAR11_02-2011-187-ASTER.dem  \
-                         --outdem EUFAR11_02-2011-187-lidar_ASTER-wgs84_latlong.dem \
-                         las1.0/LDR-EUFAR11_02-2011-187-01.LAS \
-                         las1.0/LDR-EUFAR11_02-2011-187-02.LAS
+create_dem_from_lidar --in_projection UTM33N ^
+                      --out_projection WGS84LL ^
+                      --lidar_bounds ^
+                      --demmosaic dem/EUFAR11_02-2011-187-ASTER.dem ^
+                      --outdem EUFAR11_02-2011-187-lidar_ASTER-wgs84_latlong.dem ^
+                      las1.0\LDR-EUFAR11_02-2011-187-01.LAS ^
+                      las1.0\LDR-EUFAR11_02-2011-187-02.LAS
 ```
 As previously only two lines are specified to reduce processing time.
 
@@ -186,7 +174,7 @@ This will create a DSM mosaic from the LAS files reproject to WGS84 Lat/Long and
 
 So far only a simple DSM has been created by taking the average of all first-return points within a pixel. Pixels which do not contain a return are left as no-data. There are more advanced methods of interpolation in GRASS (which we will come onto later), there are also other programs which can be used to produce a DSM. These can be accessed by two utility programs from ARSF DEM, described below. For this section the Montrose Bay data will be used, navigate to the directory the data are stored using:
 ```
-cd ~/arsf_workshop/lidar_practical/GB13_08-217
+cd C:\arsf_workshop\lidar_practical\GB13_08-217
 ```
 (note if you are using your own machine you will need to input a different location).
 
@@ -194,9 +182,9 @@ For the workshop we will use a subset, you can create this using the
 [las2las](http://www.cs.unc.edu/~isenburg/lastools/download/las2las_README.txt)
 command:
 ```bash
-las2las -keep_xy 374200 764500 375000 765500 \
-        -i las1.2/LDR-GB13_08-2014-217-02.LAS \
-        -o las1.2/LDR-GB13_08-2014-217-02_subset.LAS
+las2las -keep_xy 374200 764500 375000 765500 ^
+        -i las1.2\LDR-GB13_08-2014-217-02.LAS ^
+        -o las1.2\LDR-GB13_08-2014-217-02_subset.LAS
 ```
 In addition to subsetting LAS files the `las2las` command can be used to apply other filters to LAS files.
 
@@ -205,10 +193,10 @@ In addition to subsetting LAS files the `las2las` command can be used to apply o
 To create a DSM using GRASS the following is used
 
 ```bash
-las_to_dsm.py -o LDR-GB13_08-2014-217-02_subset_dsm_grass.tif \
-           --projection UKBNG \
-           --method GRASS \
-           las1.2/LDR-GB13_08-2014-217-02_subset.LAS
+las_to_dsm -o LDR-GB13_08-2014-217-02_subset_dsm_grass.tif ^
+           --projection UKBNG ^
+           --method GRASS ^
+           las1.2\LDR-GB13_08-2014-217-02_subset.LAS
 ```
 
 The format of the output file is set using the extension, using '.tif' will create a GeoTIFF.
@@ -219,10 +207,10 @@ if they have been installed by setting the --method flag. Note, unlike the other
 If you have installed SPDLib or the non-free LAStools (running through wine on Linux) try running the same command but setting `--method SPDLib` or `--method LAStools`. For example:
 
 ```bash
-las_to_dsm.py -o LDR-GB13_08-2014-217-02_subset_dsm_spdlib.tif \
-           --projection UKBNG \
-           --method GRASS \
-           las1.2/LDR-GB13_08-2014-217-02_subset.LAS
+las_to_dsm -o LDR-GB13_08-2014-217-02_subset_dsm_lastools.tif ^
+           --projection UKBNG ^
+           --method LAStools ^
+           las1.2\LDR-GB13_08-2014-217-02_subset.LAS
 ```
 
 ### Digital Terrain Model (DTM) ###
@@ -232,13 +220,13 @@ In addition to producing a DSM another common product from LiDAR data is a Digit
 Packages such as [LAStools](http://rapidlasso.com/lastools/),[SPDLib](http://spdlib.org) and [FUSION](http://forsys.cfr.washington.edu/fusion/fusion_overview.html) have more advanced methods for classifying ground returns (see their
 respective manuals for more details).
 
-To create a DTM the `las_to_dtm.py` command is used:
+To create a DTM the `las_to_dtm` command is used:
 
 ```bash
-las_to_dtm.py -o LDR-GB13_08-2014-217-02_subset_dtm_spdlib.tif \
-           --projection UKBNG \
-           --method SPDLib \
-           las1.2/LDR-GB13_08-2014-217-02_subset.LAS
+las_to_dtm -o LDR-GB13_08-2014-217-02_subset_dtm_lastools.tif ^
+           --projection UKBNG ^
+           --method SPDLib ^
+           las1.2\LDR-GB13_08-2014-217-02_subset.LAS
 ```
 
 As shown earlier he `gdaldem` command can be used to produce hillshade images for visualisation as shown below.
@@ -252,10 +240,10 @@ Note, depending on the cover the default classification and interpolation parame
 Outside the DEM scripts it is possible to perform more advanced manipulation of LiDAR data in GRASS. A good tutorial is available on the GRASS wiki: https://grasswiki.osgeo.org/wiki/LIDAR.
 
 ```bash
-load_las_to_grass.py --projection UKBNG \
-                     --rastertype DSM \
-                     --resolution 1 \
-                     las1.2/LDR-GB13_08-2014-217-02_subset.LAS
+load_las_to_grass --projection UKBNG ^
+                  --rastertype DSM ^
+                  --resolution 1 ^
+                  las1.2\LDR-GB13_08-2014-217-02_subset.LAS
 ```
 
 This will return:
