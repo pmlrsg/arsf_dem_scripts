@@ -229,7 +229,7 @@ las_to_dsm.py -o LDR-GB13_08-2014-217-02_subset_dsm_spdlib.tif \
 
 In addition to producing a DSM another common product from LiDAR data is a Digital Terrain Model (DTM), this represents the 'bare-earth', that is the elevation excluding buildings and vegetation. Producing a DTM is more complicated than a DSM, a fist order approximation is to take only last returns, which assumes multiple returns are received from a pulse the last is from the ground. However, many last returns are not from the ground for example dense vegetation where the last return does not reach the ground or buildings where there are not multiple returns. Producing an accurate DTM first requires ground returns to be selected from the point cloud and gaps where there are no ground returns (e.g., buildings) to be interpolated.
 
-Packages such as [LAStools](http://rapidlasso.com/lastools/),[SPDLib](http://spdlib.org) and [FUSION](http://forsys.cfr.washington.edu/fusion/fusion_overview.html) have more advanced methods for classifying ground returns (see their
+Packages such as [LAStools](http://rapidlasso.com/lastools/), [SPDLib](http://spdlib.org) and [FUSION](http://forsys.cfr.washington.edu/fusion/fusion_overview.html) have more advanced methods for classifying ground returns (see their
 respective manuals for more details).
 
 To create a DTM the `las_to_dtm.py` command is used:
@@ -241,7 +241,7 @@ las_to_dtm.py -o LDR-GB13_08-2014-217-02_subset_dtm_spdlib.tif \
            las1.2/LDR-GB13_08-2014-217-02_subset.LAS
 ```
 
-As shown earlier he `gdaldem` command can be used to produce hillshade images for visualisation as shown below.
+As shown earlier the `gdaldem` command can be used to produce hillshade images for visualisation as shown below.
 
 ![Comparison of Digital Terrain Model (DTM) and Digital Surface Model (DSM)](figures/dtm_dsm.png)
 
