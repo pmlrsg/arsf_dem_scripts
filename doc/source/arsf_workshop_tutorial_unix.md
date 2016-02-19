@@ -23,11 +23,11 @@ For this tutorial LAS 1.0 files 1 - 10 will be used. The ASTER DEM supplied with
 ### GB13/08 217 ###
 
 Data acquired over Montrose Bay on day 217/2014 ([NEODC Link](http://browse.ceda.ac.uk/browse/neodc/arsf/2014/GB13_08/GB13_08-2014_217_Montrose_Bay/LiDAR))
-For this tutorial LAS 1.2 file 2 will be used. The LAS 1.3 file will also be used for the full waveform practical.
+For this tutorial LAS 1.2 file 2 will be used.
 
 ## View Point Cloud ##
 
-ARSF deliver LiDAR data as point clouds. Before starting analysis open the point cloud using the online plas.io viewer or ARSF's Lidar Analysis GUI ([LAG](http://arsf.github.io/lag/)) viewer..
+ARSF deliver LiDAR data as point clouds. Before starting analysis open the point cloud using the online plas.io viewer or ARSF's Lidar Analysis GUI ([LAG](http://arsf.github.io/lag/)) viewer.
 
 
 ### plas.io ###
