@@ -453,7 +453,7 @@ HYPERSPECTRAL_VIEW_ANGLE_MAX = float(get_config_fallback(config, 'hyperspectral'
 SPDLIB_BIN_PATH = get_config_fallback(config,'spdlib','SPDLIB_BIN_PATH',fallback=get_spdlib_path())
 
 if SPDLIB_BIN_PATH != '' and os.path.isdir(SPDLIB_BIN_PATH) == False:
-    SPDLIB_BIN_PATH = get_spdlib_path()
+   SPDLIB_BIN_PATH = get_spdlib_path()
 
 #: Default interpolation used by SPDLib
 SPD_DEFAULT_INTERPOLATION = get_config_fallback(config,'spdlib','SPD_DEFAULT_INTERPOLATION',
