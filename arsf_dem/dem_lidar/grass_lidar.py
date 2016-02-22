@@ -311,8 +311,6 @@ def ascii_to_vector(in_ascii,
 
    https://grass.osgeo.org/grass64/manuals/v.in.ascii.html
 
-   Default is to leave vector in GRASS database rather than exporting.
-
    Arguments:
 
    * in_ascii - Input ASCII file.
@@ -410,8 +408,6 @@ def las_to_vector(in_las,
 
    If an existing grass db is provided will add raster to this,
    else will create one.
-
-   Default is to leave raster in GRASS database rather than exporting.
 
    Arguments:
 
