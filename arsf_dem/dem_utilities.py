@@ -343,7 +343,7 @@ def patch_files(in_file_list,
    if out_file is not None:
       out_raster_format = get_gdal_type_from_path(out_file)
    else:
-      out_raster_format = dem_common.GDAL_OUTFILE_FORMAT,
+      out_raster_format = dem_common.GDAL_OUTFILE_FORMAT
 
    if grassdb_path is None and not import_to_grass:
       raise Exception('No "grassdb_path" supplied but "import_to_grass" set to False.' +
