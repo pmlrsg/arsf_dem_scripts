@@ -76,7 +76,7 @@ or another packages such as QGIS or ArcMap.
          EUFAR11_02-2011_187_dsm.dem ^
          EUFAR11_02-2011_187_dsm_20m_contours.shp
 
-.. image:: figures/EUFAR11_02-2011_187_dsm_20m_contours.png
+.. image:: figures/EUFAR11_02-2011-187_dsm_20m_contours.png
    :width: 60 %
    :align: center
 
@@ -182,7 +182,7 @@ To create a DTM `las_to_dtm` is used:
 
 In this case using a progressive morphology filter to classify ground returns and a Natural Neighbour interpolation implemented within SPDLib.
 
-A comparison of DTMs and DSMs generated using these tools, applied to a flight over the New Forest is shown below.
+A comparison of DTMs and DSMs generated using these tools is shown below:
 
 .. image:: figures/dtm_dsm.png
    :width: 40 %

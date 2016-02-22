@@ -305,7 +305,7 @@ def las_to_dtm(in_las, out_dtm, keep_las=False, flags=None):
    lasfile_grd_tmp = tempfile.mkstemp(suffix='.LAS', dir=dem_common.TEMP_PATH)[1]
 
    print('Classifying ground returns')
-   classify_ground_las(in_las, lasfile_grd_tmp)
+   classify_ground_las(in_las, lasfile_grd_tmp, flags=['-ignore_class 7'])
 
    print('Creating DTM')
    las2dem_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'las2dem.exe')]

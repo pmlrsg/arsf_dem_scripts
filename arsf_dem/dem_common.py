@@ -70,6 +70,7 @@ def get_grass_lib_path():
    Exits if path does not exist
    """
    LINUX64_GRASS_LIB_PATH = '/usr/lib64/grass'
+   LINUX64_GRASS_LIB_PATH_ALTERNATIVE = '/usr/lib/grass64'
    LINUX32_GRASS_LIB_PATH = '/usr/lib/grass'
    OSX_GRASS_LIB_PATH = '/Applications/GRASS-*.app/Contents/MacOS/'
    WIN_GRASS_LIB_PATH = 'C:/OSGeo4W/apps/grass/grass'
@@ -96,6 +97,8 @@ def get_grass_lib_path():
          return LINUX64_GRASS_LIB_PATH
       elif os.path.isdir(LINUX32_GRASS_LIB_PATH):
          return LINUX32_GRASS_LIB_PATH
+      elif os.path.isdir(LINUX64_GRASS_LIB_PATH_ALTERNATIVE):
+         return LINUX64_GRASS_LIB_PATH_ALTERNATIVE
       else:
          print('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(LINUX64_GRASS_LIB_PATH),file=sys.stderr)
          sys.exit(1)
@@ -122,12 +125,20 @@ def get_grass_db_template_path():
    """
    Gets path to grass_db_template.
    Installed to PREFIX/share.
+
+   If not installed (i.e., dev version) get path to checkout and
+   assume under data.
    """
    install_prefix = __file__[:__file__.find('lib')]
    grass_db_template_path = os.path.join(install_prefix,'share','grass_db_template')
-
+   dev_checkout = __file__.split(os.path.sep)[0:-2]
+   dev_checkout = '{}'.format(os.path.sep).join(dev_checkout)
+   grass_db_template_path_dev = os.path.join(dev_checkout, 'data',
+                                             'grass_db_template')
    if os.path.isdir(grass_db_template_path):
       return grass_db_template_path
+   elif os.path.isdir(grass_db_template_path_dev):
+      return grass_db_template_path_dev
    else:
      print('Could not find grass_db_template with arsf_dem library.',file=sys.stderr)
      return None
@@ -188,7 +199,7 @@ def get_spdlib_path():
    conda (which is the recommended way to install SPDLib) to a standard location.
    """
 
-   anaconda_install_names = ['miniconda','miniconda3'
+   anaconda_install_names = ['miniconda','miniconda3',
                              'anaconda', 'anaconda3']
    if sys.platform == 'win32':
       win_spd_path = 'C:/spdlib'
@@ -203,6 +214,8 @@ def get_spdlib_path():
       for anaconda_dir in anaconda_install_names:
          if os.path.isfile(os.path.join(user_dir, anaconda_dir,'bin','spdtranslate')):
             return os.path.join(user_dir, anaconda_dir, 'bin')
+         elif os.path.isfile(os.path.join('/opt', anaconda_dir,'bin','spdtranslate')):
+            return os.path.join('/opt', anaconda_dir, 'bin')
       return ''
 
 def get_fusion_bin_path():
@@ -440,7 +453,7 @@ HYPERSPECTRAL_VIEW_ANGLE_MAX = float(get_config_fallback(config, 'hyperspectral'
 SPDLIB_BIN_PATH = get_config_fallback(config,'spdlib','SPDLIB_BIN_PATH',fallback=get_spdlib_path())
 
 if SPDLIB_BIN_PATH != '' and os.path.isdir(SPDLIB_BIN_PATH) == False:
-    SPDLIB_BIN_PATH = get_spdlib_path()
+   SPDLIB_BIN_PATH = get_spdlib_path()
 
 #: Default interpolation used by SPDLib
 SPD_DEFAULT_INTERPOLATION = get_config_fallback(config,'spdlib','SPD_DEFAULT_INTERPOLATION',

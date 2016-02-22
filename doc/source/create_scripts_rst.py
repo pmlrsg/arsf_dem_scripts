@@ -36,6 +36,7 @@ las_to_dsm_out = get_command_out(['las_to_dsm.py','-h'])
 las_to_dtm_out = get_command_out(['las_to_dtm.py','-h'])
 las_to_intensity_out = get_command_out(['las_to_intensity.py','-h'])
 mosaic_dem_tiles_out = get_command_out(['mosaic_dem_tiles.py','-h'])
+load_lidar_to_grass_out = get_command_out(['load_lidar_to_grass.py','-h'])
 
 scripts_text = '''
 
@@ -88,12 +89,20 @@ mosaic_dem_tiles
 
 {}
 
+load_lidar_to_grass
+---------------------
+
+.. code-block:: bash
+
+{}
+
 '''.format(create_apl_dem_out,
            create_dem_from_lidar_out,
            las_to_dsm_out,
            las_to_dtm_out,
            las_to_intensity_out,
-           mosaic_dem_tiles_out)
+           mosaic_dem_tiles_out,
+           load_lidar_to_grass_out)
 
 f = open(outfile,'w')
 f.write(scripts_text)

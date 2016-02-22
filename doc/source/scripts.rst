@@ -342,3 +342,51 @@ mosaic_dem_tiles
    
 
 
+load_lidar_to_grass
+---------------------
+
+.. code-block:: bash
+
+   usage: load_lidar_to_grass.py [-h] [-r Resolution]
+                                 [--projection In Projection]
+                                 [-t Output raster type]
+                                 lidarfiles [lidarfiles ...]
+   
+   Load LiDAR files into GRASS for further processing.
+   
+   For LAS files converts to ASCII first using las2txt.
+   
+   Points flagged as noise (class 7) are dropped before being added.
+   
+   Performs the following steps:
+   
+   1. Sets up GRASS database in the required projection
+   2. Loads converted files using r.in.xyz
+   
+   Then returns the path of the database which can be opened using:
+   
+      grass PATH_TO_DATABASE
+   
+   For examples of futher processing see:
+   
+   https://grasswiki.osgeo.org/wiki/LIDAR
+   
+   Created by ARSF-DAN at Plymouth Marine Laboratory (PML)
+   and is made available under the terms of the GPLv3 license.
+   
+   positional arguments:
+     lidarfiles            List or directory containing input LiDAR files
+   
+   optional arguments:
+     -h, --help            show this help message and exit
+     -r Resolution, --resolution Resolution
+                           Resolution for output DEM (default=2)
+     --projection In Projection
+                           Input projection (e.g., UTM30N)
+     -t Output raster type, --rastertype Output raster type
+                           Raster type - determines the lidar returns to load
+                           into GRASS. For all select DEM (default), for first
+                           only select DSM, for last only select DTM.
+   
+
+
