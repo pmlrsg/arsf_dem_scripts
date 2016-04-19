@@ -159,3 +159,20 @@ def PrintTermWidth(text, padding_char=' '):
       paddedtext = ' {0} {1} {0} '.format(padding_char,text)
 
    print(paddedtext)
+
+def CheckPathExistsAndIsWritable(path):
+   """
+   Check path exists and can be written to
+
+   Returns True if path exists and can be written to
+
+   """
+   # Check path exists
+   if not os.path.exists(path):
+      raise IOError("No such file or directory: {}".format(path))
+   # Check output directory is writable
+   if not os.access(path,os.W_OK):
+      raise IOError("Path does not have write permissions: {}".format(path))
+   return True
+
+
