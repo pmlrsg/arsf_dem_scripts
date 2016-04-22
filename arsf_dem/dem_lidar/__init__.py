@@ -24,9 +24,9 @@ For example::
    from arsf_dem import dem_lidar
 
    # Search current directory for all files ending matching '*.LAS'
-   in_las_list = glob.glob('*.LAS')
+   in_las_list = glob.glob('*.[Ll][Aa[Ss]')
 
-   # Iterate through list of files found
+   # Iterate through list of files found to create a raster for each line
    for in_las in in_las_list:
       # Set name of output DEM as the same as LAS file
       # but with '_dsm.tif' suffix
@@ -78,7 +78,7 @@ def _las_to_dem(in_las,out_raster,
 
    Arguments:
 
-   * in_las - Input LAS file.
+   * in_las - Input LAS file or list of LAS files
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
    * projection - Projection of input LAS files (and output DEM) as GRASS location format (e.g., UTM30N).
@@ -88,12 +88,21 @@ def _las_to_dem(in_las,out_raster,
 
    None
 
-   Example::
-
-      from arsf_dem import dem_lidar
-      dem_lidar.las_to_dtm('in_las_file.las','out_dsm.dem')
-
    """
+   # Check output path exists and can be written to
+   # (will raise exception if it doesn't)
+   dem_common_functions.CheckPathExistsAndIsWritable(os.path.split(
+                                          os.path.abspath(out_raster))[0])
+
+   tmp_las_handler, tmp_las_file = tempfile.mkstemp(suffix='.las')
+
+   # If a list is passed in merge to a single LAS file
+   if isinstance(in_las, list):
+      print('Multiple LAS files have been passed in - merging')
+      lastools_lidar.merge_las(in_las, tmp_las_file, drop_class=7)
+      in_las_merged = tmp_las_file
+   else:
+      in_las_merged = in_las
 
    # Get output type from extension (if not specified)
    out_raster_format = dem_utilities.get_gdal_type_from_path(out_raster)
@@ -105,15 +114,15 @@ def _las_to_dem(in_las,out_raster,
          grass_location = dem_common.DEFAULT_LIDAR_PROJECTION_GRASS
 
       if demtype.upper() == 'DSM':
-         grass_lidar.las_to_dsm(in_las, out_raster,
+         grass_lidar.las_to_dsm(in_las_merged, out_raster,
                                 bin_size=resolution,
                                 projection=grass_location)
       elif demtype.upper() == 'DTM':
-         grass_lidar.las_to_dtm(in_las, out_raster,
+         grass_lidar.las_to_dtm(in_las_merged, out_raster,
                                 bin_size=resolution,
                                 projection=grass_location)
       elif demtype.upper() == 'INTENSITY':
-         grass_lidar.las_to_intensity(in_las, out_raster,
+         grass_lidar.las_to_intensity(in_las_merged, out_raster,
                                       bin_size=resolution,
                                       projection=grass_location)
       else:
@@ -128,12 +137,12 @@ def _las_to_dem(in_las,out_raster,
          wkt_tmp = None
 
       if demtype.upper() == 'DSM':
-         spdlib_lidar.las_to_dsm(in_las, out_raster,
+         spdlib_lidar.las_to_dsm(in_las_merged, out_raster,
                               bin_size=resolution,
                               wkt=wkt_tmp,
                               out_raster_format=out_raster_format)
       elif demtype.upper() == 'DTM':
-         spdlib_lidar.las_to_dtm(in_las, out_raster,
+         spdlib_lidar.las_to_dtm(in_las_merged, out_raster,
                               bin_size=resolution,
                               wkt=wkt_tmp,
                               out_raster_format=out_raster_format)
@@ -158,19 +167,19 @@ def _las_to_dem(in_las,out_raster,
          dem_common_functions.WARNING('Could not convert projection to LAStools flags. {}. Will try to get projection from LAS file'.format(err))
 
       if demtype.upper() == 'DSM':
-         lastools_lidar.las_to_dsm(in_las, out_raster, flags=lastools_flags)
+         lastools_lidar.las_to_dsm(in_las_merged, out_raster, flags=lastools_flags)
       elif demtype.upper() == 'DTM':
-         lastools_lidar.las_to_dtm(in_las, out_raster, flags=lastools_flags)
+         lastools_lidar.las_to_dtm(in_las_merged, out_raster, flags=lastools_flags)
       elif demtype.upper() == 'INTENSITY':
-         lastools_lidar.las_to_intensity(in_las, out_raster, flags=lastools_flags)
+         lastools_lidar.las_to_intensity(in_las_merged, out_raster, flags=lastools_flags)
       else:
          raise Exception('DEM Type not recognised - options are DSM, DTM or Intensity')
 
    elif method.upper() == 'FUSION':
       if demtype.upper() == 'DSM':
-         fusion_lidar.las_to_dsm(in_las, out_raster, resolution=resolution)
+         fusion_lidar.las_to_dsm(in_las_merged, out_raster, resolution=resolution)
       elif demtype.upper() == 'DTM':
-         fusion_lidar.las_to_dtm(in_las, out_raster, resolution=resolution)
+         fusion_lidar.las_to_dtm(in_las_merged, out_raster, resolution=resolution)
       else:
          raise Exception('DEM Type not recognised - options are DSM or DTM')
 
@@ -184,12 +193,12 @@ def _las_to_dem(in_las,out_raster,
 
       # Create surface. Use IDW interpolation
       if demtype.upper() == 'DSM':
-         points2grid_lidar.las_to_dsm(in_las, out_raster,
+         points2grid_lidar.las_to_dsm(in_las_merged, out_raster,
                               resolution=resolution,
                               projection=wkt_tmp,
                               grid_method='idw')
       elif demtype.upper() == 'DTM':
-         points2grid_lidar.las_to_dtm(in_las, out_raster,
+         points2grid_lidar.las_to_dtm(in_las_merged, out_raster,
                               resolution=resolution,
                               projection=wkt_tmp,
                               grid_method='idw')
@@ -203,6 +212,9 @@ def _las_to_dem(in_las,out_raster,
    else:
       raise Exception('Invalid method "{}", expected GRASS, SPDLIB or LASTOOLS'.format(method))
 
+   os.close(tmp_las_handler)
+   os.remove(tmp_las_file)
+
 def las_to_dsm(in_las,out_raster,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
                projection=None,
@@ -215,7 +227,7 @@ def las_to_dsm(in_las,out_raster,
 
    Arguments:
 
-   * in_las - Input LAS file.
+   * in_las - Input LAS file or list of LAS files
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
    * projection - Projection of input LAS files (and output DEM) as GRASS location format (e.g., UTM30N).
@@ -253,7 +265,7 @@ def las_to_dtm(in_las,out_raster,
 
    Arguments:
 
-   * in_las - Input LAS file.
+   * in_las - Input LAS file or list of LAS files
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
    * projection - Projection of input LAS files (and output DEM) as GRASS location format (e.g., UTM30N).
@@ -287,7 +299,7 @@ def las_to_intensity(in_las,out_raster,
 
    Arguments:
 
-   * in_las - Input LAS file.
+   * in_las - Input LAS file or list of LAS files
    * out_raster - Output raster
    * resolution - Resolution to use for output raster.
    * projection - Projection of input LAS files (and output raster) as GRASS location format (e.g., UTM30N).

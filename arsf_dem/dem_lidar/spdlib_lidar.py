@@ -38,7 +38,7 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
 
    Known Issues: If LAS file isn't sorted SPDLib will print lots of warnings
    about writing incomplete pulses (1 for each pulse in the worst case), which
-   seems to cause problems for CallSubprocessOn. Better LAS reading for SPDLib
+   prints a lot of messages to sdterr. Better LAS reading for SPDLib
    is currently in-progress.
 
    Arguments:

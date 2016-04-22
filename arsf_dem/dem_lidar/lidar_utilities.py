@@ -75,7 +75,8 @@ def create_patched_lidar_mosaic(in_lidar,
 
    try:
       # Check output directory exists. Will raise exception if not accessible
-      dem_common_functions.CheckPathExistsAndIsWritable(os.path.split(outdem)[0])
+      dem_common_functions.CheckPathExistsAndIsWritable(
+                                 os.path.split(os.path.abspath(outdem))[0])
 
       # If a string is passed in convert to a list
       if isinstance(in_lidar, str):

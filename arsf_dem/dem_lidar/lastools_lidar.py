@@ -204,6 +204,64 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
       else:
          dem_common_functions.CallSubprocessOn(las2txt_cmd)
 
+def merge_las(in_las_list, out_las_file,
+              drop_class=None, keep_class=None, flags=None):
+   """
+   Convert LAS files to ASCII using lasmerge tool.
+
+   http://www.cs.unc.edu/~isenburg/lastools/download/lasmerge_README.txt
+
+
+   Arguments:
+
+   * in_las_list - List of input LAS files
+   * out_las_file - Output LAS file
+   * drop_class - Integer or list of integer class codes to drop
+   * keep_class - Integer or list of integer class codes to keep
+   * flags - List of additional flags for las2txt
+
+   Returns:
+
+   * None
+
+   """
+   if not _checkFreeLAStools():
+      raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
+
+   lasmerge_cmd = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH,
+                                'lasmerge')]
+
+   if drop_class is not None:
+      if isinstance(drop_class,list):
+         drop_class_str = []
+         for item in drop_class:
+            drop_class_str.append(str(item))
+         lasmerge_cmd = lasmerge_cmd + ['-drop_class'] + drop_class_str
+
+      elif isinstance(drop_class,int):
+         lasmerge_cmd = lasmerge_cmd + ['-drop_class',str(drop_class)]
+
+   if keep_class is not None:
+      if isinstance(keep_class,list):
+         keep_class_str = []
+         for item in keep_class:
+            keep_class_str.append(str(item))
+         lasmerge_cmd = lasmerge_cmd + ['-keep_class'] + keep_class_str
+
+      elif isinstance(keep_class,int):
+         lasmerge_cmd = lasmerge_cmd + ['-keep_class',str(keep_class)]
+
+   # Check for flags
+   if flags is not None:
+      lasmerge_cmd += _check_flags(flags)
+
+   for in_las_file in in_las_list:
+      lasmerge_cmd.extend(['-i',in_las_file])
+
+   lasmerge_cmd.extend(['-o', out_las_file])
+
+   dem_common_functions.CallSubprocessOn(lasmerge_cmd)
+
 def classify_ground_las(in_las,out_las, flags=None):
    """
    Classify ground returns in a LAS file.
