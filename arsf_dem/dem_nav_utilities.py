@@ -178,7 +178,7 @@ def create_apl_dem_from_mosaic(outdem,
 
    # Add metadata to DEM header (if output file was requested)
    if outdem is not None:
-      dem_utilities.add_dem_metadata(out_demfile, dem_source=dem_source,
+      dem_utilities.add_dem_metadata(outdem, dem_source=dem_source,
                                      dem_filename=os.path.basename(in_dem_mosaic))
 
    return out_demfile, grassdb_path
