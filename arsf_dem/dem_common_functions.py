@@ -91,7 +91,7 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False,logger=None):
       #still output error if quiet but not if redirecting
       #elif stderr and redirect==False: ERROR(stderr)
       elif stderr and redirect==False:
-         if logger not None:
+         if logger is not None:
             logger.error(stderr)
          raise StandardError(stderr)
 
@@ -179,5 +179,3 @@ def CheckPathExistsAndIsWritable(path):
    if not os.access(path,os.W_OK):
       raise IOError("Path does not have write permissions: {}".format(path))
    return True
-
-
