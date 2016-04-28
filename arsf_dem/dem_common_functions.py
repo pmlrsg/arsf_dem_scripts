@@ -44,7 +44,7 @@ def ERROR(strOutput,tostdouttoo=False):
       # If on windows don't bother trying to change colours, it won't work
       print("Error in "+callerid+": "+str(strOutput), file=sys.stderr)
 
-def CallSubprocessOn(command=None,redirect=False,quiet=False):
+def CallSubprocessOn(command=None,redirect=False,quiet=False,logger=None):
    """
    CallSubprocessOn - run a command via subprocess and output stdout and stderr
    if redirect == True the returns the stdout/stderr rather than printing
@@ -74,7 +74,10 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
                if lines:#if there is data read a line of it
                   someline=lines[0].readline()
                   if someline:
-                     print(someline.rstrip())
+                     if logger is None:
+                        print(someline.rstrip())
+                     else:
+                        logger.info(someline.rstrip())
 
       #Get anything left over in buffer
       stdout,stderr=process.communicate()
@@ -88,6 +91,8 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False):
       #still output error if quiet but not if redirecting
       #elif stderr and redirect==False: ERROR(stderr)
       elif stderr and redirect==False:
+         if logger is not None:
+            logger.error(stderr)
          raise StandardError(stderr)
 
    except StandardError as e:
@@ -174,5 +179,3 @@ def CheckPathExistsAndIsWritable(path):
    if not os.access(path,os.W_OK):
       raise IOError("Path does not have write permissions: {}".format(path))
    return True
-
-
