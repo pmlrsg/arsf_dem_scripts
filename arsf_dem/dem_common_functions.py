@@ -91,6 +91,8 @@ def CallSubprocessOn(command=None,redirect=False,quiet=False,logger=None):
       #still output error if quiet but not if redirecting
       #elif stderr and redirect==False: ERROR(stderr)
       elif stderr and redirect==False:
+         if logger not None:
+            logger.error(stderr)
          raise StandardError(stderr)
 
    except StandardError as e:
