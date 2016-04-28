@@ -37,3 +37,25 @@ Usage
 
 See the [tutorial](doc/source/tutorial_lidar.rst) for more details on creating DEMs from LiDAR data and
 the [scripts](doc/source/scripts.rst) page for details on available scripts.
+
+Contributing                                                                    
+---------------                                                                 
+
+### Internal (within PML)                                                  
+
+Internal development takes place using an in-house GitLab instance. Clone from the internal GitLab and create a branch from 'development-branch'. Push this branch to GitLab and submit a merge request (into 'development-branch') once changes are ready to be reviewed. Once changes have been merged into 'development-branch' push them to GitHub. Merge into master branch before tagging a new release.
+
+### External                                                       
+
+External contributions are welcome.                                             
+
+If you have found a bug or would like to suggest new features create an issue providing as much detail as possible.
+
+If you would like to contribute to the code create a fork and make changes into the branch 'development-branch'. Submit a pull request once you are ready for your changes to be merged.
+Please note, due to internal PML remote sensing group (RSG) coding guidelines a three space indent is used - any new code must stick to this convention.
+
+
+
+
+
+
