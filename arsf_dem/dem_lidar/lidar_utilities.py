@@ -55,11 +55,11 @@ def create_patched_lidar_mosaic(in_lidar,
 
    Arguments:
 
-   * in_lidar - list or directory of lidar files. Can also provide a raster as input.
+   * in_lidar - list or directory of lidar files. Can also provide a gridded raster as input.
    * outdem - output DEM.
    * in_lidar_projection - projection of input lidar files.
    * resolution - resolution to use when creating rasters from lidar files.
-   * lidar_format - format of lidar data (LAS / ASCII / RASTER).
+   * lidar_format - format of lidar data (LAS / ASCII / GRIDDED).
    * out_projection - output projection of DEM.
    * screenshot - directory / file for screenshots.
    * shaded_relief_screenshots - create shaded relief (hillshade) screenshots.
@@ -193,7 +193,7 @@ def create_patched_lidar_mosaic(in_lidar,
          dem_common_functions.WARNING('Skipping filling NULL values in LiDAR data by interpolation as patching with DEM')
          fill_lidar_nulls = False
 
-      if lidar_format.upper() != 'RASTER':
+      if lidar_format.upper() != 'GRIDDED':
          # Create DEM from individual lidar lines and patch together
          # If a string is passed in convert to a list
          if isinstance(in_lidar, str):
@@ -210,10 +210,19 @@ def create_patched_lidar_mosaic(in_lidar,
                              fill_nulls=fill_lidar_nulls)
 
       else:
+         if isinstance(in_lidar, list):
+            if len(in_lidar) == 1:
+               lidar_dem_mosaic = in_lidar[0]
+            else:
+               raise Exception('Multiple gridded lidar files are not currently'
+                               'supported. Mosaic them first')
          # Check GDAL can open dataset (will raise exception if not)
-         dem_utilities.check_gdal_dataset(in_lidar)
+         dem_utilities.check_gdal_dataset(lidar_dem_mosaic)
 
-         lidar_dem_mosaic = in_lidar
+         print('')
+         dem_common_functions.PrintTermWidth('Using existing LiDAR mosaic',
+                                             padding_char='*')
+         print('')
 
       # Check if input projection is equal to output projection
       if in_lidar_projection != out_patched_projection:
@@ -225,13 +234,16 @@ def create_patched_lidar_mosaic(in_lidar,
          # At the moment only consider UKBNG to WGS84LL
          if in_lidar_projection == 'UKBNG' and out_patched_projection == 'WGS84LL':
             print('Applying vertical offset to LiDAR mosaic')
+            # Get nodata value for mosaic
+            lidar_mosaic_nodata = dem_utilities.get_nodata_value(lidar_dem_mosaic)
+            # Apply offset
             dem_utilities.offset_null_fill_dem(temp_lidar_dem, temp_lidar_dem,
-                                                    import_to_grass=True,
-                                                    separation_file=dem_common.UKBNG_SEP_FILE_WGS84,
-                                                    ascii_separation_file=dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII,
-                                                    fill_nulls=False,
-                                                    nodata=dem_common.NODATA_VALUE,
-                                                    remove_grassdb=False)
+                                               import_to_grass=True,
+                                               separation_file=dem_common.UKBNG_SEP_FILE_WGS84,
+                                               ascii_separation_file=dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII,
+                                               fill_nulls=False,
+                                               nodata=lidar_mosaic_nodata,
+                                               remove_grassdb=False)
          lidar_dem_mosaic = temp_lidar_dem
 
       if patch_with_dem:
@@ -241,13 +253,14 @@ def create_patched_lidar_mosaic(in_lidar,
          subset_to_nav_failed = False
          if subset_to_navigation:
             try:
+               # Subset DEM
                dem_nav_utilities.subset_dem_to_nav(in_dem_mosaic, temp_mosaic_dem,
                                  nav, project,
                                  separation_file=separation_file,
                                  ascii_separation_file=ascii_separation_file,
                                  in_dem_projection=grass_library.grass_location_to_proj4(in_dem_mosaic_projection),
                                  out_projection=grass_library.grass_location_to_proj4(out_patched_projection),
-                                 nodata=dem_common.NODATA_VALUE,
+                                 nodata=nodata_value,
                                  out_res=None,
                                  remove_grassdb=True,
                                  fill_nulls=True)

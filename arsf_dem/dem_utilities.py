@@ -1338,5 +1338,27 @@ def check_gdal_dataset(in_file):
       raise IOError(gdal.GetLastErrorMsg())
    gdal_ds = None
 
+def get_nodata_value(in_file):
+   """
+   Gets nodata value for a GDAL dataset.
 
+   Reverts to default if none is available.
 
+   Arguments:
+
+   * in_file - path to existing GDAL dataset.
+   """
+
+   if not HAVE_GDAL:
+      raise ImportError('Could not import GDAL')
+
+   gdal_ds = gdal.Open(in_file, gdal.GA_ReadOnly)
+   nodata = gdal_ds.GetRasterBand(1).GetNoDataValue()
+
+   if nodata is None:
+      dem_common_functions.WARNING('Dataset does not have nodata value set '
+                                   'using default '
+                                   'of {}'.format(dem_common.NODATA_VALUE))
+      nodata = dem_common.NODATA_VALUE
+
+   return nodata
