@@ -124,14 +124,17 @@ and is made available under the terms of the GPLv3 license.
                           help ='Main project directory, used if patching with another DEM',
                           default='.',
                           required=False)
-      parser.add_argument('--demmosaic',
-                          metavar ='Input DEM mosaic',
-                          help ='''Input DEM mosaic to patch with in GDAL compatible format. Vertical datum needs to be the same
-                                   as output projection.
-                                   Only required for non-standard DEM. Use "--aster" or "--nextmap" for standard DEMs.''',
-                          required=False,
-                          default=None)
       dem_group = parser.add_mutually_exclusive_group()
+      dem_group.add_argument('--demmosaic',
+                             metavar ='Input DEM mosaic',
+                             help ='Input DEM mosaic to patch with in GDAL '
+                                   'compatible format. Vertical datum needs '
+                                   'to be the same as output projection. '
+                                   'Only required for non-standard DEM. '
+                                   'Use "--aster" or "--nextmap" for '
+                                   'standard DEMs.',
+                             required=False,
+                             default=None)
       dem_group.add_argument('--aster',
                              action='store_true',
                              help='Patch with ASTER data '

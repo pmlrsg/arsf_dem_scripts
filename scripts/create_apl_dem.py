@@ -106,27 +106,29 @@ and is made available under the terms of the GPLv3 license.
                           help ='Main project directory (default=".")',
                           default='.',
                           required=False)
-      parser.add_argument('--aster',
-                          action='store_true',
-                          help='Use ASTER data ({})'.format(dem_common.ASTER_MOSAIC_FILE),
-                          default=False,
-                          required=False)
-      parser.add_argument('--nextmap',
-                          action='store_true',
-                          help='Use Nextmap data ({})'.format(dem_common.NEXTMAP_MOSAIC_FILE),
-                          default=False,
-                          required=False)
-      parser.add_argument('--srtm',
-                          action='store_true',
-                          help='Use SRTM data ({})'.format(dem_common.SRTM_MOSAIC_FILE),
-                          default=False,
-                          required=False)
-      parser.add_argument('--demmosaic',
-                          metavar ='Input DEM mosaic',
-                          help ='Input DEM mosaic. For non-standard DEM.\
-                                 Use "--aster" or "--nextmap" for standard DEMs.',
-                          required=False,
-                          default=None)
+      dem_group = parser.add_mutually_exclusive_group()
+      dem_group.add_argument('--aster',
+                             action='store_true',
+                             help='Use ASTER data ({})'.format(dem_common.ASTER_MOSAIC_FILE),
+                             default=False,
+                             required=False)
+      dem_group.add_argument('--nextmap',
+                             action='store_true',
+                             help='Use Nextmap data ({})'.format(dem_common.NEXTMAP_MOSAIC_FILE),
+                             default=False,
+                             required=False)
+      dem_group.add_argument('--srtm',
+                             action='store_true',
+                             help='Use SRTM data ({})'.format(dem_common.SRTM_MOSAIC_FILE),
+                             default=False,
+                             required=False)
+      dem_group.add_argument('--demmosaic',
+                             metavar ='Input DEM mosaic',
+                             help ='Input DEM mosaic. For non-standard DEM. '
+                                   'Use "--aster" or "--nextmap" '
+                                   'for standard DEMs.',
+                             required=False,
+                             default=None)
       parser.add_argument('--separation_file',
                           metavar ='Seperation file',
                           help ='''File with Height offset to add if "--demmosaic" is used and
@@ -165,7 +167,9 @@ and is made available under the terms of the GPLv3 license.
          dem_source = 'USER'
       else:
          parser.print_help()
-         print('\nMust provide at least "--nextmap", "--aster" or "--srtm" flag for standard DEM locations or supply custom DEM with "--demmosaic"', file=sys.stderr)
+         print('\nMust provide at least "--nextmap", "--aster" or "--srtm" flag'
+               ' for standard DEM locations or supply custom DEM with '
+               '"--demmosaic"', file=sys.stderr)
          sys.exit(1)
 
       dem_nav_utilities.create_apl_dem_from_mosaic(args.outdem,
