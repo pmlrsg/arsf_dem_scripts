@@ -32,6 +32,7 @@ Available functions:
 * remove_gdal_aux_file - removes '.aux.xml' file created by GDAL.
 * get_gdal_type_from_path - gets GDAL format string from file name.
 * add_dem_metadata - adds metadata to DEM.
+* check_gdal_dataset - checks a dataset can be opened using GDAL.
 
 """
 
@@ -1027,6 +1028,8 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
 
    # Get information from image
    dataset = gdal.Open(in_file, gdal.GA_ReadOnly)
+   if dataset is None:
+      raise IOError('Could not open "{}" using GDAL'.format(in_file))
    projection = dataset.GetProjectionRef()
    geotransform = dataset.GetGeoTransform()
    x_size = dataset.RasterXSize
@@ -1048,6 +1051,9 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
       image_proj = spatial_ref.ExportToProj4()
       out_proj = dem_common.WGS84_PROJ4_STRING
 
+      if image_proj == '':
+         raise Exception('The file "{}" contains no '
+                         'projection information'.format(in_file))
       reprojected_bb = reproject_bounding_box(bounding_box,
                                           image_proj,
                                           out_proj)
@@ -1307,3 +1313,30 @@ def add_dem_metadata(dem_name, dem_source=None, dem_filename=None,
 
       # Close dataset
       dem_dataset = None
+
+def check_gdal_dataset(in_file):
+   """
+   Checks a dataset can be opened using GDAL.
+
+   Raises IOError if it can't.
+
+   Based on example from Even Rouault
+
+   https://lists.osgeo.org/pipermail/gdal-dev/2013-November/037520.html
+
+   Arguments:
+
+   * in_file - path to existing GDAL dataset.
+
+   """
+
+   if not HAVE_GDAL:
+      raise ImportError('Could not import GDAL')
+
+   gdal_ds = gdal.Open(in_file, gdal.GA_ReadOnly)
+   if gdal.GetLastErrorType() != 0:
+      raise IOError(gdal.GetLastErrorMsg())
+   gdal_ds = None
+
+
+

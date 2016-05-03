@@ -49,24 +49,28 @@ def create_patched_lidar_mosaic(in_lidar,
    Create patched mosaic of lidar files and optionally an additional DEM to fill
    in gaps.
 
+   Can also take a raster mosaic of LiDAR data and patch with a DEM.
+
    Used by the command line script 'create_dem_from_lidar.py'
 
    Arguments:
 
-   * in_lidar - list or directory of lidar files.
+   * in_lidar - list or directory of lidar files. Can also provide a raster as input.
    * outdem - output DEM.
    * in_lidar_projection - projection of input lidar files.
    * resolution - resolution to use when creating rasters from lidar files.
-   * lidar_format - format of lidar data (LAS / ASCII).
+   * lidar_format - format of lidar data (LAS / ASCII / RASTER).
    * out_projection - output projection of DEM.
    * screenshot - directory / file for screenshots.
    * shaded_relief_screenshots - create shaded relief (hillshade) screenshots.
+   * out_raster_type - Type of raster to generate (e.g., DTM, DSM)
    * dem_source - source of DEM to patch with lidar (ASTER / NEXTMAP).
    * dem_mosaic - dem mosaic to patch with lidar (if not using standard mosaics).
    * project - project directory, used to calculated DEM bounds for APL.
    * nav - path to navigation data file.
    * lidar_bounds - create patched DEM using lidar bounds plus buffer (for when hyperspectral navigation data is not available.
    * fill_lidar_nulls - fill null values in lidar data.
+
    """
 
    # Set up list to hold temp files
@@ -77,10 +81,6 @@ def create_patched_lidar_mosaic(in_lidar,
       # Check output directory exists. Will raise exception if not accessible
       dem_common_functions.CheckPathExistsAndIsWritable(
                                  os.path.split(os.path.abspath(outdem))[0])
-
-      # If a string is passed in convert to a list
-      if isinstance(in_lidar, str):
-         in_lidar = [in_lidar]
 
       # Input projection for lidar files
       in_lidar_projection = in_lidar_projection.upper()
@@ -193,16 +193,27 @@ def create_patched_lidar_mosaic(in_lidar,
          dem_common_functions.WARNING('Skipping filling NULL values in LiDAR data by interpolation as patching with DEM')
          fill_lidar_nulls = False
 
-      # Create DSM from individual lidar lines and patch together
-      create_lidar_mosaic(in_lidar,lidar_dem_mosaic,
-                     out_screenshot=lidar_screenshots,
-                     shaded_relief_screenshots=shaded_relief_screenshots,
-                     in_projection=in_lidar_projection,
-                     resolution=resolution,
-                     nodata=dem_common.NODATA_VALUE,
-                     lidar_format=lidar_format,
-                     raster_type=out_raster_type,
-                     fill_nulls=fill_lidar_nulls)
+      if lidar_format.upper() != 'RASTER':
+         # Create DEM from individual lidar lines and patch together
+         # If a string is passed in convert to a list
+         if isinstance(in_lidar, str):
+            in_lidar = [in_lidar]
+
+         create_lidar_mosaic(in_lidar,lidar_dem_mosaic,
+                             out_screenshot=lidar_screenshots,
+                             shaded_relief_screenshots=shaded_relief_screenshots,
+                             in_projection=in_lidar_projection,
+                             resolution=resolution,
+                             nodata=dem_common.NODATA_VALUE,
+                             lidar_format=lidar_format,
+                             raster_type=out_raster_type,
+                             fill_nulls=fill_lidar_nulls)
+
+      else:
+         # Check GDAL can open dataset (will raise exception if not)
+         dem_utilities.check_gdal_dataset(in_lidar)
+
+         lidar_dem_mosaic = in_lidar
 
       # Check if input projection is equal to output projection
       if in_lidar_projection != out_patched_projection:
