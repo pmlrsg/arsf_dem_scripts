@@ -24,7 +24,7 @@ For example::
    from arsf_dem import dem_lidar
 
    # Search current directory for all files ending matching '*.LAS'
-   in_las_list = glob.glob('*.[Ll][Aa[Ss]')
+   in_las_list = glob.glob('*.[Ll][Aa][Ss]')
 
    # Iterate through list of files found to create a raster for each line
    for in_las in in_las_list:
@@ -98,9 +98,14 @@ def _las_to_dem(in_las,out_raster,
 
    # If a list is passed in merge to a single LAS file
    if isinstance(in_las, list):
-      print('Multiple LAS files have been passed in - merging')
-      lastools_lidar.merge_las(in_las, tmp_las_file, drop_class=7)
-      in_las_merged = tmp_las_file
+      # Check if there is only one item in the list (will get this from
+      # argparse).
+      if len(in_las) == 1:
+         in_las_merged = in_las[0]
+      else:
+         print('Multiple LAS files have been passed in - merging')
+         lastools_lidar.merge_las(in_las, tmp_las_file, drop_class=7)
+         in_las_merged = tmp_las_file
    else:
       in_las_merged = in_las
 
@@ -321,3 +326,5 @@ def las_to_intensity(in_las,out_raster,
                projection=projection,
                demtype='INTENSITY',
                method=method)
+
+
