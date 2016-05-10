@@ -6,6 +6,12 @@ Functions for working with LiDAR data using SPDLib (http://spdlib.org/)
 
 Requires SPDLib to be installed.
 
+For more details about SPDLib see the following publications:
+
+Bunting, P., Armston, J., Lucas, R. M., & Clewley, D. (2013). Sorted pulse data (SPD) library. Part I: A generic file format for LiDAR data from pulsed laser systems in terrestrial environments. Computers and Geosciences, 56, 197-206. doi:10.1016/j.cageo.2013.01.019
+
+Bunting, P., Armston, J., Clewley, D., & Lucas, R. M. (2013). Sorted pulse data (SPD) library-Part II: A processing framework for LiDAR data from pulsed laser systems in terrestrial environments. Computers and Geosciences, 56, 207-215. doi:10.1016/j.cageo.2013.01.010
+
 """
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
@@ -342,20 +348,20 @@ def las_to_dsm(in_las, out_dsm,
 
    """
 
-   spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
+   spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd',
+                                                   dir=dem_common.TEMP_PATH)
 
    convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size, wkt=wkt)
-   spd_ground = spd_to_dsm(spdfile_tmp, out_dsm,
-                           interpolation=interpolation,
-                           out_raster_format=out_raster_format,
-                           bin_size=bin_size,
-                           keep_spd=keep_spd)
+   spd_to_dsm(spdfile_tmp, out_dsm,
+              interpolation=interpolation,
+              out_raster_format=out_raster_format,
+              bin_size=bin_size)
 
    os.close(spdfile_handler)
-   os.remove(spdfile_tmp)
    if keep_spd:
-      return spd_ground
+      return spdfile_tmp
    else:
+      os.remove(spdfile_tmp)
       return None
 
 def las_to_dtm(in_las, out_dtm,
@@ -390,10 +396,10 @@ def las_to_dtm(in_las, out_dtm,
 
    convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size, wkt=wkt)
    spdfile_grd_tmp = spd_to_dtm(spdfile_tmp, out_dtm,
-               interpolation=interpolation,
-               out_raster_format=out_raster_format,
-               bin_size=bin_size,
-               keep_spd=keep_spd)
+                                interpolation=interpolation,
+                                out_raster_format=out_raster_format,
+                                bin_size=bin_size,
+                                keep_spd=keep_spd)
 
    os.close(spdfile_handler)
    os.remove(spdfile_tmp)
