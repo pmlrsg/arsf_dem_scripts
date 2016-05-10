@@ -207,7 +207,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
 def merge_las(in_las_list, out_las_file,
               drop_class=None, keep_class=None, flags=None):
    """
-   Convert LAS files to ASCII using lasmerge tool.
+   Merge multiple LAS files into a single file using:
 
    http://www.cs.unc.edu/~isenburg/lastools/download/lasmerge_README.txt
 
@@ -226,7 +226,8 @@ def merge_las(in_las_list, out_las_file,
 
    """
    if not _checkFreeLAStools():
-      raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
+      raise Exception('Could not find LAStools, '
+                      'checked {}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
 
    lasmerge_cmd = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH,
                                 'lasmerge')]
