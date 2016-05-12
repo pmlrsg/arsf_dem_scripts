@@ -1052,7 +1052,8 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
                                               image_proj,
                                               out_proj)
       # Check the reprojected bounding box is a sensible size.
-      # Do this by converting height in m to degrees at equator.
+      # Do this by converting y-size of bounding box (in m) to degrees
+      # at equator.
       # Must use equator as latitude is what we want to check - also for
       # latitude makes no difference.
       in_x_size_m = max_x - min_x
