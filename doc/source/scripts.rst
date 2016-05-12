@@ -13,8 +13,8 @@ create_apl_dem
 .. code-block:: bash
 
    usage: create_apl_dem.py [-h] [-o Out DEM] [-n Nav file]
-                            [-p Main project directory] [--aster] [--nextmap]
-                            [--srtm] [--demmosaic Input DEM mosaic]
+                            [-p Main project directory]
+                            [--aster | --nextmap | --srtm | --demmosaic Input DEM mosaic]
                             [--separation_file Seperation file]
                             [-b BIL Navigation Files] [--keepgrassdb]
    
@@ -116,15 +116,15 @@ create_dem_from_lidar
 
    usage: create_dem_from_lidar.py [-h] -o Out DEM
                                    [-s Out Screenshot File or Directory]
-                                   [--shadedrelief] [--las] [--ascii]
+                                   [--shadedrelief] [--las | --ascii | --gridded]
                                    [-r Resolution]
                                    [--in_projection In Projection]
                                    [--out_projection Out Projection]
                                    [-n Nav file] [-p Main project directory]
-                                   [--demmosaic Input DEM mosaic] [--aster]
-                                   [--nextmap] [--srtm] [--hyperspectral_bounds]
-                                   [--lidar_bounds] [--fill_lidar_nulls]
-                                   [-t Output raster type] [--keepgrassdb]
+                                   [--demmosaic Input DEM mosaic | --aster | --nextmap | --srtm]
+                                   [--hyperspectral_bounds | --lidar_bounds]
+                                   [--fill_lidar_nulls] [-t Output raster type]
+                                   [--keepgrassdb]
                                    lidarfiles [lidarfiles ...]
    
    A script to create a DEM from LiDAR data in LAS or ASCII format and optionally patch with a DEM
@@ -173,6 +173,8 @@ create_dem_from_lidar
      --shadedrelief        Create shaded relief images for screenshots
      --las                 Input LiDAR data are in LAS format (default=True)
      --ascii               Input LiDAR data are in ASCII format (default=False)
+     --gridded             Input LiDAR data are in a gridded (raster) format
+                           (default=False)
      -r Resolution, --resolution Resolution
                            Resolution for output DEM (default=2)
      --in_projection In Projection
@@ -204,7 +206,7 @@ create_dem_from_lidar
      --lidar_bounds        If patching with another DEM, get extent from lidar
                            data plus default buffer of 2000.0 m. If DEM is not
                            required to be used with APL this option is
-                           recommended.
+                           recommended
      --fill_lidar_nulls    Fill NULL values in LiDAR data using interpolation.
                            Not available if patching with another DEM
      -t Output raster type, --rastertype Output raster type
@@ -221,9 +223,9 @@ las_to_dsm
    usage: las_to_dsm.py [-h] -o Out DEM [--hillshade Out Hillshade]
                         [-r Resolution] [--projection In Projection]
                         [--method Method]
-                        lasfile
+                        lasfile [lasfile ...]
    
-   Create a Digital Surface Model (DSM) from a LAS file.
+   Create a Digital Surface Model (DSM) from a LAS file(s).
    
    'las_to_dsm' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
    and is made available under the terms of the GPLv3 license.
@@ -232,7 +234,7 @@ las_to_dsm
    consult their respective documentation for more details.
    
    positional arguments:
-     lasfile               Input LAS file
+     lasfile               Input LAS file(s)
    
    optional arguments:
      -h, --help            show this help message and exit
@@ -257,9 +259,9 @@ las_to_dtm
    usage: las_to_dtm.py [-h] -o Out DEM [--hillshade Out Hillshade]
                         [-r Resolution] [--projection In Projection]
                         [--method Method]
-                        lasfile
+                        lasfile [lasfile ...]
    
-   Create a Digital Terrain Model (DTM) from a LAS file.
+   Create a Digital Terrain Model (DTM) from a LAS file(s).
    
    'las_to_dtm' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
    and is made available under the terms of the GPLv3 license.
@@ -268,7 +270,7 @@ las_to_dtm
    consult their respective documentation for more details.
    
    positional arguments:
-     lasfile               Input LAS file
+     lasfile               Input LAS file(s)
    
    optional arguments:
      -h, --help            show this help message and exit
@@ -317,6 +319,41 @@ las_to_intensity
    
 
 
+spdlib_create_dem_from_las
+----------------------------
+
+.. code-block:: bash
+
+   usage: spdlib_create_dems_from_las.py [-h] -o OUT_DIR [-r RESOLUTION]
+                                         --projection PROJECTION [--chm]
+                                         lasfile [lasfile ...]
+   
+   Create a Digital Terrain Model (DTM), Digital Surface Model (DSM) and
+   optionally Canopy Height Model (CHM) from LAS file(s). Uses SPDLib. SPDLib is
+   available under a GPLv3 license. For more details see: http://spdlib.org/
+   Bunting, P., Armston, J., Clewley, D., & Lucas, R. M. (2013). Sorted pulse
+   data (SPD) library-Part II: A processing framework for LiDAR data from pulsed
+   laser systems in terrestrial environments. Computers and Geosciences, 56,
+   207-215. doi:10.1016/j.cageo.2013.01.010 'spdlib_create_dems_from_las' was
+   created by ARSF-DAN at Plymouth Marine Laboratory (PML) and is made available
+   under the terms of the GPLv3 license.
+   
+   positional arguments:
+     lasfile               Input LAS file
+   
+   optional arguments:
+     -h, --help            show this help message and exit
+     -o OUT_DIR, --out_dir OUT_DIR
+                           Base output directory. Will create subdirectories for
+                           "dsm", "dtm" and "chm" within this
+     -r RESOLUTION, --resolution RESOLUTION
+                           Resolution for output DEM (Default=2)
+     --projection PROJECTION
+                           Input projection (e.g., UTM30N)
+     --chm                 Export raster Canopy Height Model (CHM)
+   
+
+
 mosaic_dem_tiles
 ------------------
 
@@ -349,7 +386,7 @@ load_lidar_to_grass
 
    usage: load_lidar_to_grass.py [-h] [-r Resolution]
                                  [--projection In Projection]
-                                 [-t Output raster type]
+                                 [-t Output raster type] [--vector]
                                  lidarfiles [lidarfiles ...]
    
    Load LiDAR files into GRASS for further processing.
@@ -387,6 +424,9 @@ load_lidar_to_grass
                            Raster type - determines the lidar returns to load
                            into GRASS. For all select DEM (default), for first
                            only select DSM, for last only select DTM.
+     --vector              Load points as vector. WARNING - this can require a
+                           lot of memory ensure sufficient RAM is available
+                           before using this options
    
 
 
