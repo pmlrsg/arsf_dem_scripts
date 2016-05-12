@@ -260,7 +260,7 @@ def create_patched_lidar_mosaic(in_lidar,
                                  ascii_separation_file=ascii_separation_file,
                                  in_dem_projection=grass_library.grass_location_to_proj4(in_dem_mosaic_projection),
                                  out_projection=grass_library.grass_location_to_proj4(out_patched_projection),
-                                 nodata=nodata_value,
+                                 nodata=dem_common.NODATA_VALUE,
                                  out_res=None,
                                  remove_grassdb=True,
                                  fill_nulls=True)
@@ -272,7 +272,8 @@ def create_patched_lidar_mosaic(in_lidar,
          if not subset_to_navigation or (subset_to_navigation and subset_to_nav_failed):
             print('Getting bounding box from LiDAR mosaic')
             # Get bounding box from output lidar mosaic
-            lidar_bb = dem_utilities.get_gdal_dataset_bb(lidar_dem_mosaic, output_ll=True)
+            lidar_bb = dem_utilities.get_gdal_dataset_bb(lidar_dem_mosaic,
+                                                         output_ll=True)
             buffered_lidar_bb = get_lidar_buffered_bb(lidar_bb)
 
             dem_utilities.subset_dem_to_bounding_box(in_dem_mosaic,

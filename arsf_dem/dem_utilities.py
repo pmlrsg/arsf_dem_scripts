@@ -1276,6 +1276,8 @@ def add_dem_metadata(dem_name, dem_source=None, dem_filename=None,
    if get_gdal_type_from_path(dem_name) == 'ENVI':
       # Get ENVI header (using GDAL filelist function)
       dem_dataset  = gdal.Open(dem_name, gdal.GA_ReadOnly)
+      if dem_dataset is None:
+         raise Exception('Could not open {}'.format(dem_name))
       dem_header = dem_dataset.GetFileList()[1]
       dem_dataset = None
 
