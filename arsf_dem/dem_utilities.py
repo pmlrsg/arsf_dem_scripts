@@ -1055,8 +1055,31 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
          raise Exception('The file "{}" contains no '
                          'projection information'.format(in_file))
       reprojected_bb = reproject_bounding_box(bounding_box,
-                                          image_proj,
-                                          out_proj)
+                                              image_proj,
+                                              out_proj)
+      # Check the reprojected bounding box is a sensible size.
+      # Do this by converting y-size of bounding box (in m) to degrees
+      # at equator.
+      # Must use equator as latitude is what we want to check - also for
+      # latitude makes no difference.
+      in_x_size_m = max_x - min_x
+      in_y_size_m = max_y - min_y
+      out_y_size_deg = reprojected_bb[1] - reprojected_bb[0]
+
+      check_x_size_deg, check_y_size_deg = m_to_deg(0, in_x_size_m,
+                                                    in_y_size_m)
+
+      # Can't do exact comparison as 'm_to_deg' is less accurate but if
+      # the difference is more than 50 % is very likely to be a problem
+      if out_y_size_deg > (check_y_size_deg * 1.5) or \
+         out_y_size_deg < (check_y_size_deg * 0.5):
+         print('Input bounding box (from image):')
+         print(bounding_box)
+         print('Output bounding box (reprojected):')
+         print(reprojected_bb)
+         raise Exception('Reprojected bounding box is larger than expected.\n'
+                         'Check correct projection has been provided')
+
       bounding_box = reprojected_bb
 
    # Close dataset
