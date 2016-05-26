@@ -201,12 +201,14 @@ def _las_to_dem(in_las,out_raster,
          points2grid_lidar.las_to_dsm(in_las_merged, out_raster,
                               resolution=resolution,
                               projection=wkt_tmp,
-                              grid_method='idw')
+                              grid_method='idw',
+                              fill_window_size=7)
       elif demtype.upper() == 'DTM':
          points2grid_lidar.las_to_dtm(in_las_merged, out_raster,
                               resolution=resolution,
                               projection=wkt_tmp,
-                              grid_method='idw')
+                              grid_method='idw',
+                              fill_window_size=7)
       else:
          raise Exception('DEM Type not recognised - options are DSM or DTM')
 
