@@ -101,6 +101,8 @@ def _las_to_dem(in_las,out_raster,
       # Check if there is only one item in the list (will get this from
       # argparse).
       if len(in_las) == 1:
+         if not os.path.isfile(in_las[0]):
+            raise Exception('The file "{}" does not exist'.format(in_las[0]))
          in_las_merged = in_las[0]
       else:
          print('Multiple LAS files have been passed in - merging')

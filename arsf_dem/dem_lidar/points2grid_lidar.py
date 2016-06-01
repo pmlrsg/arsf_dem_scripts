@@ -21,7 +21,7 @@ import tempfile
 # Import common files
 from .. import dem_common
 from .. import dem_common_functions
-from .. import dem_utilities
+from .. import get_gdal_drivers
 
 def _checkPoints2Grid():
    """
@@ -56,9 +56,18 @@ def export_ascii_raster(points2dem_outfile, out_raster,
       shutil.copy(in_raster, out_raster)
    # Otherwise use gdal_translate
    else:
-      out_raster_format = dem_utilities.get_gdal_type_from_path(out_raster)
+      # Set output options
+      out_ext = os.path.splitext(out_raster)[-1]
+      out_format = get_gdal_drivers.GDALDrivers().get_driver_from_ext(out_ext)
+      out_options = \
+      get_gdal_drivers.GDALDrivers().get_creation_options_from_ext(out_ext)
+
       gdal_translate_cmd = ['gdal_translate',
-                            '-of',out_raster_format]
+                            '-of',out_format]
+      # If there are creation options add these
+      for creation_option in out_options:
+         gdal_translate_cmd.extend(['-co', creation_option])
+
       if projection is not None:
          gdal_translate_cmd.extend(['-a_srs',projection])
 
