@@ -429,6 +429,122 @@ def patch_files(in_file_list,
    else:
       return patched_name, grassdb_path
 
+def replace_nodata_val(in_demfile, out_demfile=None,
+                       import_to_grass=True,
+                       innodata=-9999,
+                       outnodata=dem_common.NODATA_VALUE,
+                       out_raster_type=dem_common.GDAL_OUTFILE_DATATYPE,
+                       projection=None,
+                       remove_grassdb=True,
+                       grassdb_path=None):
+   """
+   Replaces nodata value in image with another value
+
+   Arguments:
+
+   * in_demfile - Input DEM.
+   * out_demfile - Output DEM, if 'None', won't export from GRASS
+                   database.
+   * innodata - Input no data value
+   * outnodata - No data value
+   * out_raster_type - GDAL datatype for output raster (e.g., Float32)
+   * projection - Projection to use (e.g., UKBNG) if not supplied will get from 'in_demfile'.
+   * remove_grassdb - Remove GRASS database after processing is complete.
+   * grassdb_path - Input path to GRASS database, if not supplied will create one.
+
+   Returns:
+
+   * out_demfile path / out_demfile name in GRASS database
+   * path to GRASS database / None
+
+   """
+
+   # Set projection based on input file
+   in_proj = None
+   if projection is None:
+      # If not importing to grass only a list of
+      # names, not files.
+      if import_to_grass:
+         in_proj = grass_library.getGRASSProjFromGDAL(in_demfile)
+      if in_proj is None:
+         dem_common_functions.WARNING('No projection supplied and could not determine projection from any input files.')
+         dem_common_functions.WARNING('Assuming "WGS84LL".')
+         in_proj = 'WGS84LL'
+   else:
+      in_proj = projection
+
+   # Get output format from file extension
+   if out_demfile is not None:
+      out_raster_format = get_gdal_type_from_path(out_demfile)
+   else:
+      out_raster_format = dem_common.GDAL_OUTFILE_FORMAT
+
+   if grassdb_path is None and not import_to_grass:
+      raise Exception('No "grassdb_path" supplied but "import_to_grass" set to False.' +
+                        'If file is already in GRASS supply path, else set "import_to_grass" to True')
+
+   # Set up grass path
+   if grassdb_path is None:
+      grassdb_path = grass_library.grassDBsetup()
+   else:
+      location = projection
+      mapset   = 'PERMANENT'
+      grass.setup.init(dem_common.GRASS_LIB_PATH,
+                       grassdb_path,
+                       location,
+                       mapset)
+
+   grass_library.setLocation(in_proj)
+
+   # Import DEM into GRASS
+   demname = os.path.basename(in_demfile).replace("-","_")
+
+   print('Importing DEM')
+   if import_to_grass:
+      grass.run_command('r.external',
+                        input = in_demfile,
+                        output=demname,
+                        flags='e',
+                        overwrite=True)
+
+   else:
+      demname = in_demfile
+
+   # Check file exists
+   if not grass_library.checkFileExists(demname):
+      raise Exception('Could not find {} in GRASS database'.format(demname))
+
+   # Set region
+   grass_library.SetRegion(rast=demname)
+
+   replace_nodata_name = 'nodata_replace'
+
+   # Replace no-data values
+   grass.mapcalc('{0}=if({1} == {2},{3},{1})'.format(replace_nodata_name,
+                                                     demname,
+                                                     innodata,
+                                                     outnodata),
+                 overwrite=True)
+   # Export
+   if out_demfile is not None:
+      print('Exporting')
+      grass.run_command('r.out.gdal',
+                        format=out_raster_format,
+                        type=out_raster_type,
+                        input=replace_nodata_name,
+                        output=out_demfile,
+                        nodata=outnodata,
+                        overwrite=True)
+      remove_gdal_aux_file(out_demfile)
+
+  # Remove GRASS database created
+   if remove_grassdb:
+      shutil.rmtree(grassdb_path)
+      return out_demfile, None
+   else:
+      return replace_nodata_name, grassdb_path
+
+
 def subset_dem_to_bounding_box(in_dem_mosaic,
                      out_demfile,
                      bounding_box,
@@ -1045,18 +1161,27 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
 
    bounding_box = [min_y,max_y, min_x,max_x]
 
-   if output_ll:
-      spatial_ref = osr.SpatialReference()
-      spatial_ref.ImportFromWkt(projection)
-      image_proj = spatial_ref.ExportToProj4()
-      out_proj = dem_common.WGS84_PROJ4_STRING
+   # Import projections to SpatialReference class
+   image_spatial_ref = osr.SpatialReference()
+   image_spatial_ref.ImportFromWkt(projection)
+   image_proj = image_spatial_ref.ExportToProj4()
+
+   out_proj = dem_common.WGS84_PROJ4_STRING
+   out_spatial_ref = osr.SpatialReference()
+   out_spatial_ref.ImportFromWkt(out_proj)
+
+   # Check if output in WGS84LL has been selected and this isn't the
+   # same as the input
+   if output_ll and out_spatial_ref.IsSame(image_spatial_ref):
 
       if image_proj == '':
          raise Exception('The file "{}" contains no '
                          'projection information'.format(in_file))
+
       reprojected_bb = reproject_bounding_box(bounding_box,
                                               image_proj,
                                               out_proj)
+
       # Check the reprojected bounding box is a sensible size.
       # Do this by converting y-size of bounding box (in m) to degrees
       # at equator.
@@ -1100,6 +1225,7 @@ def remove_gdal_aux_file(in_file):
    * None
 
    """
+
    aux_file = in_file + '.aux.xml'
 
    if os.path.isfile(aux_file):

@@ -230,12 +230,13 @@ def create_patched_lidar_mosaic(in_lidar,
                 s_srs=grass_library.grass_location_to_proj4(in_lidar_projection),
                 t_srs=grass_library.grass_location_to_proj4(out_patched_projection))
 
+         # Get no data value from LiDAR
+         lidar_mosaic_nodata = dem_utilities.get_nodata_value(lidar_dem_mosaic)
          # Check if a vertical datum shift is required.
          # At the moment only consider UKBNG to WGS84LL
          if in_lidar_projection == 'UKBNG' and out_patched_projection == 'WGS84LL':
             print('Applying vertical offset to LiDAR mosaic')
             # Get nodata value for mosaic
-            lidar_mosaic_nodata = dem_utilities.get_nodata_value(lidar_dem_mosaic)
             # Apply offset
             dem_utilities.offset_null_fill_dem(temp_lidar_dem, temp_lidar_dem,
                                                import_to_grass=True,
@@ -244,7 +245,19 @@ def create_patched_lidar_mosaic(in_lidar,
                                                fill_nulls=False,
                                                nodata=lidar_mosaic_nodata,
                                                remove_grassdb=False)
-         lidar_dem_mosaic = temp_lidar_dem
+            lidar_dem_mosaic = temp_lidar_dem
+         # If the LiDAR data has a different nodata value replace - save
+         # using two different values for LiDAR and ASTER mosaic
+         # Applying vertical offset will automatically do this.
+         elif patch_with_dem and lidar_mosaic_nodata != dem_common.NODATA_VALUE:
+            print('Replacing no data values of {} with '
+                  '{}'.format(lidar_mosaic_nodata, dem_common.NODATA_VALUE))
+            dem_utilities.replace_nodata_val(temp_lidar_dem, temp_lidar_dem,
+                                             import_to_grass=True,
+                                             innodata=lidar_mosaic_nodata,
+                                             outnodata=dem_common.NODATA_VALUE,
+                                             remove_grassdb=False)
+            lidar_dem_mosaic = temp_lidar_dem
 
       if patch_with_dem:
          print('')
