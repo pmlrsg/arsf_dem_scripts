@@ -1225,11 +1225,34 @@ def remove_gdal_aux_file(in_file):
    * None
 
    """
-
    aux_file = in_file + '.aux.xml'
 
-   if os.path.isfile(aux_file):
-      os.remove(aux_file)
+   # If there is no .aux.xml file, can just return
+   if not os.path.isfile(aux_file):
+      return None
+
+   # For ENVI files make sure relevant data (e.g., nodata values)
+   # are copied to header file
+   if get_gdal_type_from_path(in_file) == 'ENVI':
+      no_data_val = get_nodata_value(in_file)
+
+      if no_data_val is not None:
+         in_file_ds  = gdal.Open(in_file, gdal.GA_ReadOnly)
+         if in_file_ds is None:
+            raise Exception('Could not open {} using GDAL'.format(in_file))
+         in_file_header = None
+         for component_file in in_file_ds.GetFileList():
+            if component_file.endswith('.hdr'):
+               in_file_header = component_file
+         if in_file_header is None:
+            raise Exception('Could not find header for {}'.format(in_file))
+         in_file_ds = None
+
+         # Open header and append text to bottom
+         with open(in_file_header,'a') as f:
+            f.write('data ignore value = {}\n'.format(no_data_val))
+
+   os.remove(aux_file)
 
 def reproject_bounding_box(in_bounding_box,
                            in_projection,
@@ -1505,11 +1528,5 @@ def get_nodata_value(in_file):
 
    gdal_ds = gdal.Open(in_file, gdal.GA_ReadOnly)
    nodata = gdal_ds.GetRasterBand(1).GetNoDataValue()
-
-   if nodata is None:
-      dem_common_functions.WARNING('Dataset does not have nodata value set '
-                                   'using default '
-                                   'of {}'.format(dem_common.NODATA_VALUE))
-      nodata = dem_common.NODATA_VALUE
 
    return nodata

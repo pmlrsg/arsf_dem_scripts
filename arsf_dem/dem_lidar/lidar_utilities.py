@@ -232,6 +232,8 @@ def create_patched_lidar_mosaic(in_lidar,
 
          # Get no data value from LiDAR
          lidar_mosaic_nodata = dem_utilities.get_nodata_value(lidar_dem_mosaic)
+         if lidar_dem_mosaic is None:
+            lidar_mosaic_nodata = dem_common.NODATA_VALUE
          # Check if a vertical datum shift is required.
          # At the moment only consider UKBNG to WGS84LL
          if in_lidar_projection == 'UKBNG' and out_patched_projection == 'WGS84LL':

@@ -221,6 +221,11 @@ def _las_to_dem(in_las,out_raster,
    else:
       raise Exception('Invalid method "{}", expected GRASS, SPDLIB or LASTOOLS'.format(method))
 
+   # If an ENVI file remove .aux.xml file GDAL creates. This function will copy
+   # any relevant parameters (e.g., no data value) to the .hdr file
+   if out_raster_format == 'ENVI':
+      dem_utilities.remove_gdal_aux_file(out_raster)
+
    os.close(tmp_las_handler)
    os.remove(tmp_las_file)
 
