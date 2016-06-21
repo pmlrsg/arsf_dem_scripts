@@ -58,6 +58,19 @@ def get_config_int_fallback(config, section, option, fallback=None):
    except:
       return fallback
 
+def get_config_bool_fallback(config, section, option, fallback=None):
+   """
+   Try to get config parameter as bool, in case of error
+   default to fallback value.
+
+   If we move to Python3 can remove this as and just replace with getboolean
+   which will accept a fallback value
+   """
+   try:
+      return config.getboolean(config,section,option)
+   except:
+      return fallback
+
 
 # Functions to try and get paths for files
 def get_grass_lib_path():
@@ -167,6 +180,24 @@ def get_temp_path():
 
    return TEMP_PATH
 
+def get_debug():
+   """
+   Function to check if DEM_SCRIPTS_DEBUG environmental variable has been set
+
+   If it has been set to yes, true or 1 returns True, else returns false.
+   """
+   DEBUG = False
+
+   try:
+      debug_val = os.environ['DEM_SCRIPTS_DEBUG']
+      if debug_val.upper() == 'YES' or debug_val.upper() == 'TRUE' \
+         or debug_val == '1':
+         DEBUG = True
+   except KeyError:
+      pass
+
+   return DEBUG
+
 def get_lastools_path():
    """
    Function to get path to LAStools
@@ -272,6 +303,9 @@ if not read_config:
 
 #: Temporary path
 TEMP_PATH = get_config_fallback(config,'system','TEMP_PATH',fallback=get_temp_path())
+
+#: DEBUG mode
+DEBUG = get_config_bool_fallback(config,'system','DEBUG',fallback=get_debug())
 
 #: Path for GRASS Library
 GRASS_LIB_PATH = get_config_fallback(config,'grass','GRASS_LIB_PATH',fallback=None)

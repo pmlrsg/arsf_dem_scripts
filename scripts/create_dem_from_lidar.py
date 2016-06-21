@@ -25,7 +25,7 @@ except ImportError as err:
    sys.exit(1)
 
 #: Debug mode
-DEBUG = False
+DEBUG = dem_common.DEBUG
 
 if __name__ == '__main__':
    description_str = '''A script to create a DEM from LiDAR data in LAS or ASCII format and optionally patch with a DEM
