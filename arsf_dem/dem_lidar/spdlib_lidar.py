@@ -22,6 +22,7 @@ import tempfile
 # Import common files
 from .. import dem_common
 from .. import dem_common_functions
+from .. import dem_utilities
 
 def _checkSPDLib():
    """Check if SPDLib is installed."""
@@ -187,6 +188,8 @@ def _spd_to_raster(in_spd, out_raster,
 
    subprocess.check_call(dem_cmd)
 
+   # Set nodata value (SPDLib uses nan but doesn't explicitly set as no data)
+   dem_utilities.set_nodata_value(out_raster, float('NaN'))
 
 def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,

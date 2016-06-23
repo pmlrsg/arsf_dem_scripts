@@ -33,6 +33,8 @@ Available functions:
 * get_gdal_type_from_path - gets GDAL format string from file name.
 * add_dem_metadata - adds metadata to DEM.
 * check_gdal_dataset - checks a dataset can be opened using GDAL.
+* get_nodata_value - gets the nodata value for a GDAL dataset
+* set_nodata_value - sets the nodata value for a GDAL dataset
 
 """
 
@@ -1521,6 +1523,7 @@ def get_nodata_value(in_file):
    Arguments:
 
    * in_file - path to existing GDAL dataset.
+
    """
 
    if not HAVE_GDAL:
@@ -1528,5 +1531,24 @@ def get_nodata_value(in_file):
 
    gdal_ds = gdal.Open(in_file, gdal.GA_ReadOnly)
    nodata = gdal_ds.GetRasterBand(1).GetNoDataValue()
+   gdal_ds = None
 
    return nodata
+
+def set_nodata_value(in_file, nodata_value):
+   """
+   Sets nodata value for the first band of a GDAL dataset.
+
+   Arguments:
+
+   * in_file - path to existing GDAL dataset.
+   * nodata_value - nodata value
+
+   """
+
+   if not HAVE_GDAL:
+      raise ImportError('Could not import GDAL')
+
+   gdal_ds = gdal.Open(in_file, gdal.GA_ReadOnly)
+   gdal_ds.GetRasterBand(1).SetNoDataValue(nodata_value)
+   gdal_ds = None
