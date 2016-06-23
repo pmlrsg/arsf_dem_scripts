@@ -56,8 +56,12 @@ from .. import dem_utilities
 from .. import dem_common_functions
 from .. import grass_library
 
+#: Methods which can create a DEM from LAS files
 LAS_TO_DEM_METHODS = ['GRASS','SPDLib','LAStools','FUSION','points2grid']
+#: Methods which can create an intensity image from LAS files
 LAS_TO_INTENSITY_METHODS = ['GRASS', 'LAStools']
+#: Methods which can't filter out noisy points in LAS files and require these to be removed first
+METHODS_REQUIRE_LAS_NOISE_REMOVAL = ['SPDLib']
 
 def _las_to_dem(in_las,out_raster,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
@@ -103,7 +107,15 @@ def _las_to_dem(in_las,out_raster,
       if len(in_las) == 1:
          if not os.path.isfile(in_las[0]):
             raise Exception('The file "{}" does not exist'.format(in_las[0]))
-         in_las_merged = in_las[0]
+         elif method.upper() in [s.upper() for s in METHODS_REQUIRE_LAS_NOISE_REMOVAL]:
+            # If method can't filter LAS files do this first
+            # use merge_las function.
+            print('Creating LAS file with noise points removed.'
+                  ' Required for {}'.format(method))
+            lastools_lidar.merge_las(in_las, tmp_las_file, drop_class=7)
+            in_las_merged = tmp_las_file
+         else:
+            in_las_merged = in_las[0]
       else:
          print('Multiple LAS files have been passed in - merging')
          lastools_lidar.merge_las(in_las, tmp_las_file, drop_class=7)

@@ -113,7 +113,7 @@ Bunting, P., Armston, J., Clewley, D., & Lucas, R. M. (2013). Sorted pulse data
       grass_library.grass_location_to_wkt(args.projection, wkt_tmp)
       # Merge LAS files (if multiple are passed in) and drop
       # class 7
-      # Currently SPDLib doesn't ignore points flagges as noise so
+      # SPDLib doesn't ignore points flagged as noise so
       # need to create LAS file without class 7 anyway - merge command is
       # easiest way to do this.
       args.lasfile = [os.path.abspath(f) for f in args.lasfile]
