@@ -28,7 +28,7 @@ except ImportError as err:
    sys.exit(1)
 
 #: Debug mode
-DEBUG = True
+DEBUG = dem_common.DEBUG
 
 def load_files_to_grass(in_lidar_files,
                         in_projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,

@@ -37,6 +37,8 @@ las_to_dtm_out = get_command_out(['las_to_dtm.py','-h'])
 las_to_intensity_out = get_command_out(['las_to_intensity.py','-h'])
 mosaic_dem_tiles_out = get_command_out(['mosaic_dem_tiles.py','-h'])
 load_lidar_to_grass_out = get_command_out(['load_lidar_to_grass.py','-h'])
+spdlib_create_dem_from_las_out = get_command_out(
+                                    ['spdlib_create_dems_from_las.py', '-h'])
 
 scripts_text = '''
 
@@ -82,6 +84,13 @@ las_to_intensity
 
 {}
 
+spdlib_create_dem_from_las
+----------------------------
+
+.. code-block:: bash
+
+{}
+
 mosaic_dem_tiles
 ------------------
 
@@ -101,6 +110,7 @@ load_lidar_to_grass
            las_to_dsm_out,
            las_to_dtm_out,
            las_to_intensity_out,
+           spdlib_create_dem_from_las_out,
            mosaic_dem_tiles_out,
            load_lidar_to_grass_out)
 

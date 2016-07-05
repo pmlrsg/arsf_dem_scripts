@@ -80,16 +80,25 @@ and is made available under the terms of the GPLv3 license.
                           help='Create shaded relief images for screenshots',
                           default=False,
                           required=False)
-      parser.add_argument('--las',
-                          action='store_true',
-                          help='Input LiDAR data are in LAS format (default=True)',
-                          default=True,
-                          required=False)
-      parser.add_argument('--ascii',
-                          action='store_true',
-                          help='Input LiDAR data are in ASCII format (default=False)',
-                          default=False,
-                          required=False)
+      lidar_group = parser.add_mutually_exclusive_group()
+      lidar_group.add_argument('--las',
+                               action='store_true',
+                               help='Input LiDAR data are in LAS format '
+                                    '(default=True)',
+                               default=True,
+                               required=False)
+      lidar_group.add_argument('--ascii',
+                               action='store_true',
+                               help='Input LiDAR data are in ASCII format '
+                                    '(default=False)',
+                               default=False,
+                               required=False)
+      lidar_group.add_argument('--gridded',
+                               action='store_true',
+                               help='Input LiDAR data are in a gridded (raster)'
+                                    ' format (default=False)',
+                               default=False,
+                               required=False)
       parser.add_argument('-r', '--resolution',
                           metavar ='Resolution',
                           help ='Resolution for output DEM (default={})'.format(dem_common.DEFAULT_LIDAR_RES_METRES),
@@ -115,38 +124,52 @@ and is made available under the terms of the GPLv3 license.
                           help ='Main project directory, used if patching with another DEM',
                           default='.',
                           required=False)
-      parser.add_argument('--demmosaic',
-                          metavar ='Input DEM mosaic',
-                          help ='''Input DEM mosaic to patch with in GDAL compatible format. Vertical datum needs to be the same
-                                   as output projection.
-                                   Only required for non-standard DEM. Use "--aster" or "--nextmap" for standard DEMs.''',
-                          required=False,
-                          default=None)
-      parser.add_argument('--aster',
-                          action='store_true',
-                          help='Patch with ASTER data ({})'.format(dem_common.ASTER_MOSAIC_FILE),
-                          default=False,
-                          required=False)
-      parser.add_argument('--nextmap',
-                          action='store_true',
-                          help='Patch with Nextmap data ({})'.format(dem_common.NEXTMAP_MOSAIC_FILE),
-                          default=False,
-                          required=False)
-      parser.add_argument('--srtm',
-                          action='store_true',
-                          help='Use SRTM data ({})'.format(dem_common.SRTM_MOSAIC_FILE),
-                          default=False,
-                          required=False)
-      parser.add_argument('--hyperspectral_bounds',
-                          action='store_true',
-                          help='''If patching with another DEM, get extent from hyperspectral navigation data,
-                                  recommended if DEM is to be used with APL and navigation data are available. This is the default behaviour''',
-                          default=False,
-                          required=False)
-      parser.add_argument('--lidar_bounds',
-                          action='store_true',
-                          help='''If patching with another DEM, get extent from lidar data plus default buffer of {} m.
-                                  If DEM is not required to be used with APL this option is recommended.'''.format(dem_common.DEFAULT_LIDAR_DEM_BUFFER['N']),
+      dem_group = parser.add_mutually_exclusive_group()
+      dem_group.add_argument('--demmosaic',
+                             metavar ='Input DEM mosaic',
+                             help ='Input DEM mosaic to patch with in GDAL '
+                                   'compatible format. Vertical datum needs '
+                                   'to be the same as output projection. '
+                                   'Only required for non-standard DEM. '
+                                   'Use "--aster" or "--nextmap" for '
+                                   'standard DEMs.',
+                             required=False,
+                             default=None)
+      dem_group.add_argument('--aster',
+                             action='store_true',
+                             help='Patch with ASTER data '
+                                  '({})'.format(dem_common.ASTER_MOSAIC_FILE),
+                             default=False,
+                             required=False)
+      dem_group.add_argument('--nextmap',
+                             action='store_true',
+                             help='Patch with Nextmap data '
+                                  ' ({})'.format(dem_common.NEXTMAP_MOSAIC_FILE),
+                             default=False,
+                             required=False)
+      dem_group.add_argument('--srtm',
+                             action='store_true',
+                             help='Use SRTM data '
+                                  '({})'.format(dem_common.SRTM_MOSAIC_FILE),
+                             default=False,
+                             required=False)
+      bounds_group = parser.add_mutually_exclusive_group()
+      bounds_group.add_argument('--hyperspectral_bounds',
+                                action='store_true',
+                                help='If patching with another DEM, get extent '
+                                     'from hyperspectral navigation data, '
+                                     'recommended if DEM is to be used with APL '
+                                     'and navigation data are available. '
+                                     'This is the default behaviour''',
+                                default=False,
+                                required=False)
+      bounds_group.add_argument('--lidar_bounds',
+                                action='store_true',
+                                help='If patching with another DEM, get extent '
+                                     'from lidar data plus default buffer of '
+                                     '{} m. If DEM is not required to be used '
+                                     'with APL this option is recommended'
+                                     ''.format(dem_common.DEFAULT_LIDAR_DEM_BUFFER['N']),
                           default=False,
                           required=False)
       parser.add_argument('--fill_lidar_nulls',
@@ -171,7 +194,8 @@ and is made available under the terms of the GPLv3 license.
       lidar_format = 'LAS'
       if args.ascii:
          lidar_format = 'ASCII'
-
+      if args.gridded:
+         lidar_format = 'GRIDDED' 
       # Set source DEM (if patching)
       # ASTER DEM
       if args.aster:
@@ -185,7 +209,7 @@ and is made available under the terms of the GPLv3 license.
       else:
          dem_source = None
 
-      # Set if hypersectral bounds are to be used or lidar
+      # Set if hyperspectral bounds are to be used or lidar
       if args.lidar_bounds:
          use_lidar_bounds = True
       else:
@@ -201,6 +225,7 @@ and is made available under the terms of the GPLv3 license.
                                                 args.outdem,
                                                 in_lidar_projection=in_lidar_projection,
                                                 resolution=args.resolution,
+                                                lidar_format=lidar_format,
                                                 out_projection=args.out_projection,
                                                 screenshot=args.screenshot,
                                                 shaded_relief_screenshots=args.shadedrelief,

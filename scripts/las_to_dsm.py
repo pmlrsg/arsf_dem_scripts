@@ -28,7 +28,7 @@ except ImportError as err:
 DEBUG = dem_common.DEBUG
 
 if __name__ == '__main__':
-   description_str = '''Create a Digital Surface Model (DSM) from a LAS file.
+   description_str = '''Create a Digital Surface Model (DSM) from a LAS file(s).
 
 'las_to_dsm' was created by ARSF-DAN at Plymouth Marine Laboratory (PML)
 and is made available under the terms of the GPLv3 license.
@@ -40,7 +40,8 @@ consult their respective documentation for more details.
 
    try:
       parser = argparse.ArgumentParser(description=description_str,formatter_class=argparse.RawDescriptionHelpFormatter)
-      parser.add_argument("lasfile", nargs=1,type=str, help="Input LAS file")
+      parser.add_argument("lasfile", nargs="+",type=str,
+                          help="Input LAS file(s)")
       parser.add_argument('-o', '--outdem',
                           metavar ='Out DEM',
                           help ='Output name for DTM',
@@ -67,7 +68,7 @@ consult their respective documentation for more details.
                           required=False)
       args=parser.parse_args()
 
-      dem_lidar.las_to_dsm(args.lasfile[0], args.outdem,
+      dem_lidar.las_to_dsm(args.lasfile, args.outdem,
                            resolution=args.resolution,
                            projection=args.projection,
                            method=args.method)

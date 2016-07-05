@@ -49,24 +49,28 @@ def create_patched_lidar_mosaic(in_lidar,
    Create patched mosaic of lidar files and optionally an additional DEM to fill
    in gaps.
 
+   Can also take a raster mosaic of LiDAR data and patch with a DEM.
+
    Used by the command line script 'create_dem_from_lidar.py'
 
    Arguments:
 
-   * in_lidar - list or directory of lidar files.
+   * in_lidar - list or directory of lidar files. Can also provide a gridded raster as input.
    * outdem - output DEM.
    * in_lidar_projection - projection of input lidar files.
    * resolution - resolution to use when creating rasters from lidar files.
-   * lidar_format - format of lidar data (LAS / ASCII).
+   * lidar_format - format of lidar data (LAS / ASCII / GRIDDED).
    * out_projection - output projection of DEM.
    * screenshot - directory / file for screenshots.
    * shaded_relief_screenshots - create shaded relief (hillshade) screenshots.
+   * out_raster_type - Type of raster to generate (e.g., DTM, DSM)
    * dem_source - source of DEM to patch with lidar (ASTER / NEXTMAP).
    * dem_mosaic - dem mosaic to patch with lidar (if not using standard mosaics).
    * project - project directory, used to calculated DEM bounds for APL.
    * nav - path to navigation data file.
    * lidar_bounds - create patched DEM using lidar bounds plus buffer (for when hyperspectral navigation data is not available.
    * fill_lidar_nulls - fill null values in lidar data.
+
    """
 
    # Set up list to hold temp files
@@ -75,11 +79,8 @@ def create_patched_lidar_mosaic(in_lidar,
 
    try:
       # Check output directory exists. Will raise exception if not accessible
-      dem_common_functions.CheckPathExistsAndIsWritable(os.path.split(outdem)[0])
-
-      # If a string is passed in convert to a list
-      if isinstance(in_lidar, str):
-         in_lidar = [in_lidar]
+      dem_common_functions.CheckPathExistsAndIsWritable(
+                                 os.path.split(os.path.abspath(outdem))[0])
 
       # Input projection for lidar files
       in_lidar_projection = in_lidar_projection.upper()
@@ -192,16 +193,36 @@ def create_patched_lidar_mosaic(in_lidar,
          dem_common_functions.WARNING('Skipping filling NULL values in LiDAR data by interpolation as patching with DEM')
          fill_lidar_nulls = False
 
-      # Create DSM from individual lidar lines and patch together
-      create_lidar_mosaic(in_lidar,lidar_dem_mosaic,
-                     out_screenshot=lidar_screenshots,
-                     shaded_relief_screenshots=shaded_relief_screenshots,
-                     in_projection=in_lidar_projection,
-                     resolution=resolution,
-                     nodata=dem_common.NODATA_VALUE,
-                     lidar_format=lidar_format,
-                     raster_type=out_raster_type,
-                     fill_nulls=fill_lidar_nulls)
+      if lidar_format.upper() != 'GRIDDED':
+         # Create DEM from individual lidar lines and patch together
+         # If a string is passed in convert to a list
+         if isinstance(in_lidar, str):
+            in_lidar = [in_lidar]
+
+         create_lidar_mosaic(in_lidar,lidar_dem_mosaic,
+                             out_screenshot=lidar_screenshots,
+                             shaded_relief_screenshots=shaded_relief_screenshots,
+                             in_projection=in_lidar_projection,
+                             resolution=resolution,
+                             nodata=dem_common.NODATA_VALUE,
+                             lidar_format=lidar_format,
+                             raster_type=out_raster_type,
+                             fill_nulls=fill_lidar_nulls)
+
+      else:
+         if isinstance(in_lidar, list):
+            if len(in_lidar) == 1:
+               lidar_dem_mosaic = in_lidar[0]
+            else:
+               raise Exception('Multiple gridded lidar files are not currently'
+                               'supported. Mosaic them first')
+         # Check GDAL can open dataset (will raise exception if not)
+         dem_utilities.check_gdal_dataset(lidar_dem_mosaic)
+
+         print('')
+         dem_common_functions.PrintTermWidth('Using existing LiDAR mosaic',
+                                             padding_char='*')
+         print('')
 
       # Check if input projection is equal to output projection
       if in_lidar_projection != out_patched_projection:
@@ -209,18 +230,36 @@ def create_patched_lidar_mosaic(in_lidar,
                 s_srs=grass_library.grass_location_to_proj4(in_lidar_projection),
                 t_srs=grass_library.grass_location_to_proj4(out_patched_projection))
 
+         # Get no data value from LiDAR
+         lidar_mosaic_nodata = dem_utilities.get_nodata_value(lidar_dem_mosaic)
+         if lidar_dem_mosaic is None:
+            lidar_mosaic_nodata = dem_common.NODATA_VALUE
          # Check if a vertical datum shift is required.
          # At the moment only consider UKBNG to WGS84LL
          if in_lidar_projection == 'UKBNG' and out_patched_projection == 'WGS84LL':
             print('Applying vertical offset to LiDAR mosaic')
+            # Get nodata value for mosaic
+            # Apply offset
             dem_utilities.offset_null_fill_dem(temp_lidar_dem, temp_lidar_dem,
-                                                    import_to_grass=True,
-                                                    separation_file=dem_common.UKBNG_SEP_FILE_WGS84,
-                                                    ascii_separation_file=dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII,
-                                                    fill_nulls=False,
-                                                    nodata=dem_common.NODATA_VALUE,
-                                                    remove_grassdb=False)
-         lidar_dem_mosaic = temp_lidar_dem
+                                               import_to_grass=True,
+                                               separation_file=dem_common.UKBNG_SEP_FILE_WGS84,
+                                               ascii_separation_file=dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII,
+                                               fill_nulls=False,
+                                               nodata=lidar_mosaic_nodata,
+                                               remove_grassdb=False)
+            lidar_dem_mosaic = temp_lidar_dem
+         # If the LiDAR data has a different nodata value replace - save
+         # using two different values for LiDAR and ASTER mosaic
+         # Applying vertical offset will automatically do this.
+         elif patch_with_dem and lidar_mosaic_nodata != dem_common.NODATA_VALUE:
+            print('Replacing no data values of {} with '
+                  '{}'.format(lidar_mosaic_nodata, dem_common.NODATA_VALUE))
+            dem_utilities.replace_nodata_val(temp_lidar_dem, temp_lidar_dem,
+                                             import_to_grass=True,
+                                             innodata=lidar_mosaic_nodata,
+                                             outnodata=dem_common.NODATA_VALUE,
+                                             remove_grassdb=False)
+            lidar_dem_mosaic = temp_lidar_dem
 
       if patch_with_dem:
          print('')
@@ -229,6 +268,7 @@ def create_patched_lidar_mosaic(in_lidar,
          subset_to_nav_failed = False
          if subset_to_navigation:
             try:
+               # Subset DEM
                dem_nav_utilities.subset_dem_to_nav(in_dem_mosaic, temp_mosaic_dem,
                                  nav, project,
                                  separation_file=separation_file,
@@ -247,7 +287,8 @@ def create_patched_lidar_mosaic(in_lidar,
          if not subset_to_navigation or (subset_to_navigation and subset_to_nav_failed):
             print('Getting bounding box from LiDAR mosaic')
             # Get bounding box from output lidar mosaic
-            lidar_bb = dem_utilities.get_gdal_dataset_bb(lidar_dem_mosaic, output_ll=True)
+            lidar_bb = dem_utilities.get_gdal_dataset_bb(lidar_dem_mosaic,
+                                                         output_ll=True)
             buffered_lidar_bb = get_lidar_buffered_bb(lidar_bb)
 
             dem_utilities.subset_dem_to_bounding_box(in_dem_mosaic,

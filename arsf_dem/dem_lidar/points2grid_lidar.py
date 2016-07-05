@@ -8,17 +8,20 @@ https://github.com/CRREL/points2grid
 Requires the development version of points2grid to be installed which
 has filters for LAS points.
 
+Documentation on points2grid is available from:
+
+http://www.opentopography.org/otsoftware/points2grid
+
 """
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os
 import shutil
 import tempfile
-import subprocess
 # Import common files
 from .. import dem_common
 from .. import dem_common_functions
-from .. import dem_utilities
+from .. import get_gdal_drivers
 
 def _checkPoints2Grid():
    """
@@ -53,9 +56,18 @@ def export_ascii_raster(points2dem_outfile, out_raster,
       shutil.copy(in_raster, out_raster)
    # Otherwise use gdal_translate
    else:
-      out_raster_format = dem_utilities.get_gdal_type_from_path(out_raster)
+      # Set output options
+      out_ext = os.path.splitext(out_raster)[-1]
+      out_format = get_gdal_drivers.GDALDrivers().get_driver_from_ext(out_ext)
+      out_options = \
+      get_gdal_drivers.GDALDrivers().get_creation_options_from_ext(out_ext)
+
       gdal_translate_cmd = ['gdal_translate',
-                            '-of',out_raster_format]
+                            '-of',out_format]
+      # If there are creation options add these
+      for creation_option in out_options:
+         gdal_translate_cmd.extend(['-co', creation_option])
+
       if projection is not None:
          gdal_translate_cmd.extend(['-a_srs',projection])
 
@@ -67,6 +79,8 @@ def _las_to_dem(in_las, out_dem,
                projection=None,
                demtype='DSM',
                grid_method='mean',
+               search_radius=None,
+               fill_window_size=None,
                quiet=True):
    """
    Create Digital Elevation Model (DEM) from a LAS file using points2grid
@@ -79,6 +93,8 @@ def _las_to_dem(in_las, out_dem,
    * resolution - output resolution
    * demtype - DSM / DTM
    * grid_method - points2grid output type (min, max, mean, idw or std)
+   * search_radius - specifies the search radius (default is 2 or resolution, whichever is greater)
+   * fill_window_size - window size to use for filling nulls
    * quiet - don't print output from points2grid command
 
    """
@@ -87,11 +103,19 @@ def _las_to_dem(in_las, out_dem,
 
    outdem_handler, dem_tmp = tempfile.mkstemp(suffix='', dir=dem_common.TEMP_PATH)
 
+   # Set search raduis. For 'typical' ARSF 
+   if search_radius is None:
+      if resolution < 2:
+         search_radius = 2
+      else:
+         search_radius = resolution
+
    print('Creating surface')
    surfaceCMD = [os.path.join(dem_common.POINTS2GRID_BIN_PATH,'points2grid'),
                  '--exclude_class', '7',
                  '--output_file_name',dem_tmp,
                  '--output_format','arc',
+                 '--search_radius', str(search_radius),
                  '--resolution',str(resolution)]
 
    if grid_method.lower() == 'min':
@@ -104,6 +128,13 @@ def _las_to_dem(in_las, out_dem,
       surfaceCMD.extend(['--idw'])
    elif grid_method.lower() == 'std':
       surfaceCMD.extend(['--std'])
+
+   if fill_window_size is not None:
+      if fill_window_size not in [3, 5, 7]:
+         raise ValueError('Size for fill window must be 3, 5 or 7. '
+                          '{} was provided'.format(fill_window_size))
+      surfaceCMD.extend(['--fill',
+                         '--fill_window_size', str(fill_window_size)])
 
    if demtype.upper() == 'DSM':
       surfaceCMD.extend(['--first_return_only'])
@@ -128,6 +159,7 @@ def las_to_dsm(in_las, out_dsm,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
                projection=None,
                grid_method='mean',
+               fill_window_size=None,
                quiet=True):
    """
    Create Digital Surface Model (DSM) from a LAS file using points2grid
@@ -138,6 +170,7 @@ def las_to_dsm(in_las, out_dsm,
    * out_dsm - Output DTM file
    * resolution - output resolution
    * grid_method - points2grid output type (min, max, mean, idw or std)
+   * fill_window_size - window size to use for filling nulls
    * quiet - don't print output from points2grid command
 
    """
@@ -146,6 +179,7 @@ def las_to_dsm(in_las, out_dsm,
                projection=projection,
                demtype='DSM',
                grid_method=grid_method,
+               fill_window_size=fill_window_size,
                quiet=quiet)
 
    return None
@@ -154,6 +188,7 @@ def las_to_dtm(in_las, out_dtm,
                resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
                projection=None,
                grid_method='mean',
+               fill_window_size=None,
                quiet=True):
    """
    Create Digital Terrain Model (DSM) from a LAS file using points2grid
@@ -167,6 +202,7 @@ def las_to_dtm(in_las, out_dtm,
    * out_dtm - Output DTM file
    * resolution - output resolution
    * grid_method - points2grid output type (min, max, mean, idw or std)
+   * fill_window_size - window size to use for filling nulls
    * quiet - don't print output from points2grid command
 
    """
@@ -175,6 +211,7 @@ def las_to_dtm(in_las, out_dtm,
                projection=projection,
                demtype='DTM',
                grid_method=grid_method,
+               fill_window_size=fill_window_size,
                quiet=quiet)
 
    return None

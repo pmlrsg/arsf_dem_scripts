@@ -6,6 +6,12 @@ Functions for working with LiDAR data using SPDLib (http://spdlib.org/)
 
 Requires SPDLib to be installed.
 
+For more details about SPDLib see the following publications:
+
+Bunting, P., Armston, J., Lucas, R. M., & Clewley, D. (2013). Sorted pulse data (SPD) library. Part I: A generic file format for LiDAR data from pulsed laser systems in terrestrial environments. Computers and Geosciences, 56, 197-206. doi:10.1016/j.cageo.2013.01.019
+
+Bunting, P., Armston, J., Clewley, D., & Lucas, R. M. (2013). Sorted pulse data (SPD) library-Part II: A processing framework for LiDAR data from pulsed laser systems in terrestrial environments. Computers and Geosciences, 56, 207-215. doi:10.1016/j.cageo.2013.01.010
+
 """
 
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
@@ -16,6 +22,7 @@ import tempfile
 # Import common files
 from .. import dem_common
 from .. import dem_common_functions
+from .. import dem_utilities
 
 def _checkSPDLib():
    """Check if SPDLib is installed."""
@@ -28,7 +35,8 @@ def _checkSPDLib():
       return False
 
 def convert_las_to_spd(in_las,out_spd,wkt=None,
-                  bin_size=dem_common.DEFAULT_LIDAR_RES_METRES):
+                       bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
+                       no_pulse=True):
    """
    Convert LAS file to spatially indexed SPD file by calling
    spdtranslate.
@@ -38,8 +46,8 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
 
    Known Issues: If LAS file isn't sorted SPDLib will print lots of warnings
    about writing incomplete pulses (1 for each pulse in the worst case), which
-   seems to cause problems for CallSubprocessOn. Better LAS reading for SPDLib
-   is currently in-progress.
+   prints a lot of messages to sdterr. Therefore using 'no_pulse=True' (default)
+   is recommend if SPD file is only going to be used in DEM scripts.
 
    Arguments:
 
@@ -47,6 +55,7 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
    * out_spd - Output SPD file
    * wkt - WKT file defining projection (will obtain from LAS if not provided)
    * bin_size - Bin size for spatial indexing
+   * no_pulse - Don't try to import as pulses.
 
    Returns:
 
@@ -58,18 +67,27 @@ def convert_las_to_spd(in_las,out_spd,wkt=None,
       raise Exception('Could not find SPDLib')
 
    temp_dir = tempfile.mkdtemp(dir=dem_common.TEMP_PATH)
-   spdtmppath = os.path.join(temp_dir, 'spd_tmp')
+   spdtmppath = os.path.join(temp_dir, 'spd_tmp_')
 
-   spdCMD = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdtranslate'),
-               '--if','LAS','--of','SPD',
-               '-b',str(bin_size),
-               '-x','LAST_RETURN',
-               '--temppath',spdtmppath,
-               '-i',in_las,'-o',out_spd]
+   # If not using pulses import using 'LAS (No Pulse) importer
+   # as this won't generate warnings if returns can't be matched
+   # to a pulse
+   las_importer = 'LAS'
+   if no_pulse:
+      las_importer = 'LASNP'
+
+   spdtranslate_cmd = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdtranslate'),
+                       '--if', las_importer,
+                       '--of','SPD',
+                       '-b',str(bin_size),
+                       '-x','LAST_RETURN',
+                       '--temppath',spdtmppath,
+                       '-i',in_las,'-o',out_spd]
+
    if wkt is not None:
-      spdCMD = spdCMD + ['--input_proj',wkt, '--output_proj', wkt]
+      spdtranslate_cmd.extend(['--input_proj',wkt, '--output_proj', wkt])
 
-   subprocess.check_call(spdCMD)
+   subprocess.check_call(spdtranslate_cmd)
 
    # Remove temp files
    shutil.rmtree(temp_dir)
@@ -123,6 +141,55 @@ def classify_ground_spd(in_spd,out_spd,
    os.close(spdfile_handler)
    os.remove(spdfile_grd_tmp)
 
+def _spd_to_raster(in_spd, out_raster,
+                   raster_type='DSM',
+                   interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
+                   out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
+                   bin_size=dem_common.DEFAULT_LIDAR_RES_METRES):
+   """
+   Create a raster from a SPD file
+
+   Calls the spdinterp tool.
+
+   Arguments:
+
+   * in_spd - Input SPD File
+   * out_raster - Output raster file
+   * raster_type - type of raster to create, DTM, DSM or CHM
+   * interpolation - Interpolation method
+   * out_raster_format - GDAL format name for output raster (e.g., ENVI)
+   * bin_size - Bin size for spatial indexing
+
+   Returns:
+
+   * None
+
+   """
+   if not _checkSPDLib():
+      raise Exception('Could not find SPDLib')
+
+   if not os.path.isfile(in_spd):
+      raise Exception('Input SPD file "{}" does not exist'.format(in_spd))
+
+   dem_cmd = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdinterp'),
+              '--in',interpolation,
+              '-f',out_raster_format,
+              '-b',str(bin_size),
+              '-i',in_spd,'-o',out_raster]
+
+   if raster_type.upper() == 'DSM':
+      dem_cmd.extend(['--dsm','--topo'])
+   elif raster_type.upper() == 'DTM':
+      dem_cmd.extend(['--dtm','--topo'])
+   elif raster_type.upper() == 'CHM':
+      dem_cmd.extend(['--chm','--height'])
+   else:
+      raise Exception('Raster type "{}" was not recognised'.format(raster_type))
+
+   subprocess.check_call(dem_cmd)
+
+   # Set nodata value (SPDLib uses nan but doesn't explicitly set as no data)
+   dem_utilities.set_nodata_value(out_raster, float('NaN'))
 
 def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
@@ -145,20 +212,11 @@ def spd_to_dsm(in_spd, out_dsm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    * None
 
    """
-   if not _checkSPDLib():
-      raise Exception('Could not find SPDLib')
-
-   if not os.path.isfile(in_spd):
-      raise Exception('Input SPD file "{}" does not exist'.format(in_spd))
-
-   dsmCMD = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdinterp'),
-       '--dsm','--topo',
-       '--in',interpolation,
-       '-f',out_raster_format,
-       '-b',str(bin_size),
-       '-i',in_spd,'-o',out_dsm]
-
-   subprocess.check_call(dsmCMD)
+   _spd_to_raster(in_spd, out_dsm,
+                  raster_type='DSM',
+                  interpolation=interpolation,
+                  out_raster_format=out_raster_format,
+                  bin_size=bin_size)
 
 def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
                out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
@@ -197,14 +255,11 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    classify_ground_spd(in_spd, spdfile_grd_tmp)
 
    print('Creating DTM')
-   dtmCMD = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spdinterp'),
-       '--dtm','--topo',
-       '--in',interpolation,
-       '-f',out_raster_format,
-       '-b',str(bin_size),
-       '-i',spdfile_grd_tmp,'-o',out_dtm]
-
-   subprocess.check_call(dtmCMD)
+   _spd_to_raster(spdfile_grd_tmp, out_dtm,
+                  raster_type='DTM',
+                  interpolation=interpolation,
+                  out_raster_format=out_raster_format,
+                  bin_size=bin_size)
 
    os.close(spdfile_handler)
    if keep_spd:
@@ -212,6 +267,61 @@ def spd_to_dtm(in_spd, out_dtm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATI
    else:
       os.remove(spdfile_grd_tmp)
       return None
+
+def spd_to_chm(in_spd, out_chm, interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
+               out_raster_format=dem_common.GDAL_OUTFILE_FORMAT,
+               bin_size=dem_common.DEFAULT_LIDAR_RES_METRES,
+               keep_spd=False):
+   """
+   Create a Canopy Height Model (CMH) from an SPD file
+
+   First attributes height filed in SPD file using spddefheight
+
+   Arguments:
+
+   * in_spd - Input SPD File
+   * out_chm - Output CHM file
+   * interpolation - Interpolation method
+   * out_raster_format - GDAL format name for output raster (e.g., ENVI)
+   * bin_size - Bin size for spatial indexing
+   * keep_spd - Keep ground classified SPD file and return path (default is to remove)
+
+   Returns:
+
+   * Path to SPD file with height filed populated
+
+   """
+   if not _checkSPDLib():
+      raise Exception('Could not find SPDLib')
+
+   if not os.path.isfile(in_spd):
+      raise Exception('Input SPD file "{}" does not exist'.format(in_spd))
+
+   spdfile_handler, spdfile_height_tmp = tempfile.mkstemp(suffix='.spd',
+                                          dir=dem_common.TEMP_PATH)
+
+   print('Classifying ground returns')
+   spddefheight_cmd = [os.path.join(dem_common.SPDLIB_BIN_PATH,'spddefheight'),
+                       '--interp',
+                       '--in', interpolation,
+                       '-i', in_spd,
+                       '-o', spdfile_height_tmp]
+   subprocess.check_call(spddefheight_cmd)
+
+   print('Creating CHM')
+   _spd_to_raster(spdfile_height_tmp, out_chm,
+                  raster_type='CHM',
+                  interpolation=interpolation,
+                  out_raster_format=out_raster_format,
+                  bin_size=bin_size)
+
+   os.close(spdfile_handler)
+   if keep_spd:
+      return spdfile_height_tmp
+   else:
+      os.remove(spdfile_height_tmp)
+      return None
+
 
 def las_to_dsm(in_las, out_dsm,
                interpolation=dem_common.SPD_DEFAULT_INTERPOLATION,
@@ -241,13 +351,14 @@ def las_to_dsm(in_las, out_dsm,
 
    """
 
-   spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd', dir=dem_common.TEMP_PATH)
+   spdfile_handler, spdfile_tmp = tempfile.mkstemp(suffix='.spd',
+                                                   dir=dem_common.TEMP_PATH)
 
    convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size, wkt=wkt)
    spd_to_dsm(spdfile_tmp, out_dsm,
-               interpolation=interpolation,
-               out_raster_format=out_raster_format,
-               bin_size=bin_size)
+              interpolation=interpolation,
+              out_raster_format=out_raster_format,
+              bin_size=bin_size)
 
    os.close(spdfile_handler)
    if keep_spd:
@@ -288,10 +399,10 @@ def las_to_dtm(in_las, out_dtm,
 
    convert_las_to_spd(in_las, spdfile_tmp,bin_size=bin_size, wkt=wkt)
    spdfile_grd_tmp = spd_to_dtm(spdfile_tmp, out_dtm,
-               interpolation=interpolation,
-               out_raster_format=out_raster_format,
-               bin_size=bin_size,
-               keep_spd=keep_spd)
+                                interpolation=interpolation,
+                                out_raster_format=out_raster_format,
+                                bin_size=bin_size,
+                                keep_spd=keep_spd)
 
    os.close(spdfile_handler)
    os.remove(spdfile_tmp)
