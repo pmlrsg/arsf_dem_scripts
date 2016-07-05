@@ -21,7 +21,7 @@ from arsf_dem import dem_common_functions
 from arsf_dem import grass_library
 
 #: Debug mode
-DEBUG = True
+DEBUG = dem_common.DEBUG
 
 #: Set interpolation method to use
 interpolation = dem_common.SPD_DEFAULT_INTERPOLATION
