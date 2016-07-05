@@ -4,8 +4,8 @@ ARSF DEM Scripts
 About
 ------
 
-A collection of scripts developed by the Airborne Research and Survey Facility
-Data Analysis Node (ARSF-DAN; https://arsf-dan.nerc.ac.uk/trac/) for working with DEMs.
+A collection of scripts developed by the [NERC](http://www.nerc.ac.uk/) Airborne Research Facility
+Data Analysis Node (NERC-ARF-DAN; https://nerc-arf-dan.pml.ac.uk) for working with DEMs.
 
 Licensing
 ----------
