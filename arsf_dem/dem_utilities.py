@@ -606,7 +606,7 @@ def subset_dem_to_bounding_box(in_dem_mosaic,
    dem_common_functions.PrintTermWidth('Subsetting DEM to bounding box')
    # When subsetting perform horizontal reprojection
    # If output projection is not WGS84LL need to reproject bounding box
-   if out_projection is not None and out_projection != 'WGS84LL':
+   if out_projection is not None and grass_library.proj4_to_grass_location(out_projection) != 'WGS84LL':
       tm_fh, temp_mosaic_dem = tempfile.mkstemp(prefix='dem_subset',suffix='.dem', dir=dem_common.TEMP_PATH)
       temp_mosaic_dem_header = os.path.splitext(temp_mosaic_dem)[0] + '.hdr'
 
@@ -1174,7 +1174,7 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
 
    # Check if output in WGS84LL has been selected and this isn't the
    # same as the input
-   if output_ll and out_spatial_ref.IsSame(image_spatial_ref):
+   if output_ll and not out_spatial_ref.IsSame(image_spatial_ref):
 
       if image_proj == '':
          raise Exception('The file "{}" contains no '
