@@ -77,7 +77,8 @@ def _check_flags(in_flags):
 
    return outflags_list
 
-def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,flags=None,print_only=False):
+def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,
+                         flags=None, print_only=False):
    """
    Convert LAS files to ASCII using las2txt
    tool.
@@ -122,13 +123,14 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
 
    """
    if not _checkFreeLAStools():
-      raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
+      raise Exception('Could not find LAStools, checked '
+                      '{}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
 
-   las2txt_cmd_base = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH,'las2txt'),
-                  '-parse',
-                  'txyzicrna',
-                  '-sep',
-                  'space']
+   las2txt_cmd_base = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH, 'las2txt'),
+                       '-parse',
+                       'txyzicrna',
+                       '-sep',
+                       'space']
 
    if drop_class is not None:
       if isinstance(drop_class,list):
@@ -170,25 +172,23 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
       # If a directoy is passed in
       # Look for LAS or LAZ files
       in_las_list = glob.glob(
-                           os.path.join(in_las,'*LAS'))
+                           os.path.join(in_las,'*[Ll][Aa][Ss]'))
       in_las_list.extend(glob.glob(
-                           os.path.join(in_las,'*LAZ')))
-      in_las_list.extend(glob.glob(
-                           os.path.join(in_las,'*las')))
-      in_las_list.extend(glob.glob(
-                           os.path.join(in_las,'*laz')))
+                           os.path.join(in_las,'*[Ll][Aa][Zz]')))
       if len(in_las_list) == 0:
-         raise IOError('Could not find any LAS files in directory:\n {}'.format(in_las))
+         raise IOError('Could not find any LAS files in directory'
+                       ':\n {}'.format(in_las))
 
       # Check a directory has been provided for output
       if not os.path.isdir(out_ascii):
-         raise Exception('Must provide path to existing directory if an input directory is provided')
+         raise Exception('Must provide path to existing directory if an '
+                         'input directory is provided')
 
       for in_las_file in in_las_list:
          out_ascii_base = os.path.splitext(os.path.basename(in_las_file))[0]
          out_ascii_file = os.path.join(out_ascii, out_ascii_base + '.txt')
          las2txt_cmd = las2txt_cmd_base + ['-i',in_las_file,
-                                '-o',out_ascii_file]
+                                           '-o',out_ascii_file]
 
          if print_only:
             print(" ", " ".join(las2txt_cmd))
@@ -197,7 +197,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
 
    else:
       las2txt_cmd = las2txt_cmd_base + ['-i',in_las,
-                                '-o',out_ascii]
+                                        '-o',out_ascii]
 
       if print_only:
          print(" ", " ".join(las2txt_cmd))
