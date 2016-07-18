@@ -448,69 +448,96 @@ def grass_proj_to_lastools_flag(in_grass_proj):
       return '-utm {}'.format(in_grass_proj[3:])
 
 
-def zip_las(in_las, out_laz = None, delete_las=False,print_only=True):
-   #check if in_las is a directory
-   if os.path.isdir(in_las):
-      #Check if out_laz is none. if so will output to input directory
+def convert_las_to_laz(in_las, out_laz=None, print_only=False, delete_las=False):
+   """
+   Compress LAS files to LAZ using laszip
+   tool.
+
+   http://www.cs.unc.edu/~isenburg/lastools/download/laszip_README.txt
+
+   Calls with the following options:
+
+   laszip -i in_las -o out_laz
+
+   Arguments:
+
+   * in_las - Input LAS file / directory containing LAS files
+   * out_laz - Output LAZ file / output directory for LAZ files. 
+      If None will assume same as input directory
+   * print_only - Don't run commands, only print
+   * delete_las - Delete the input LAS files after compression
+
+   Returns:
+
+   * None
+
+   """
+   if not _checkFreeLAStools():
+      raise Exception('Could not find LAStools, checked '
+                      '{}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
+
+   laszip_cmd_base = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH, 'laszip')]
+
+
+   if isinstance(in_las,list):
+      # If a list is passed in, run for each file
+      for in_las_file in in_las:
+         out_laz_base = os.path.splitext(os.path.basename(in_las_file))[0]
+         out_laz_file = os.path.join(out_laz, out_laz_base + '.laz')
+         laszip_cmd = laszip_cmd_base + ['-i',in_las_file,
+                                '-o',out_laz_file]
+         if print_only:
+            print(" ", " ".join(laszip_cmd))
+         else:
+            dem_common_functions.CallSubprocessOn(laszip_cmd)
+         if delete_las:
+            if print_only:
+               print("Will remove file ",in_las_file)
+            else:
+               os.remove(in_las_file)
+
+   elif os.path.isdir(in_las):
+      # If a directoy is passed in
+      # Look for LAS
+      in_las_list = glob.glob(
+                           os.path.join(in_las,'*[Ll][Aa][Ss]'))
+      if len(in_las_list) == 0:
+         raise IOError('Could not find any LAS files in directory'
+                       ':\n {}'.format(in_las))
+
+      # Check a directory has been provided for output
       if out_laz is None:
          out_laz = in_las
       elif not os.path.isdir(out_laz):
-         raise Exception("output doesn't exist or is not a directory")
+         raise Exception('Output directory must exist if supplied')
 
-      #get absolute paths
-      in_las = os.path.abspath(in_las)
-      out_laz = os.path.abspath(out_laz)
-      las_files = []
-      out_laz_files = []
-      for file_name in os.listdir(in_las):
-         if '.las' in file_name or '.LAS' in file_name:
-            las_files.append(os.path.join(in_las,file_name))
-            out_laz_files.append(os.path.join(out_laz,os.path.splitext(file_name)[0]+'.laz'))
+      for in_las_file in in_las_list:
+         out_laz_base = os.path.splitext(os.path.basename(in_las_file))[0]
+         out_laz_file = os.path.join(out_laz, out_laz_base + '.laz')
+         laszip_cmd = laszip_cmd_base + ['-i',in_las_file,
+                                           '-o',out_laz_file]
 
-      #now run lazzip
-      for las_file,laz_file in zip(las_files,out_laz_files):
-         laszip_cmd = 'laszip '
-         laszip_cmd += las_file
-         laszip_cmd += ' -o ' + laz_file
          if print_only:
-            print("Will run command: ", laszip_cmd)
-            print()
+            print(" ", " ".join(laszip_cmd))
          else:
             dem_common_functions.CallSubprocessOn(laszip_cmd)
-      if delete_las:
-         for las_file in las_files:
+         if delete_las:
             if print_only:
-               print("Will remove file ", las_file)
-               print()
+               print("Will remove file ", in_las_file)
             else:
-               print("Removing file: ",las_file)
-               os.remove(las_file)
-   elif os.path.isfile(in_las):
-      #we have a single file
-      #check file extension is .las or .LAS
-      if not in_las.endswith('.las') or not in_las.endswith('.LAS')
-         raise Exception("Input file does not appear to be of las format. Should be .las or .LAS")
-
-      #get absolute path
-      in_las = os.path.abspath(in_las)
-      
-      #check if output filename is supplied, else use input filename
+               os.remove(in_las_file)
+   else:
       if out_laz is None:
-         out_laz = os.path.splitext(in_las)[0]+'.laz'
-      
-      #run laszip command
-      laszip_cmd = 'laszip '
-      laszip_cmd += in_las
-      laszip_cmd += ' -o ' + out_laz
+         out_laz = os.path.splitext(in_las)[0] + '.laz'
+      laszip_cmd = laszip_cmd_base + ['-i',in_las,
+                                        '-o',out_laz]
+
       if print_only:
-         print("Will run command: ", laszip_cmd)
+         print(" ", " ".join(laszip_cmd))
       else:
          dem_common_functions.CallSubprocessOn(laszip_cmd)
       if delete_las:
          if print_only:
-            print("Will remove file", in_las)
+            print("Will remove file ",in_las)
          else:
             os.remove(in_las)
-   else:
-      #no suitable input file or directory given
-      raise Exception("Input supplied could not be found or does not have required permissions")
