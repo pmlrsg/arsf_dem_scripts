@@ -77,7 +77,8 @@ def _check_flags(in_flags):
 
    return outflags_list
 
-def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,flags=None,print_only=False):
+def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,
+                         flags=None, print_only=False):
    """
    Convert LAS files to ASCII using las2txt
    tool.
@@ -122,13 +123,14 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
 
    """
    if not _checkFreeLAStools():
-      raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
+      raise Exception('Could not find LAStools, checked '
+                      '{}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
 
-   las2txt_cmd_base = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH,'las2txt'),
-                  '-parse',
-                  'txyzicrna',
-                  '-sep',
-                  'space']
+   las2txt_cmd_base = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH, 'las2txt'),
+                       '-parse',
+                       'txyzicrna',
+                       '-sep',
+                       'space']
 
    if drop_class is not None:
       if isinstance(drop_class,list):
@@ -170,25 +172,23 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
       # If a directoy is passed in
       # Look for LAS or LAZ files
       in_las_list = glob.glob(
-                           os.path.join(in_las,'*LAS'))
+                           os.path.join(in_las,'*[Ll][Aa][Ss]'))
       in_las_list.extend(glob.glob(
-                           os.path.join(in_las,'*LAZ')))
-      in_las_list.extend(glob.glob(
-                           os.path.join(in_las,'*las')))
-      in_las_list.extend(glob.glob(
-                           os.path.join(in_las,'*laz')))
+                           os.path.join(in_las,'*[Ll][Aa][Zz]')))
       if len(in_las_list) == 0:
-         raise IOError('Could not find any LAS files in directory:\n {}'.format(in_las))
+         raise IOError('Could not find any LAS files in directory'
+                       ':\n {}'.format(in_las))
 
       # Check a directory has been provided for output
       if not os.path.isdir(out_ascii):
-         raise Exception('Must provide path to existing directory if an input directory is provided')
+         raise Exception('Must provide path to existing directory if an '
+                         'input directory is provided')
 
       for in_las_file in in_las_list:
          out_ascii_base = os.path.splitext(os.path.basename(in_las_file))[0]
          out_ascii_file = os.path.join(out_ascii, out_ascii_base + '.txt')
          las2txt_cmd = las2txt_cmd_base + ['-i',in_las_file,
-                                '-o',out_ascii_file]
+                                           '-o',out_ascii_file]
 
          if print_only:
             print(" ", " ".join(las2txt_cmd))
@@ -197,7 +197,7 @@ def convert_las_to_ascii(in_las, out_ascii, drop_class=None, keep_class=None,fla
 
    else:
       las2txt_cmd = las2txt_cmd_base + ['-i',in_las,
-                                '-o',out_ascii]
+                                        '-o',out_ascii]
 
       if print_only:
          print(" ", " ".join(las2txt_cmd))
@@ -448,4 +448,96 @@ def grass_proj_to_lastools_flag(in_grass_proj):
       return '-utm {}'.format(in_grass_proj[3:])
 
 
+def convert_las_to_laz(in_las, out_laz=None, print_only=False, delete_las=False):
+   """
+   Compress LAS files to LAZ using laszip
+   tool.
 
+   http://www.cs.unc.edu/~isenburg/lastools/download/laszip_README.txt
+
+   Calls with the following options:
+
+   laszip -i in_las -o out_laz
+
+   Arguments:
+
+   * in_las - Input LAS file / directory containing LAS files
+   * out_laz - Output LAZ file / output directory for LAZ files. 
+      If None will assume same as input directory
+   * print_only - Don't run commands, only print
+   * delete_las - Delete the input LAS files after compression
+
+   Returns:
+
+   * None
+
+   """
+   if not _checkFreeLAStools():
+      raise Exception('Could not find LAStools, checked '
+                      '{}'.format(dem_common.LASTOOLS_FREE_BIN_PATH))
+
+   laszip_cmd_base = [os.path.join(dem_common.LASTOOLS_FREE_BIN_PATH, 'laszip')]
+
+
+   if isinstance(in_las,list):
+      # If a list is passed in, run for each file
+      for in_las_file in in_las:
+         out_laz_base = os.path.splitext(os.path.basename(in_las_file))[0]
+         out_laz_file = os.path.join(out_laz, out_laz_base + '.laz')
+         laszip_cmd = laszip_cmd_base + ['-i',in_las_file,
+                                '-o',out_laz_file]
+         if print_only:
+            print(" ", " ".join(laszip_cmd))
+         else:
+            dem_common_functions.CallSubprocessOn(laszip_cmd)
+         if delete_las:
+            if print_only:
+               print("Will remove file ",in_las_file)
+            else:
+               os.remove(in_las_file)
+
+   elif os.path.isdir(in_las):
+      # If a directoy is passed in
+      # Look for LAS
+      in_las_list = glob.glob(
+                           os.path.join(in_las,'*[Ll][Aa][Ss]'))
+      if len(in_las_list) == 0:
+         raise IOError('Could not find any LAS files in directory'
+                       ':\n {}'.format(in_las))
+
+      # Check a directory has been provided for output
+      if out_laz is None:
+         out_laz = in_las
+      elif not os.path.isdir(out_laz):
+         raise Exception('Output directory must exist if supplied')
+
+      for in_las_file in in_las_list:
+         out_laz_base = os.path.splitext(os.path.basename(in_las_file))[0]
+         out_laz_file = os.path.join(out_laz, out_laz_base + '.laz')
+         laszip_cmd = laszip_cmd_base + ['-i',in_las_file,
+                                           '-o',out_laz_file]
+
+         if print_only:
+            print(" ", " ".join(laszip_cmd))
+         else:
+            dem_common_functions.CallSubprocessOn(laszip_cmd)
+         if delete_las:
+            if print_only:
+               print("Will remove file ", in_las_file)
+            else:
+               os.remove(in_las_file)
+   else:
+      if out_laz is None:
+         out_laz = os.path.splitext(in_las)[0] + '.laz'
+      laszip_cmd = laszip_cmd_base + ['-i',in_las,
+                                        '-o',out_laz]
+
+      if print_only:
+         print(" ", " ".join(laszip_cmd))
+      else:
+         dem_common_functions.CallSubprocessOn(laszip_cmd)
+      if delete_las:
+         if print_only:
+            print("Will remove file ",in_las)
+         else:
+            os.remove(in_las)
