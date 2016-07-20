@@ -36,7 +36,8 @@ NON_GDAL_DRIVER_FROM_EXT = {'bil' : 'ENVI',
 #: Preferred creation options for GDAL
 GDAL_CREATION_OPTIONS = {'bil' : ['INTERLEAVE=BIL'],
                          'bsq' : ['INTERLEAVE=BSQ'],
-                         'tif' : ['COMPRESS=LZW']}
+                         'tif' : ['COMPRESS=LZW'],
+                         'nc'  : ['FORMAT=NC4C', 'COMPRESS=DEFLATE']}
 
 class GDALDrivers(object):
    """
