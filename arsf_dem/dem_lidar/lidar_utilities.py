@@ -130,8 +130,8 @@ def create_patched_lidar_mosaic(in_lidar,
             ascii_separation_file = False
          # Else shift to WGS-84 vertical datum
          else:
-            separation_file = dem_common.UKBNG_SEP_FILE_UKBNG
-            ascii_separation_file = dem_common.UKBNG_SEP_FILE_UKBNG_IS_ASCII
+            separation_file = dem_common.UKBNG_SEP_FILE_WGS84
+            ascii_separation_file = dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII
          patch_with_dem=True
 
       # SRTM DEM

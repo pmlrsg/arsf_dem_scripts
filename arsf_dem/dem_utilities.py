@@ -1174,7 +1174,7 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
 
    # Check if output in WGS84LL has been selected and this isn't the
    # same as the input
-   if output_ll and not out_spatial_ref.IsSame(image_spatial_ref):
+   if output_ll and not out_spatial_ref.IsSameGeogCS(image_spatial_ref):
 
       if image_proj == '':
          raise Exception('The file "{}" contains no '
