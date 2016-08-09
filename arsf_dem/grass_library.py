@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # grass_library
 #
-# Created by Stephen Gould 2014
+# Created by Stephen Goult 2014
 #
 # Modified by Dan Clewley (dac) to
 # become part of arsf_dem library
@@ -47,7 +47,19 @@ Available functions:
 * grass_location_to_proj4: Convert GRASS style projection to Proj4 format
 * proj4_to_grass_location: Convert Proj4 projection to GRASS style
 * grass_location_to_wkt: Convert GRASS style projection to WKT
-
+* checkFileExists: Check a file exists within GRASS
+* convertVectorXYZtoSHP: Convert csv file of points to shapefile
+* importVectors: Import OGR supported vectors into GRASS database
+* overlayVectorsOnRaster: Function to patch rasters
+* createMosaicFromRastersAndVectors: Create mosaic from all rasters & vectors in mapset
+* setNull: Set the null value for a raster
+* locationFromFile: Create a GRASS location from a file
+* rescale: Rescale a raster (or group)
+* rescaleRGB: Rescale 3 bands and return as an RGB group
+* rasterWithMapsetName: Append the mapset name to a raster
+* SetRegion: Set the region based on given bounds or a raster
+* importGdal: Import a GDAL supported raster
+* splitGroupIntoRasters: Split the given group into individual rasters
 """
 
 ################################################################################
@@ -1456,6 +1468,24 @@ def overlayVectorsOnRaster(vectormap,rastermap):
 
    return
 
+def convertVectorXYZtoSHP(vectorfile,outputshape=None,delim='\t',skiplines=0,x=1,y=2,z=0,format='point'):
+   """
+   Import XYZ csv vector and output as shapefile vector. Can specify input + output filenames, delimiter,
+   how many lines to skip at start and which columns are associated with x,y,z. Can change format although 
+   this would usually be point.
+   """
+   #output name in grass database - replace the main forbidden chars that may be in a filename
+   output=os.path.basename(vectorfile).replace('.','_').replace('-','_').replace('+','_')
+   #if no output shapefile name given then output into tmp dir
+   if outputshape is None:
+      shapeoutputdir=tempfile.mkdtemp(suffix="vector")
+      outputshape=os.path.join(shapeoutputdir,output+".shp")
+   #import the csv into grass
+   grass.run_command('v.in.ascii',input=vectorfile,output=output,format=format,fs=delim,skip=skiplines,x=x,y=y,z=z,cat=0,overwrite=True)
+   #output as a shape file
+   grass.run_command('v.out.ogr',flags='s',input=output, type="point,line", dsn=outputshape,layer=1,format="ESRI_Shapefile").
+   #return the the output filename
+   return outputshape
 
 def importVectors(directory,region=None,tables=None):
    """
