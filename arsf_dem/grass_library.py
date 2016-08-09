@@ -1483,7 +1483,7 @@ def convertVectorXYZtoSHP(vectorfile,outputshape=None,delim='\t',skiplines=0,x=1
    #import the csv into grass
    grass.run_command('v.in.ascii',input=vectorfile,output=output,format=format,fs=delim,skip=skiplines,x=x,y=y,z=z,cat=0,overwrite=True)
    #output as a shape file
-   grass.run_command('v.out.ogr',flags='s',input=output, type="point,line", dsn=outputshape,layer=1,format="ESRI_Shapefile").
+   grass.run_command('v.out.ogr',flags='s',input=output, type="point,line", dsn=outputshape,layer=1,format="ESRI_Shapefile")
    #return the the output filename
    return outputshape
 
