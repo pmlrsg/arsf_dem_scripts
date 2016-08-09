@@ -1456,6 +1456,19 @@ def overlayVectorsOnRaster(vectormap,rastermap):
 
    return
 
+def convertVectorXYZtoSHP(vectorfile,outputshape=None,delim='\t',skiplines=0,x=1,y=2,z=0,format='point'):
+   #output name in grass database - replace the main forbidden chars that may be in a filename
+   output=os.path.basename(vectorfile).replace('.','_').replace('-','_').replace('+','_')
+   #if no output shapefile name given then output into tmp dir
+   if outputshape is None:
+      shapeoutputdir=tempfile.mkdtemp(suffix="vector")
+      outputshape=os.path.join(shapeoutputdir,output+".shp")
+   #import the csv into grass
+   grass.run_command('v.in.ascii',input=vectorfile,output=output,format=format,fs=delim,skip=skiplines,x=x,y=y,z=z,cat=0,overwrite=True)
+   #output as a shape file
+   grass.run_command('v.out.ogr',flags='s',input=output, type="point,line", dsn=outputshape,layer=1,format="ESRI_Shapefile").
+   #return the the output filename
+   return outputshape
 
 def importVectors(directory,region=None,tables=None):
    """
