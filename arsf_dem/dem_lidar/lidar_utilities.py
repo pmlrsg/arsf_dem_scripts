@@ -152,7 +152,7 @@ def create_patched_lidar_mosaic(in_lidar,
       # Custom DEM
       elif dem_mosaic is not None:
          in_dem_mosaic = dem_mosaic
-         in_dem_mosaic_projection = 'WGS84LL'
+         in_dem_mosaic_projection = grass_library.getGRASSProjFromGDAL(dem_mosaic)
          separation_file = None
          ascii_separation_file = False
          patch_with_dem = True
