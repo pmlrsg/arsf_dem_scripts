@@ -1549,6 +1549,6 @@ def set_nodata_value(in_file, nodata_value):
    if not HAVE_GDAL:
       raise ImportError('Could not import GDAL')
 
-   gdal_ds = gdal.Open(in_file, gdal.GA_ReadOnly)
+   gdal_ds = gdal.Open(in_file, gdal.GA_Update)
    gdal_ds.GetRasterBand(1).SetNoDataValue(nodata_value)
    gdal_ds = None
