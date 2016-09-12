@@ -347,7 +347,7 @@ GDAL_OUTFILE_DATATYPE = get_config_fallback(config,'rastercreation','GDAL_OUTFIL
 #: Default GDAL creation options
 GDAL_CREATION_OPTIONS = get_config_fallback(config,'rastercreation','GDAL_CREATION_OPTIONS',fallback='"INTERLEAVE=BIL"')
 #: Default nodata value
-NODATA_VALUE = get_config_int_fallback(config,'rastercreation','NODATA_VALUE',fallback=0)
+NODATA_VALUE = get_config_int_fallback(config,'rastercreation','NODATA_VALUE',fallback=-9999)
 
 # Set options for lidar
 #: Default lidar resolution (in metres)
