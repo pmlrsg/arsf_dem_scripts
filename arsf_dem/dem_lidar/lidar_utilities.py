@@ -275,7 +275,7 @@ def create_patched_lidar_mosaic(in_lidar,
                                  in_dem_projection=grass_library.grass_location_to_proj4(in_dem_mosaic_projection),
                                  out_projection=grass_library.grass_location_to_proj4(out_patched_projection),
                                  nodata=dem_common.NODATA_VALUE,
-                                 out_res=None,
+                                 out_res=resolution,
                                  remove_grassdb=True,
                                  fill_nulls=True)
             except Exception as err:
@@ -298,7 +298,7 @@ def create_patched_lidar_mosaic(in_lidar,
                                  in_dem_projection=grass_library.grass_location_to_proj4(in_dem_mosaic_projection),
                                  out_projection=grass_library.grass_location_to_proj4(out_patched_projection),
                                  nodata=dem_common.NODATA_VALUE,
-                                 out_res=None,
+                                 out_res=resolution,
                                  remove_grassdb=True,
                                  fill_nulls=True)
 

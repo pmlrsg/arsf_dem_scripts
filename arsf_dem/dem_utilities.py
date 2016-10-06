@@ -1070,11 +1070,13 @@ def call_gdalwarp(in_file, out_file, s_srs=None, t_srs=dem_common.WGS84_PROJ4_ST
                                  str(out_extent[1])])
 
    if target_res is not None:
-      if len(target_res) != 2:
-         raise Exception('Expected two values for target resolution')
-      gdalwarp_cmd.extend(['-tr',str(target_res[0]),
-                                           str(target_res[1])])
-
+      if isinstance(target_res, list):
+         # If a list has been passed in use different values for x and y
+         gdalwarp_cmd.extend(['-tr',str(target_res[0]),
+                              str(target_res[1])])
+      else:
+         gdalwarp_cmd.extend(['-tr',str(target_res),
+                              str(target_res)])
    if s_srs is not None:
       gdalwarp_cmd.extend(['-s_srs','"{}"'.format(s_srs)])
 
