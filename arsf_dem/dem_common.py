@@ -67,7 +67,7 @@ def get_config_bool_fallback(config, section, option, fallback=None):
    which will accept a fallback value
    """
    try:
-      return config.getboolean(config,section,option)
+      return config.getboolean(section,option)
    except:
       return fallback
 
