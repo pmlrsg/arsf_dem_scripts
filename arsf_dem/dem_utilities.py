@@ -1170,11 +1170,11 @@ def get_gdal_dataset_bb(in_file, output_ll=False):
 
    out_proj = dem_common.WGS84_PROJ4_STRING
    out_spatial_ref = osr.SpatialReference()
-   out_spatial_ref.ImportFromWkt(out_proj)
+   out_spatial_ref.ImportFromProj4(out_proj)
 
-   # Check if output in WGS84LL has been selected and this isn't the
-   # same as the input
-   if output_ll and not out_spatial_ref.IsSameGeogCS(image_spatial_ref):
+   # Check if output in WGS84LL has been selected and the input coordinate
+   # system is projected (in m)
+   if output_ll and image_spatial_ref.IsProjected():
 
       if image_proj == '':
          raise Exception('The file "{}" contains no '
