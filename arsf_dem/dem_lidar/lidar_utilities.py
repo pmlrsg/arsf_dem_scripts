@@ -247,7 +247,6 @@ def create_patched_lidar_mosaic(in_lidar,
                                                fill_nulls=False,
                                                nodata=lidar_mosaic_nodata,
                                                remove_grassdb=False)
-            lidar_dem_mosaic = temp_lidar_dem
          # If the LiDAR data has a different nodata value replace - save
          # using two different values for LiDAR and ASTER mosaic
          # Applying vertical offset will automatically do this.
@@ -259,7 +258,7 @@ def create_patched_lidar_mosaic(in_lidar,
                                              innodata=lidar_mosaic_nodata,
                                              outnodata=dem_common.NODATA_VALUE,
                                              remove_grassdb=False)
-            lidar_dem_mosaic = temp_lidar_dem
+         lidar_dem_mosaic = temp_lidar_dem
 
       if patch_with_dem:
          print('')
@@ -276,7 +275,7 @@ def create_patched_lidar_mosaic(in_lidar,
                                  in_dem_projection=grass_library.grass_location_to_proj4(in_dem_mosaic_projection),
                                  out_projection=grass_library.grass_location_to_proj4(out_patched_projection),
                                  nodata=dem_common.NODATA_VALUE,
-                                 out_res=None,
+                                 out_res=resolution,
                                  remove_grassdb=True,
                                  fill_nulls=True)
             except Exception as err:
@@ -299,7 +298,7 @@ def create_patched_lidar_mosaic(in_lidar,
                                  in_dem_projection=grass_library.grass_location_to_proj4(in_dem_mosaic_projection),
                                  out_projection=grass_library.grass_location_to_proj4(out_patched_projection),
                                  nodata=dem_common.NODATA_VALUE,
-                                 out_res=None,
+                                 out_res=resolution,
                                  remove_grassdb=True,
                                  fill_nulls=True)
 
