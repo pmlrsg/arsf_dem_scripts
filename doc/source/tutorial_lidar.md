@@ -1,6 +1,6 @@
 # NERC-ARF Workshop - Discrete LiDAR Practical #
 
-This worksheet is for Linux, it is identical to the [Windows](tutorial_lidar_windows) version but scripts have the extension `.py` and lines are broken by `\` rather than `^`.
+This worksheet is for Linux, it is identical to the [Windows](tutorial_lidar_windows.md) version but scripts have the extension `.py` and lines are broken by `\` rather than `^`.
 
 ## Datasets and computing set up ##
 
