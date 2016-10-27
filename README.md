@@ -1,5 +1,5 @@
-ARSF DEM Scripts
-=================
+NERC-ARF DEM Scripts
+=====================
 
 About
 ------
@@ -35,19 +35,19 @@ For more details on installation see [installation](doc/source/installation.rst)
 Usage
 ------
 
-See the [tutorial](doc/source/tutorial_lidar.rst) for more details on creating DEMs from LiDAR data and
+See the [tutorial](doc/source/tutorial_lidar.md) for more details on creating DEMs from LiDAR data and
 the [scripts](doc/source/scripts.rst) page for details on available scripts.
 
-Contributing                                                                    
----------------                                                                 
+Contributing
+---------------
 
-### Internal (within PML)                                                  
+### Internal (within PML)
 
 Internal development takes place using an in-house GitLab instance. Clone from the internal GitLab and create a branch from 'development-branch'. Push this branch to GitLab and submit a merge request (into 'development-branch') once changes are ready to be reviewed. Once changes have been merged into 'development-branch' push them to GitHub. Merge into master branch before tagging a new release.
 
-### External                                                       
+### External
 
-External contributions are welcome.                                             
+External contributions are welcome.
 
 If you have found a bug or would like to suggest new features create an issue providing as much detail as possible.
 

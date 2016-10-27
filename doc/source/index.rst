@@ -14,9 +14,6 @@ Tutorials
       :maxdepth: 2
 
       installation
-      tutorial_lidar
-
-
 
 Scripts
 -------
