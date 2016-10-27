@@ -8,11 +8,7 @@ This tutorial uses the NERC-ARF DEM Scripts, developed by NERC-ARF-DAN and avail
 [https://github.com/pmlrsg/arsf_dem_scripts](https://github.com/pmlrsg/arsf_dem_scripts).
 You will need to have these scripts installed before starting the tutorial.
 
-LiDAR data from two flights will be used for this tutorial. If you are using a NERC-ARF computer or the Virtual Machine these data are under:
-```
-~/nerc-arf-workshop/lidar_practical
-```
-If you are using your own machine you will need to download the data from [NEODC](http://neodc.nerc.ac.uk/) [^1].
+You will also need to download the data from [NEODC](http://neodc.nerc.ac.uk/) [^1].
 
 ### EUFAR11/02 187 ###
 
