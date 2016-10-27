@@ -172,7 +172,7 @@ This will create a DSM mosaic from the LAS files reproject to WGS84 Lat/Long and
 
 So far only a simple DSM has been created by taking the average of all first-return points within a pixel. Pixels which do not contain a return are left as no-data. There are more advanced methods of interpolation in GRASS (which we will come onto later), there are also other programs which can be used to produce a DSM. These can be accessed by two utility programs, described below. For this section the Montrose Bay data will be used, navigate to the directory the data are stored using:
 ```
-cd ~/nerc-arf-workshop/lidar_practical/GB13_08-217
+cd C:\nerc-arf-workshop\lidar_practical\GB13_08-217
 ```
 (note if you are using your own machine you will need to input a different location).
 
