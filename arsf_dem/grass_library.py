@@ -838,6 +838,9 @@ def grass_location_to_wkt(in_grass_proj, outfile=None):
 
    """
 
+   if in_grass_proj is not None:
+      in_grass_proj = str(in_grass_proj)
+
    if not HAVE_GDAL:
       raise ImportError('Could not import GDAL')
 
