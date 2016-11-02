@@ -82,9 +82,7 @@ def get_grass_lib_path():
 
    Exits if path does not exist
    """
-   LINUX64_GRASS_LIB_PATH = '/usr/lib64/grass'
-   LINUX64_GRASS_LIB_PATH_ALTERNATIVE = '/usr/lib/grass64'
-   LINUX32_GRASS_LIB_PATH = '/usr/lib/grass'
+   LINUX_GRASS_LIB_PATH = '/usr/lib*/grass*'
    OSX_GRASS_LIB_PATH = '/Applications/GRASS-*.app/Contents/MacOS/'
    WIN_GRASS_LIB_PATH = 'C:/OSGeo4W/apps/grass/grass'
 
@@ -106,14 +104,17 @@ def get_grass_lib_path():
          sys.exit(1)
     # If its not Windows or OS X, assume Linux or something UNIX-like
    else:
-      if os.path.isdir(LINUX64_GRASS_LIB_PATH):
-         return LINUX64_GRASS_LIB_PATH
-      elif os.path.isdir(LINUX32_GRASS_LIB_PATH):
-         return LINUX32_GRASS_LIB_PATH
-      elif os.path.isdir(LINUX64_GRASS_LIB_PATH_ALTERNATIVE):
-         return LINUX64_GRASS_LIB_PATH_ALTERNATIVE
+      # Need to use glob to search for different locations GRASS could be.
+      # Return the last one found, could be a problem with different versions
+      # (e.g., 32 and 64 bit) but for these scenaros best to override with
+      # config file.
+      grass_version_path = glob.glob(LINUX_GRASS_LIB_PATH)
+      if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
+         return grass_version_path[-1]
       else:
-         print('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(LINUX64_GRASS_LIB_PATH),file=sys.stderr)
+         print('Could not find GRASS library. Tried default location of {}. '
+               'Set in Config file using '
+               '"GRASS_LIB_PATH"'.format(LINUX_GRASS_LIB_PATH),file=sys.stderr)
          sys.exit(1)
 
 def get_grass_python_lib_path(GRASS_LIB_PATH=None):
