@@ -14,10 +14,10 @@ from distutils.core import setup
 # For windows also copy batch files, incase .py files
 # aren't associated with Python.
 if sys.platform == 'win32':
-   scripts_list = glob.glob('scripts\\*.py')
-   scripts_list.extend(glob.glob('scripts\\*.bat'))
+    scripts_list = glob.glob('scripts\\*.py')
+    scripts_list.extend(glob.glob('scripts\\*.bat'))
 else:
-   scripts_list = glob.glob('scripts/*.py')
+    scripts_list = glob.glob('scripts/*.py')
 
 setup(
   name='arsf_dem',

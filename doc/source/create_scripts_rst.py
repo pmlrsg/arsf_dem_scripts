@@ -13,19 +13,19 @@ import subprocess
 import os
 
 def get_command_out(command):
-   """ Get output from command """
+    """ Get output from command """
 
-   out = subprocess.Popen(command,stdin=subprocess.PIPE,
-                          stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    out = subprocess.Popen(command,stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
-   (stdout, stderr) = out.communicate()
+    (stdout, stderr) = out.communicate()
 
-   out_tabs = ''
+    out_tabs = ''
 
-   for line in stdout.decode().split('\n'):
-      out_tabs += '   {}\n'.format(line)
+    for line in stdout.decode().split('\n'):
+        out_tabs += '   {}\n'.format(line)
 
-   return out_tabs
+    return out_tabs
 
 outfile = os.path.join(os.path.split(__file__)[0],'scripts.rst')
 

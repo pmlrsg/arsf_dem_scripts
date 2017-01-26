@@ -29,43 +29,42 @@ use 'create_apl_dem.py' instead. See example 7 in help.
 
 """
 try:
-   parser = argparse.ArgumentParser(description=description_str, formatter_class=argparse.RawDescriptionHelpFormatter)
-   parser.add_argument("demtiles", nargs='+',type=str, help="Tiles to create DEM from")
-   parser.add_argument('-o', '--outdem',
-                       metavar ='Out DEM',
-                       help ='Output name for mosaiced DEM',
-                       required=True,
-                       default=None)
-   args=parser.parse_args()
+    parser = argparse.ArgumentParser(description=description_str, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("demtiles", nargs='+',type=str, help="Tiles to create DEM from")
+    parser.add_argument('-o', '--outdem',
+                        metavar ='Out DEM',
+                        help ='Output name for mosaiced DEM',
+                        required=True,
+                        default=None)
+    args=parser.parse_args()
 
-   # On Windows don't have shell expansion so fake it using glob
-   if args.demtiles[0].find('*') > -1:
-      input_tile_list = glob.glob(args.demtiles[0])
-   else:
-      input_tile_list = args.demtiles
+    # On Windows don't have shell expansion so fake it using glob
+    if args.demtiles[0].find('*') > -1:
+        input_tile_list = glob.glob(args.demtiles[0])
+    else:
+        input_tile_list = args.demtiles
 
-   out_mosaic, grassdb_path = dem_utilities.patch_files(input_tile_list,
-                out_file=None,
-                import_to_grass=True,
-                projection='WGS84LL',
-                nodata=dem_common.NODATA_VALUE,
-                remove_grassdb=False)
+    out_mosaic, grassdb_path = dem_utilities.patch_files(input_tile_list,
+                 out_file=None,
+                 import_to_grass=True,
+                 projection='WGS84LL',
+                 nodata=dem_common.NODATA_VALUE,
+                 remove_grassdb=False)
 
-   dem_utilities.offset_null_fill_dem(out_mosaic,
-                                   out_demfile=args.outdem,
-                                   import_to_grass=False,
-                                   separation_file=dem_common.WWGSG_FILE,
-                                   ascii_separation_file=dem_common.WWGSG_FILE_IS_ASCII,
-                                   fill_nulls=True,
-                                   projection='WGS84LL',
-                                   nodata=dem_common.NODATA_VALUE,
-                                   out_raster_format=dem_utilities.get_gdal_type_from_path(args.outdem),
-                                   remove_grassdb=True,
-                                   grassdb_path=grassdb_path)
+    dem_utilities.offset_null_fill_dem(out_mosaic,
+                                    out_demfile=args.outdem,
+                                    import_to_grass=False,
+                                    separation_file=dem_common.WWGSG_FILE,
+                                    ascii_separation_file=dem_common.WWGSG_FILE_IS_ASCII,
+                                    fill_nulls=True,
+                                    projection='WGS84LL',
+                                    nodata=dem_common.NODATA_VALUE,
+                                    out_raster_format=dem_utilities.get_gdal_type_from_path(args.outdem),
+                                    remove_grassdb=True,
+                                    grassdb_path=grassdb_path)
 
 except KeyboardInterrupt:
-   sys.exit(2)
+    sys.exit(2)
 except Exception as err:
-   dem_common_functions.ERROR(err)
-   sys.exit(1)
-
+    dem_common_functions.ERROR(err)
+    sys.exit(1)
