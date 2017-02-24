@@ -52,7 +52,6 @@ External contributions are welcome.
 If you have found a bug or would like to suggest new features create an issue providing as much detail as possible.
 
 If you would like to contribute to the code create a fork and make changes into the branch 'development-branch'. Submit a pull request once you are ready for your changes to be merged.
-Please note, due to internal PML remote sensing group (RSG) coding guidelines a three space indent is used - any new code must stick to this convention.
 
 
 
