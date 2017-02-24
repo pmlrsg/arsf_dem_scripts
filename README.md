@@ -7,6 +7,9 @@ About
 A collection of scripts developed by the [NERC](http://www.nerc.ac.uk/) Airborne Research Facility
 Data Analysis Node (NERC-ARF-DAN; https://nerc-arf-dan.pml.ac.uk) for working with DEMs.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.322341.svg)](https://doi.org/10.5281/zenodo.322341)
+
+
 Licensing
 ----------
 
