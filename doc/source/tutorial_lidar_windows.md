@@ -12,7 +12,7 @@ You will also need to download the data from [NEODC](http://neodc.nerc.ac.uk/) [
 
 ### EUFAR11/02 187 ###
 
-Data acquired over Svalbard on day 187/2011 ([NEODC Link](http://browse.ceda.ac.uk/browse/neodc/arsf/2011/EUFAR11_02/EUFAR11_02-2011-187_SVALBD_PGLACIAL/LiDAR) [^2])
+Data acquired over Svalbard on day 187/2011 ([NEODC Link](http://browse.ceda.ac.uk/browse/neodc/arsf/2011/EUFAR11_02/EUFAR11_02-2011_187_SVALBD_PGLACIAL/LiDAR) [^2])
 For this tutorial LAS 1.0 files 1 - 10 will be used. The ASTER DEM supplied with the hyperspectral data will also be used.
 
 ### GB13/08 217 ###
@@ -67,7 +67,7 @@ create_dem_from_lidar --in_projection UTM33N ^
 This will create a DSM from files 1 and 2.
 Note to use all lines in the folder just provide the directory (las1.0) rather than individual lines. It is recommended you only use two for the tutorial so it runs through quicker.
 The flag '--in\_projection' is used to specify the projection of the LAS files is
-UTM33N. The resolution can be specified using `--resolution 2`, if this is not supplied the default resolution (2 m) will be used.
+UTM33N. The resolution can be specified using `--resolution 1`, if this is not supplied the default resolution (2 m) will be used. Note that the command options (starting with --) do not need to be written in any specific order.
 
 As part of the process of creating a DSM, only points which are the
 first return are kept and any points flagged as noise (class 7) are
@@ -273,12 +273,14 @@ r.surf.idw input=INPUTLAYER output=OUTPUTLAYERNAME
 
 Changing 'INPUTLAYER' to the name of the file in GRASS and 'OUTPUTLAYERNAME' to name you wish to use for the interpolated raster.
 
+Note that this command will apply some smoothing and output the data as integer, therefore it will lose smaller vertical details within the LiDAR.
+
 Load this file into GRASS and compare with the original.
 
 ![Dataset in GRASS after Inverse Distance Weighted (IDW) interpolation.](figures/grass_dsm_idw.png)
 
 [^1]: NEODC [http://neodc.nerc.ac.uk/](http://neodc.nerc.ac.uk/)
-[^2]: EUFAR11/02 NEODC link [http://browse.ceda.ac.uk/browse/neodc/arsf/2011/EUFAR11_02/EUFAR11_02-2011-187_SVALBD_PGLACIAL/LiDAR](http://browse.ceda.ac.uk/browse/neodc/arsf/2011/EUFAR11_02/EUFAR11_02-2011-187_SVALBD_PGLACIAL/LiDAR)
+[^2]: EUFAR11/02 NEODC link [http://browse.ceda.ac.uk/browse/neodc/arsf/2011/EUFAR11_02/EUFAR11_02-2011_187_SVALBD_PGLACIAL/LiDAR](http://browse.ceda.ac.uk/browse/neodc/arsf/2011/EUFAR11_02/EUFAR11_02-2011_187_SVALBD_PGLACIAL/LiDAR)
 [^3]: GB13/08 NEODC link [http://browse.ceda.ac.uk/browse/neodc/arsf/2014/GB13_08/GB13_08-2014_217_Montrose_Bay/LiDAR](http://browse.ceda.ac.uk/browse/neodc/arsf/2014/GB13_08/GB13_08-2014_217_Montrose_Bay/LiDAR)
 [^4]: LAG [http://arsf.github.io/lag/](http://arsf.github.io/lag/)
 [^5]: las2txt documentation [http://www.cs.unc.edu/~isenburg/lastools/download/las2txt_README.txt](http://www.cs.unc.edu/~isenburg/lastools/download/las2txt_README.txt)
