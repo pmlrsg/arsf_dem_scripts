@@ -146,7 +146,7 @@ def grassDBsetup():
     t = time.strftime("%H%M%S")
     tempfolder = "grassdb-%s-%s" % (pid,t)
     tempfolder = os.path.join(dem_common.TEMP_PATH,tempfolder)
-    print("Grass database created at: "+tempfolder)
+    print("Grass database created at: {}".format(tempfolder))
     shutil.copytree(dem_common.GRASS_DATABASE_TEMPLATE,
                     tempfolder)
     gisdbase = os.path.join(tempfolder)
@@ -157,7 +157,6 @@ def grassDBsetup():
                 location,
                 mapset)
     return tempfolder
-#end function
 
 def setGrassQuiet(verbosity=0):
     """Function grassDBsetup
@@ -171,7 +170,6 @@ def setGrassQuiet(verbosity=0):
        Returns:
     """
     os.environ['GRASS_VERBOSE']=str(verbosity)
-#end function
 
 def setGrassPythonLoc():
     """Function setGrassPythonLoc
@@ -354,7 +352,7 @@ def readAsciiLidar(lasfolder, location=None,patch=True,datacolumn=dem_common.LID
     if location is not None:
         # take the origin location to reset at the end
         orig_loc = grass.read_command('g.gisenv', get="LOCATION_NAME").replace('\n','')
-        grass.run_command('g.gisenv', set="LOCATION_NAME=%s" % (location))
+        setLocation(location)
 
     print("Importing Ascii lidar")
     #if lasfolder is a folder get the file list - else create a list with just the lasfolder FILE
@@ -663,7 +661,6 @@ def setLocation(projection):
             dem_common_functions.ERROR("No recognisable projection given")
             location = None
     if location is not None:
-        print("changing location")
         grass.run_command('g.gisenv',
                     set="LOCATION_NAME=%s" % (location))
     return location
