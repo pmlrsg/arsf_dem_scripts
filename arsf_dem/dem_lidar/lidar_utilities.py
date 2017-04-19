@@ -216,6 +216,8 @@ def create_patched_lidar_mosaic(in_lidar,
                 else:
                     raise Exception('Multiple gridded lidar files are not currently'
                                     'supported. Mosaic them first')
+            else:
+                lidar_dem_mosaic = in_lidar
             # Check GDAL can open dataset (will raise exception if not)
             dem_utilities.check_gdal_dataset(lidar_dem_mosaic)
 
