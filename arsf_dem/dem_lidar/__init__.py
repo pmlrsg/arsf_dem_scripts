@@ -186,6 +186,9 @@ def _las_to_dem(in_las,out_raster,
             dem_common_functions.WARNING('Could not convert projection to LAStools flags. {}. Will try to get projection from LAS file'.format(err))
 
         if demtype.upper() == 'DSM':
+            # Set spike-free flag, advice is ~ 3 x average pulse spacing
+            # so approximate as 2 x resolution
+            lastools_flags.extend(['-spike_free {}'.format(2*float(resolution))])
             lastools_lidar.las_to_dsm(in_las_merged, out_raster, flags=lastools_flags)
         elif demtype.upper() == 'DTM':
             lastools_lidar.las_to_dtm(in_las_merged, out_raster, flags=lastools_flags)
