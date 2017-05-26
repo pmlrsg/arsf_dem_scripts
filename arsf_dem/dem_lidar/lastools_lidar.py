@@ -287,11 +287,12 @@ def classify_ground_las(in_las,out_las, flags=None):
     if not _checkPaidLAStools():
         raise Exception('Could not find LAStools, checked {}'.format(dem_common.LASTOOLS_NONFREE_BIN_PATH))
 
-    lasground_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'lasground.exe')]
+    lasground_cmd = [os.path.join(dem_common.LASTOOLS_NONFREE_BIN_PATH,'lasground_new.exe')]
+
     # Check for flags
     if flags is not None:
         lasground_cmd += _check_flags(flags)
-
+    lasground_cmd.extend(['-extra_fine'])
     lasground_cmd.extend(['-i',in_las, '-o',out_las])
 
     # Run directly through subprocess, as CallSubprocessOn
@@ -307,6 +308,11 @@ def las_to_dsm(in_las, out_dsm, flags=None):
     http://www.cs.unc.edu/~isenburg/lastools/download/las2dem_README.txt
 
     Note: this tool requires a license.
+
+    To use the spike_free method pass in the flag ['-spike_free 4'].
+    For more details see:
+
+    https://rapidlasso.com/2016/02/03/generating-spike-free-digital-surface-models-from-lidar/
 
     Arguments:
 
