@@ -309,7 +309,8 @@ def las_to_dsm(in_las, out_dsm, flags=None):
 
     Note: this tool requires a license.
 
-    Uses the 'spike_free' flag, see:
+    To use the spike_free method pass in the flag ['-spike_free 4'].
+    For more details see:
 
     https://rapidlasso.com/2016/02/03/generating-spike-free-digital-surface-models-from-lidar/
 
@@ -334,9 +335,6 @@ def las_to_dsm(in_las, out_dsm, flags=None):
     if flags is not None:
         las2dem_cmd += _check_flags(flags)
 
-    # If spike free flag hasn't been passed in, add it.
-    if '-spike_free' not in las2dem_cmd:
-        las2dem_cmd.extend(['-spike_free', '4'])
     las2dem_cmd.extend(['-i',in_las, '-o',out_dsm])
 
     # Run directly through subprocess, as CallSubprocessOn
