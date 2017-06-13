@@ -13,11 +13,13 @@ Available functions:
 * create_patched_lidar_mosaic - Create mosaic from lidar data and patch with another DEM.
 * create_lidar_mosaic - Create mosaic from lidar data.
 * get_lidar_buffered_bb - buffer bounding box by 'DEFAULT_LIDAR_DEM_BUFFER' or user specified buffer.
+* get_lidar_outline_polygon - creates polygon with outline of lidar line.
 
 """
 from __future__ import print_function # Import print function (so we can use Python 3 syntax with Python 2)
 import os
 import shutil
+import sys
 import glob
 import tempfile
 
@@ -28,6 +30,15 @@ from .. import dem_common_functions
 
 from . import grass_lidar
 from .. import grass_library
+
+# Import GRASS
+sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
+try:
+    import grass.script as grass
+except ImportError as err:
+    raise ImportError("Could not import grass library. Try setting "
+                      "'GRASS_PYTHON_LIB_PATH' environmental variable.")
+
 
 def create_patched_lidar_mosaic(in_lidar,
                      outdem,
@@ -647,3 +658,80 @@ def get_lidar_buffered_bb(in_bounding_box, bb_buffer=dem_common.DEFAULT_LIDAR_DE
     out_bounding_box[3] = in_bounding_box[3] + east_buffer
 
     return out_bounding_box
+
+def get_lidar_outline_polygon(in_lidar_file,
+                              out_polygon,
+                              in_lidar_projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
+                              resolution=100,
+                              lidar_format='LAS',
+                              out_format='GeoJSON'):
+    """
+    Creates a polygon representing the outline of a LiDAR point cloud file.
+
+    Grids LiDAR file, converts to mask and then generates a polygon from this.
+    The polygon is smoothed using 'v.generalize'.
+
+    Arguments:
+
+    * in_lidar_file - Input LiDAR file
+    * out_polygon - Output polygon
+    * in_lidar_projection - Projection of LiDAR file
+    * resolution - Resolution to grid LiDAR using
+    * lidar_format - format of lidar data (LAS / ASCII).
+    * out_format - OGR format for output polygon (e.g., KML, ESRI Shapefile)
+
+    """
+
+    mask_name = 'lidar_mask'
+    vector_name = 'ldar_mask_poly'
+    smoothed_vector_name = 'lidar_mask_poly_smooth'
+
+    # Rasterise LiDAR file
+    if lidar_format.upper() == 'LAS':
+        out_raster_name, grassdb_path = grass_lidar.las_to_raster(
+                 in_lidar_file,
+                 out_raster=None,
+                 remove_grassdb=False,
+                 projection=in_lidar_projection,
+                 bin_size=resolution)
+    elif lidar_format.upper() == 'ASCII':
+        out_raster_name, grassdb_path = grass_lidar.ascii_to_raster(
+                 in_lidar_file,
+                 out_raster=None,
+                 remove_grassdb=False,
+                 projection=in_lidar_projection,
+                 bin_size=resolution)
+    else:
+        raise Exception('Input LiDAR format not recognised')
+
+    # Convert  to mask
+    grass.mapcalc('{mask}=if({lidar} != {nodata}'
+                  ',1,0)'.format(mask=mask_name, lidar=out_raster_name,
+                                 nodata=dem_common.NODATA_VALUE))
+
+    if not grass_library.checkFileExists(mask_name):
+        raise Exception('Could not create mask')
+
+    # Convert to polygon
+    grass.run_command('r.to.vect',
+                      input=mask_name,
+                      output=vector_name,
+                      feature='area')
+
+    # Smooth polygon
+    grass.run_command('v.generalize',
+                      input=vector_name,
+                      output=smoothed_vector_name,
+                      method='snakes', threshold=1000)
+
+    # Export
+    grass.run_command('v.out.ogr',
+                      input=smoothed_vector_name,
+                      dsn=out_polygon,
+                      type='area',
+                      format=out_format)
+
+    if not os.path.isfile(out_polygon):
+        raise Exception('Could not create output polygon')
+
+    shutil.rmtree(grassdb_path)
