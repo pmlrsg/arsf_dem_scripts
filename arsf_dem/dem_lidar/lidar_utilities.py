@@ -664,7 +664,7 @@ def get_lidar_outline_polygon(in_lidar_file,
                               in_lidar_projection=dem_common.DEFAULT_LIDAR_PROJECTION_GRASS,
                               resolution=100,
                               lidar_format='LAS',
-                              out_format='GeoJSON'):
+                              out_format='KML'):
     """
     Creates a polygon representing the outline of a LiDAR point cloud file.
 
