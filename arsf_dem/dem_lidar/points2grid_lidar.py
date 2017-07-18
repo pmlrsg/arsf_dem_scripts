@@ -220,13 +220,13 @@ def las_to_dtm(in_las, out_dtm,
     return None
 
 def classified_las_to_dtm(in_las, out_dtm,
-               resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
-               projection=None,
-               grid_method='mean',
-               fill_window_size=7,
-               quiet=True):
+                          resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
+                          projection=None,
+                          grid_method='mean',
+                          fill_window_size=7,
+                          quiet=True):
     """
-    Create Digital Terrain Model (DSM) from a LAS file where the ground
+    Create Digital Terrain Model (DTM) from a LAS file where the ground
     returns have already been classified (class 2).
 
     Arguments:
