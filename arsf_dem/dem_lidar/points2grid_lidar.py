@@ -239,13 +239,16 @@ def classified_las_to_dtm(in_las, out_dtm,
     * quiet - don't print output from points2grid command
 
     """
+    non_ground_classes = [i for i in range(0,32)]
+    non_ground_classes.remove(2)
+
     _las_to_dem(in_las, out_dtm,
                 resolution=resolution,
                 projection=projection,
                 demtype='DTM',
                 grid_method=grid_method,
                 fill_window_size=fill_window_size,
-                exclude_class=[0,1,3,4,5,6,7,8,9,12],
+                exclude_class=non_ground_classes,
                 quiet=quiet)
 
     return None
