@@ -81,6 +81,7 @@ def _las_to_dem(in_las, out_dem,
                grid_method='mean',
                search_radius=None,
                fill_window_size=None,
+               exclude_class=[7],
                quiet=True):
     """
     Create Digital Elevation Model (DEM) from a LAS file using points2grid
@@ -95,6 +96,7 @@ def _las_to_dem(in_las, out_dem,
     * grid_method - points2grid output type (min, max, mean, idw or std)
     * search_radius - specifies the search radius (default is 2 or resolution, whichever is greater)
     * fill_window_size - window size to use for filling nulls
+    * exclude_class - list of classes to exclude (default = class 7)
     * quiet - don't print output from points2grid command
 
     """
@@ -112,11 +114,12 @@ def _las_to_dem(in_las, out_dem,
 
     print('Creating surface')
     surfaceCMD = [os.path.join(dem_common.POINTS2GRID_BIN_PATH,'points2grid'),
-                  '--exclude_class', '7',
                   '--output_file_name',dem_tmp,
                   '--output_format','arc',
                   '--search_radius', str(search_radius),
                   '--resolution',str(resolution)]
+    surfaceCMD.extend(['--exclude_class'])
+    surfaceCMD.extend([str(c) for c in exclude_class])
 
     if grid_method.lower() == 'min':
         surfaceCMD.extend(['--min'])
@@ -148,7 +151,7 @@ def _las_to_dem(in_las, out_dem,
 
     print('Exporting')
     export_ascii_raster(dem_tmp, out_dem, projection=projection,
-                                           output_type=grid_method.lower())
+                        output_type=grid_method.lower())
 
     os.close(outdem_handler)
     os.remove(dem_tmp + '.{}.asc'.format(grid_method.lower()))
@@ -212,6 +215,40 @@ def las_to_dtm(in_las, out_dtm,
                 demtype='DTM',
                 grid_method=grid_method,
                 fill_window_size=fill_window_size,
+                quiet=quiet)
+
+    return None
+
+def classified_las_to_dtm(in_las, out_dtm,
+                          resolution=dem_common.DEFAULT_LIDAR_RES_METRES,
+                          projection=None,
+                          grid_method='mean',
+                          fill_window_size=7,
+                          quiet=True):
+    """
+    Create Digital Terrain Model (DTM) from a LAS file where the ground
+    returns have already been classified (class 2).
+
+    Arguments:
+
+    * in_las - Input classified LAS File
+    * out_dtm - Output DTM file
+    * resolution - output resolution
+    * grid_method - points2grid output type (min, max, mean, idw or std)
+    * fill_window_size - window size to use for filling nulls
+    * quiet - don't print output from points2grid command
+
+    """
+    non_ground_classes = [i for i in range(0,32)]
+    non_ground_classes.remove(2)
+
+    _las_to_dem(in_las, out_dtm,
+                resolution=resolution,
+                projection=projection,
+                demtype='DTM',
+                grid_method=grid_method,
+                fill_window_size=fill_window_size,
+                exclude_class=non_ground_classes,
                 quiet=quiet)
 
     return None
