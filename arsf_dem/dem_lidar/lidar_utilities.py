@@ -677,7 +677,7 @@ def get_lidar_outline_polygon(in_lidar_file,
     * out_polygon - Output polygon
     * in_lidar_projection - Projection of LiDAR file
     * resolution - Resolution to grid LiDAR using
-    * lidar_format - format of lidar data (LAS / ASCII).
+    * lidar_format - format of lidar data (LAS, ASCII or GRIDDED).
     * out_format - OGR format for output polygon (e.g., KML, ESRI Shapefile)
 
     """
@@ -701,6 +701,25 @@ def get_lidar_outline_polygon(in_lidar_file,
                  remove_grassdb=False,
                  projection=in_lidar_projection,
                  bin_size=resolution)
+    elif lidar_format.upper() == 'GRIDDED':
+        # For gridded data set up GRASS database and import.
+        print('Ignoring resolution for gridded data')
+        grassdb_path = grass_library.grassDBsetup()
+        out_raster_name = 'imported_lidar'
+        in_proj = grass_library.getGRASSProjFromGDAL(in_lidar_file)
+        location = in_proj
+        mapset   = 'PERMANENT'
+        grass.setup.init(dem_common.GRASS_LIB_PATH,
+                         grassdb_path,
+                         location,
+                         mapset)
+        grass_library.setLocation(in_proj)
+        grass.run_command('r.external',
+                          input=in_lidar_file,
+                          output=out_raster_name,
+                          overwrite=True,
+                          flags='e',
+                          quiet=False)
     else:
         raise Exception('Input LiDAR format not recognised')
 
