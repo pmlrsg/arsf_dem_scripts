@@ -1344,14 +1344,17 @@ def rescaleRGB(r,g,b,bounds='0,255'):
     return groupname
 
 
-def locationFromFile(filename,locationname=None):
+def locationFromFile(filename, locationname=None):
     """
     Create a new location that matches the given file. Can specify the new location name.
     """
-    if locationname==None:
-        pid = os.getpid()
-        t = time.strftime("%H%M%S")
-        locationname="custom-%s-%s" % (pid,t)
+    if locationname is None:
+        try:
+            locationname = getGRASSProjFromGDAL(filename)
+        except Exception:
+            pid = os.getpid()
+            t = time.strftime("%H%M%S")
+            locationname="custom-%s-%s" % (pid,t)
 
     if grass.run_command('g.proj',georef=filename,flags='c',location=locationname) != 0:
         #An error occurred
