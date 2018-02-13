@@ -107,8 +107,7 @@ def create_apl_dem_from_mosaic(outdem,
         ascii_separation_file = dem_common.UKBNG_SEP_FILE_WGS84_IS_ASCII
         out_res = dem_common.NEXTMAP_RES_DEGREES
         if not os.path.isfile(dem_common.OSTN02_NTV2_BIN_FILE):
-            dem_common_functions.ERROR("Could not find OSTN02 transform file.\nChecked {}".format(dem_common.OSTN02_NTV2_BIN_FILE))
-            sys.exit(1)
+            raise Exception("Could not find OSTN02 transform file.\nChecked {}".format(dem_common.OSTN02_NTV2_BIN_FILE))
 
     # SRTM DEM
     elif (dem_source is not None) and (dem_source.upper() == 'SRTM'):

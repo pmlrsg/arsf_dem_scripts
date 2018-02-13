@@ -91,9 +91,7 @@ try:
     import grass.script as grass
     import grass.script.setup as gsetup
 except ImportError as err:
-    print("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
-    print(err, file=sys.stderr)
-    sys.exit(1)
+    raise ImportError("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
 import shutil
 import time
 import numpy
