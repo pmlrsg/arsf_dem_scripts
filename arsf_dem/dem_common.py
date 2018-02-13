@@ -91,8 +91,7 @@ def get_grass_lib_path():
         if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
             return grass_version_path[-1]
         else:
-            print('Could not find GRASS library. Tried default location of {}.Set in Config file using "GRASS_LIB_PATH"'.format(OSX_GRASS_LIB_PATH),file=sys.stderr)
-            sys.exit(1)
+            raise ImportError('Could not find GRASS library. Tried default location of {}.Set in Config file using "GRASS_LIB_PATH"'.format(OSX_GRASS_LIB_PATH))
     elif sys.platform == 'win32':
         # As under Windows OSGeo4W stores with version name, run Glob to try
         # and find path from root
@@ -100,8 +99,7 @@ def get_grass_lib_path():
         if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
             return grass_version_path[-1]
         else:
-            print('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(WIN_GRASS_LIB_PATH),file=sys.stderr)
-            sys.exit(1)
+            raise ImportError('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(WIN_GRASS_LIB_PATH))
        # If its not Windows or OS X, assume Linux or something UNIX-like
     else:
         # Need to use glob to search for different locations GRASS could be.
@@ -112,10 +110,9 @@ def get_grass_lib_path():
         if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
             return grass_version_path[-1]
         else:
-            print('Could not find GRASS library. Tried default location of {}. '
-                  'Set in Config file using '
-                  '"GRASS_LIB_PATH"'.format(LINUX_GRASS_LIB_PATH),file=sys.stderr)
-            sys.exit(1)
+            raise ImportError('Could not find GRASS library. Tried default location of {}. '
+                              'Set in Config file using '
+                              '"GRASS_LIB_PATH"'.format(LINUX_GRASS_LIB_PATH))
 
 def get_grass_python_lib_path(GRASS_LIB_PATH=None):
     """
@@ -131,9 +128,8 @@ def get_grass_python_lib_path(GRASS_LIB_PATH=None):
     if os.path.isdir(GRASS_PYTHON_LIB_PATH):
         return GRASS_PYTHON_LIB_PATH
     else:
-        print('Could not find GRASS Python library. Was not where expected relative to "GRASS_LIB_PATH".',file=sys.stderr)
-        print('You need to define in config file using "GRASS_PYTHON_LIB_PATH".',file=sys.stderr)
-        sys.exit(1)
+        raise ImportError('Could not find GRASS Python library. Was not where expected relative to "GRASS_LIB_PATH".'
+                          'You need to define in config file using "GRASS_PYTHON_LIB_PATH".')
 
 def get_grass_db_template_path():
     """
@@ -332,10 +328,9 @@ if GRASS_DATABASE_TEMPLATE is None or os.path.isdir(GRASS_DATABASE_TEMPLATE) == 
     GRASS_DATABASE_TEMPLATE = get_grass_db_template_path()
 
 if GRASS_DATABASE_TEMPLATE is None or os.path.isdir(GRASS_DATABASE_TEMPLATE) == False:
-    print('''Could not find GRASS database template.
+    raise ImportError('''Could not find GRASS database template.
  Try downloading from http://arsf-dan.nerc.ac.uk/trac/raw-attachment/wiki/Help/DEM_scripts/grass_db_template.zip
  and setting path in config file using "GRASS_DATABASE_TEMPLATE"'''.format(GRASS_DATABASE_TEMPLATE),file=sys.stderr)
-    sys.exit()
 
 # Set some common options for raster creation
 

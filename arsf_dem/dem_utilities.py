@@ -56,9 +56,9 @@ sys.path.append(dem_common.GRASS_PYTHON_LIB_PATH)
 try:
     import grass.script as grass
 except ImportError as err:
-    print("Could not import grass library. Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable.", file=sys.stderr)
-    print(err, file=sys.stderr)
-    sys.exit(1)
+    raise ImportError("Could not import grass library. "
+                      "Try setting 'GRASS_PYTHON_LIB_PATH' environmental variable."
+                      "\n{}".format(err))
 
 # Try to import GDAL
 HAVE_GDAL=True
