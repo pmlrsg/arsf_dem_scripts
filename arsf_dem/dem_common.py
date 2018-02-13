@@ -91,7 +91,7 @@ def get_grass_lib_path():
         if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
             return grass_version_path[-1]
         else:
-            raise ImportError('Could not find GRASS library. Tried default location of {}.Set in Config file using "GRASS_LIB_PATH"'.format(OSX_GRASS_LIB_PATH),file=sys.stderr)
+            raise ImportError('Could not find GRASS library. Tried default location of {}.Set in Config file using "GRASS_LIB_PATH"'.format(OSX_GRASS_LIB_PATH))
     elif sys.platform == 'win32':
         # As under Windows OSGeo4W stores with version name, run Glob to try
         # and find path from root
@@ -99,7 +99,7 @@ def get_grass_lib_path():
         if (len(grass_version_path) > 0) and (os.path.isdir(grass_version_path[-1])):
             return grass_version_path[-1]
         else:
-            raise ImportError('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(WIN_GRASS_LIB_PATH),file=sys.stderr)
+            raise ImportError('Could not find GRASS library. Tried default location of {}. Set in Config file using "GRASS_LIB_PATH"'.format(WIN_GRASS_LIB_PATH))
        # If its not Windows or OS X, assume Linux or something UNIX-like
     else:
         # Need to use glob to search for different locations GRASS could be.
@@ -112,7 +112,7 @@ def get_grass_lib_path():
         else:
             raise ImportError('Could not find GRASS library. Tried default location of {}. '
                               'Set in Config file using '
-                              '"GRASS_LIB_PATH"'.format(LINUX_GRASS_LIB_PATH),file=sys.stderr)
+                              '"GRASS_LIB_PATH"'.format(LINUX_GRASS_LIB_PATH))
 
 def get_grass_python_lib_path(GRASS_LIB_PATH=None):
     """
