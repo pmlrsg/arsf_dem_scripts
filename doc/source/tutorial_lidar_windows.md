@@ -66,8 +66,9 @@ create_dem_from_lidar --in_projection UTM33N ^
 
 This will create a DSM from files 1 and 2.
 Note to use all lines in the folder just provide the directory (las1.0) rather than individual lines. It is recommended you only use two for the tutorial so it runs through quicker.
-The flag '--in\_projection' is used to specify the projection of the LAS files is
-UTM33N. The resolution can be specified using `--resolution 1`, if this is not supplied the default resolution (2 m) will be used. Note that the command options (starting with --) do not need to be written in any specific order.
+The flag `--in_projection` is used to specify the projection of the LAS files, which is UTM33N.
+The resolution can be specified using `--resolution <value>`, where you replace `<value>` with the required resolution in metres. If this is not supplied the default resolution (2 m) will be used
+Note that the command options (starting with `--`) do not need to be written in any specific order.
 
 As part of the process of creating a DSM, only points which are the
 first return are kept and any points flagged as noise (class 7) are
@@ -149,7 +150,7 @@ Processing Library (APL) to geocorrect hyperspectral data, some extra
 consideration are needed:
 
 * The DSM needs to use WGS-84 Lat/Long projection and heights need to be relative to the WGS-84 ellipsoid.
-* Areas of no-data need to be filled (e.g., with a courser resolution DEM).
+* Areas of no-data need to be filled (e.g., with a coarser resolution DEM).
 * The format needs to be ENVI Band Interleaved by Line (BIL) or Band Sequential (BSQ).
 
 The same `create_dem_from_lidar` script can be used to generate a DSM
@@ -166,11 +167,11 @@ create_dem_from_lidar --in_projection UTM33N ^
 ```
 As previously only two lines are specified to reduce processing time.
 
-This will create a DSM mosaic from the LAS files reproject to WGS84 Lat/Long and patch with 'EUFAR11\_02-2011-187\_ASTER.dem' (as provided with the NERC-ARF hyperspectral delivery), cropped to the bounding box of all LiDAR data plus a buffer of 2 km. This assumes the vertical datum of the DEM mosaic is the same as that required for the output projection.
+This will create a DSM mosaic from the LAS files, reproject to WGS84 Lat/Long and patch with 'EUFAR11\_02-2011-187\_ASTER.dem' (as provided with the NERC-ARF hyperspectral delivery), cropped to the bounding box of all LiDAR data plus a buffer of 2 km. This assumes the vertical datum of the DEM mosaic is the same as that required for the output projection.
 
 ## Create DSM / DTM using additional programs ##
 
-So far only a simple DSM has been created by taking the average of all first-return points within a pixel. Pixels which do not contain a return are left as no-data. There are more advanced methods of interpolation in GRASS (which we will come onto later), there are also other programs which can be used to produce a DSM. These can be accessed by two utility programs, described below. For this section the Montrose Bay data will be used, navigate to the directory the data are stored using:
+So far only a simple DSM has been created by taking the average of all first-return points within a pixel. Pixels which do not contain a return are left as no-data. There are more advanced methods of interpolation in GRASS (which we will come onto later), there are also other programs which can be used to produce a DSM. These can be accessed by two utility programs, described below. For this section the Montrose Bay data will be used, navigate to the directory the data are stored in using:
 ```
 cd C:\nerc-arf-workshop\lidar_practical\GB13_08-217
 ```
@@ -199,8 +200,7 @@ las_to_dsm -o LDR-GB13_08-2014-217-02_subset_dsm_grass.tif ^
 
 The format of the output file is set using the extension, using '.tif' will create a GeoTIFF.
 
-Other programs such as [LAStools](http://rapidlasso.com/lastools/) [^12], [SPDLib](http://spdlib.org) [^13], [FUSION](http://forsys.cfr.washington.edu/fusion/fusion_overview.html) [^14] and [points2grid](https://github.com/CRREL/points2grid) [^15] can be used by
-if they have been installed by setting the --method flag. Note, unlike the other methods, the tools required to create a DEM in LAStools are not free and binaries are only provided for Windows (although work on Linux through Wine). It is possible to run without a license for non-profit and personal work but they will introduce noise and artifacts (such as black diagonal lines) in the data. For more details see [LAStools License](http://www.cs.unc.edu/~isenburg/lastools/LICENSE.txt) [16^]
+Other programs such as [LAStools](http://rapidlasso.com/lastools/) [^12], [SPDLib](http://spdlib.org) [^13], [FUSION](http://forsys.cfr.washington.edu/fusion/fusion_overview.html) [^14] and [points2grid](https://github.com/CRREL/points2grid) [^15] can be used, if they have been installed, by setting the --method flag. Note, unlike the other methods, the tools required to create a DEM in LAStools are not free and binaries are only provided for Windows (although work on Linux through Wine). It is possible to run without a license for non-profit and personal work but they will introduce noise and artifacts (such as black diagonal lines) in the data. For more details see [LAStools License](http://www.cs.unc.edu/~isenburg/lastools/LICENSE.txt) [16^]
 
 Try running the same command but setting `--method LAStools` or `--method SPDLib` (if SPDLib is installed). For example:
 ```bash
@@ -212,7 +212,7 @@ las_to_dsm -o LDR-GB13_08-2014-217-02_subset_dsm_spdlib.tif ^
 
 ### Digital Terrain Model (DTM) ###
 
-In addition to producing a DSM another common product from LiDAR data is a Digital Terrain Model (DTM), this represents the 'bare-earth', that is the elevation excluding buildings and vegetation. Producing a DTM is more complicated than a DSM, a first order approximation is to take only last returns, which assumes multiple returns are received from a pulse the last is from the ground. However, many last returns are not from the ground for example dense vegetation where the last return does not reach the ground or buildings where there are not multiple returns. Producing an accurate DTM first requires ground returns to be selected from the point cloud and gaps where there are no ground returns (e.g., buildings) to be interpolated.
+In addition to producing a DSM another common product from LiDAR data is a Digital Terrain Model (DTM), this represents the 'bare-earth', that is the elevation excluding buildings and vegetation. Producing a DTM is more complicated than a DSM, a first order approximation is to take only last returns, which assumes multiple returns are received from a pulse and that the last is from the ground. However, many last returns are not from the ground for example dense vegetation where the last return does not reach the ground or buildings where there are not multiple returns. Producing an accurate DTM first requires ground returns to be selected from the point cloud and gaps where there are no ground returns (e.g., buildings) to be interpolated.
 
 Packages such as [LAStools](http://rapidlasso.com/lastools/) [^12], [SPDLib](http://spdlib.org) [^13] and [FUSION](http://forsys.cfr.washington.edu/fusion/fusion_overview.html) [^14] have more advanced methods for classifying ground returns (see their
 respective manuals for more details).
