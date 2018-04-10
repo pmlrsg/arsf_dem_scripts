@@ -237,13 +237,17 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
         # Fill Null values
         print('Filling Null values')
         null_filled_name = 'patched_elevated_filled'
-        grass.run_command('r.fillnulls',
-                          input=elevated_name,
-                          output=null_filled_name,
-                          tension=40,
-                          smooth=0.1,
-                          overwrite=True)
-
+        try:
+            grass.run_command('r.fillnulls',
+                              input=elevated_name,
+                              output=null_filled_name,
+                              tension=40,
+                              smooth=0.1,
+                              overwrite=True)
+        # If this fails, pass. Will check for file in following step and print
+        # warning there.
+        except Exception as err:
+            pass
         # Check file exists (to confirm command has run correctly
         if not grass_library.checkFileExists(null_filled_name):
             dem_common_functions.WARNING('Could not NULL fill DEM, possibly there are no NULL values to fill')
@@ -270,6 +274,7 @@ def offset_null_fill_dem(in_demfile, out_demfile=None,
                           input=smoothed_name,
                           output=out_demfile,
                           nodata=nodata,
+                          flags='fc',
                           overwrite=True)
         remove_gdal_aux_file(out_demfile)
 
@@ -420,7 +425,7 @@ def patch_files(in_file_list,
                      input=patched_name,
                      output=out_file,
                      nodata=nodata,
-                     flags='f',
+                     flags='fc',
                      overwrite=True)
         remove_gdal_aux_file(out_file)
 
@@ -536,6 +541,7 @@ def replace_nodata_val(in_demfile, out_demfile=None,
                           input=replace_nodata_name,
                           output=out_demfile,
                           nodata=outnodata,
+                          flags='fc',
                           overwrite=True)
         remove_gdal_aux_file(out_demfile)
 
