@@ -644,6 +644,7 @@ def setLocation(projection):
 
        Returns: The location switched to, or created
     """
+    print("Setting location to: {}".format(projection))
     if projection == "WGS84LL":
         location = projection
     elif projection == "UKBNG":
@@ -660,7 +661,7 @@ def setLocation(projection):
             location = None
     if location is not None:
         grass.run_command('g.gisenv',
-                    set="LOCATION_NAME=%s" % (location))
+                          set="LOCATION_NAME=%s" % (location))
     return location
 #end function
 
@@ -1347,16 +1348,9 @@ def locationFromFile(filename, locationname=None):
     Create a new location that matches the given file. Can specify the new location name.
     """
     if locationname is None:
-        try:
-            locationname = getGRASSProjFromGDAL(filename)
-        except Exception:
-            pid = os.getpid()
-            t = time.strftime("%H%M%S")
-            locationname="custom-%s-%s" % (pid,t)
+        locationname = getGRASSProjFromGDAL(filename)
 
-    if grass.run_command('g.proj',georef=filename,flags='c',location=locationname) != 0:
-        #An error occurred
-        locationname=None
+    setLocation(locationname)
 
     return locationname
 
