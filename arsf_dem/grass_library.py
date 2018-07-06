@@ -624,10 +624,12 @@ def getGRASSProjFromGDAL(in_file):
              (projection.lower() == "transverse mercator")) and \
              (spheroid.lower().find("airy") > -1):
         grass_proj = "UKBNG"
+    elif projection == "" or projection is None:
+        grass_proj = "UNPROJECTED"
     else:
         gdaldataset = None
         raise Exception('Could not identify projection from file.\n' +
-                       'WKT string is: {}'.format(spatial_ref.ExportToPrettyWkt()))
+                        'WKT string is: {}'.format(spatial_ref.ExportToPrettyWkt()))
 
     gdaldataset = None
     return grass_proj
@@ -644,12 +646,17 @@ def setLocation(projection):
 
        Returns: The location switched to, or created
     """
+    print("Setting location to: {}".format(projection))
     if projection == "WGS84LL":
         location = projection
     elif projection == "UKBNG":
         location = projection
     elif 'UTM' in projection:
         location = newLocation(projection)
+    elif projection == "UNPROJECTED":
+        # Create a dummy coordinate system for unprojected data.
+        location = newLocation("+proj=tmerc +lat_0=0+lon_0=0 +ellps=WGS84 +units=m +no_defs",
+                               projection)
     else:
         # If the projection is not the expected GRASS location format
         # try as a proj4 string.
@@ -660,11 +667,11 @@ def setLocation(projection):
             location = None
     if location is not None:
         grass.run_command('g.gisenv',
-                    set="LOCATION_NAME=%s" % (location))
+                          set="LOCATION_NAME=%s" % (location))
     return location
 #end function
 
-def newLocation(projection):
+def newLocation(projection, grass_loc=None):
     """
     Function newLocation
 
@@ -679,6 +686,7 @@ def newLocation(projection):
     * projection: projection to create new location can be
                          proj4 string or GRASS style projection name
                          (e.g., UKBNG)
+    * location_name: name for projection, if not provided will get from projection
 
     Returns:
 
@@ -686,8 +694,16 @@ def newLocation(projection):
 
     """
     try:
-        grass_loc = proj4_to_grass_location(projection)
-        proj4_str = projection
+        if grass_loc is not None:
+            try:
+                proj4_to_grass_location(projection)
+                proj4_str = projection
+            except Exception as err:
+                raise Exception("GRASS location name provided but projection "
+                                "not provided as proj4 string")
+        else:
+            grass_loc = proj4_to_grass_location(projection)
+            proj4_str = projection
     except Exception:
         grass_loc = projection
         proj4_str = grass_location_to_proj4(grass_loc)
@@ -920,13 +936,8 @@ def proj4_to_grass_location(in_proj4):
              (spheroid.lower().find("airy") > -1):
         grass_proj = "UKBNG"
     else:
-        dem_common_functions.WARNING('''Could not determine GRASS location name from:
-
-  {}
-
-  Setting to 'UNKNOWN'
-  '''.format(in_proj4))
-        grass_proj = "UNKNOWN"
+        raise Exception('Could not determine GRASS location name from: \n'
+                        '{}'.format(in_proj4))
 
     return grass_proj
 
@@ -1347,16 +1358,9 @@ def locationFromFile(filename, locationname=None):
     Create a new location that matches the given file. Can specify the new location name.
     """
     if locationname is None:
-        try:
-            locationname = getGRASSProjFromGDAL(filename)
-        except Exception:
-            pid = os.getpid()
-            t = time.strftime("%H%M%S")
-            locationname="custom-%s-%s" % (pid,t)
+        locationname = getGRASSProjFromGDAL(filename)
 
-    if grass.run_command('g.proj',georef=filename,flags='c',location=locationname) != 0:
-        #An error occurred
-        locationname=None
+    setLocation(locationname)
 
     return locationname
 
