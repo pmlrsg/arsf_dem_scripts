@@ -652,7 +652,15 @@ def setLocation(projection):
     elif projection == "UKBNG":
         location = projection
     elif 'UTM' in projection:
-        location = newLocation(projection)
+        try:
+            # UTM projection isn't in template so need to set up as a new location
+            location = newLocation(projection)
+        except Exception as err:
+            dem_common_functions.WARNING("Setting location to {} failed with "
+                                         "error:\n{}\n. Assuming location "
+                                         "exists".format(projection, err))
+            # If creating a new location fails assume already exists
+            location = projection
     elif projection == "UNPROJECTED":
         # Create a dummy coordinate system for unprojected data.
         location = newLocation("+proj=tmerc +lat_0=0+lon_0=0 +ellps=WGS84 +units=m +no_defs",
