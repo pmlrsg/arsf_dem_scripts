@@ -655,7 +655,10 @@ def setLocation(projection):
         try:
             # UTM projection isn't in template so need to set up as a new location
             location = newLocation(projection)
-        except Exception:
+        except Exception as err:
+            dem_common_functions.WARNING("Setting location to {} failed with "
+                                         "error:\n{}\n. Assuming location "
+                                         "exists".format(projection, err))
             # If creating a new location fails assume already exists
             location = projection
     elif projection == "UNPROJECTED":
