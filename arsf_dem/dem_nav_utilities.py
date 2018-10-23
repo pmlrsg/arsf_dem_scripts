@@ -252,6 +252,13 @@ def subset_dem_to_nav(in_dem_mosaic, out_demfile,
                                                       max_view_angle=max_view_angle,
                                                       sensor=sensor)
 
+    # Calculate difference between selected buffer and one already applied in
+    # dem_library
+    nav_bb[0] = nav_bb[0] - (dem_common.DEFAULT_APL_DEM_BUFFER['S'] - dem_library.getDemCalBuffer())
+    nav_bb[1] = nav_bb[1] + (dem_common.DEFAULT_APL_DEM_BUFFER['N'] - dem_library.getDemCalBuffer())
+    nav_bb[2] = nav_bb[2] - (dem_common.DEFAULT_APL_DEM_BUFFER['W'] - dem_library.getDemCalBuffer())
+    nav_bb[3] = nav_bb[3] + (dem_common.DEFAULT_APL_DEM_BUFFER['E'] - dem_library.getDemCalBuffer())
+
     if not project_info_used:
         dem_common_functions.WARNING('Could not find project from directory "{}".'.format(os.path.abspath(project_dir)))
         if nav_file is None:
