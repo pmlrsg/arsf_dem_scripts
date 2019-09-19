@@ -1076,7 +1076,7 @@ def call_gdalwarp(in_file, out_file, s_srs=None, t_srs=dem_common.WGS84_PROJ4_ST
                                    str(out_extent[1])])
 
     if target_res is not None:
-        if isinstance(target_res, list):
+        if isinstance(target_res, list) or isinstance(target_res, tuple):
             # If a list has been passed in use different values for x and y
             gdalwarp_cmd.extend(['-tr',str(target_res[0]),
                                  str(target_res[1])])
